@@ -25,12 +25,12 @@ endif()
 if(MQLQD_REAL_ROOT_OF_SRC_TREE)
   # XXX: OFF -> UNIMPLEMENTED (may be not rewritten)
   option(MQLQD_BUILD_TESTS      "whether or not tests should be built"        ON)
-  option(MQLQD_BUILD_PACKAGE    "whether or not the package should be built"  ON)
+  option(MQLQD_BUILD_PACKAGE    "whether or not the package should be built"  OFF)
   option(MQLQD_COVERAGE_ENABLE  "whether or not to enable the tests coverage" OFF)
   option(MQLQD_COVERAGE_CLEAN   "clean coverage data before taking new"       ON)
   option(MQLQD_INSTALL_ENABLE   "whether or not to enable the install rule"   OFF)
-  option(MQLQD_MEMCHECK_ENABLE  "detect leaks via valgrind memcheck tool"     ON)
-  option(MQLQD_SNTZ_ADDR        "whether or not to enable address sanitizer"  ON)
+  option(MQLQD_MEMCHECK_ENABLE  "detect leaks via valgrind memcheck tool"     OFF)
+  option(MQLQD_SNTZ_ADDR        "whether or not to enable address sanitizer"  OFF)
 
   ## For the list of supported compilers visit:
   ## https://cmake.org/cmake/help/latest/prop_tgt/COMPILE_WARNING_AS_ERROR.html
@@ -137,5 +137,5 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
       PATTERN     "*.hpp"
     )
   endif(MQLQD_INSTALL_ENABLE)
-endif(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+endif(MQLQD_REAL_ROOT_OF_SRC_TREE)
 
