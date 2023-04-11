@@ -48,16 +48,19 @@ int main (int argc, char *argv[])
   // output every passed command line argument on stdout on separate lines.
   // std::copy(argv, argv + argc, std::ostream_iterator<char *>(std::cout, "\n")); // XXX
 
-  cxxopts::Options options("mqlqd_client", "transfer file over TCP/IP to the server with mqlqd_daemon.");
+  cxxopts::Options options("mqlqd_client",
+      "Transfer file(s) over TCP/IP to the server running the mqlqd_daemon.");
   options.add_options()
-    ("a,addr", "Server IP address",
+    ("a,addr", "Server IP address with the mqlqd_daemon.",
      cxxopts::value<cmd_opt_t>()->default_value(dvw(cfg::def_addr)))
-    ("p,port", "Port number of the daemon on the server",
+
+    ("p,port", "Port number of the daemon on the server.",
      cxxopts::value<cmd_opt_t>()->default_value(dvw(cfg::def_port)))
-    ("f,file", "File path", cxxopts::value<cmd_opt_t>())
-    ("h,help", "Show usage help")
-    ("file_paths", "File path(s) as trailing argument(s)", cxxopts::value<std::vector<cmd_opt_t>>());
-    ;
+
+    ("f,file", "File path of the file to transmit.", cxxopts::value<cmd_opt_t>())
+    ("h,help", "Show usage help.")
+    ("file_paths", "File path(s) as trailing argument(s).",
+     cxxopts::value<std::vector<cmd_opt_t>>());
   // to support multiple files as trailing arguments: file1.txt file2.txt file3.txt
   // XXX: UNIMPLEMENTED
   options.parse_positional({"file_paths"});
