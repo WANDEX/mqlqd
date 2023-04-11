@@ -20,6 +20,7 @@ else()
   set(MQLQD_REAL_ROOT_OF_SRC_TREE OFF)
   ## target compilation options/flags
   include(cmake/comp_opts_cxx.cmake)
+  include(cmake/cxxopts.cmake)
 endif()
 
 if(MQLQD_REAL_ROOT_OF_SRC_TREE)
@@ -38,6 +39,9 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
 
   ## target compilation options/flags
   include(cmake/comp_opts_cxx.cmake)
+
+  include(cmake/cxxopts.cmake)
+  add_subdirectory(src)
 
   if(MQLQD_BUILD_PACKAGE)
     set(package_files include/ src/ cmake/ CMakeLists.txt LICENSE)
