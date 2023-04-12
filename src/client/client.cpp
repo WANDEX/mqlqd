@@ -97,6 +97,11 @@ int cmd_opts(int argc, const char *argv[])
                   << err.what() << '\n';
         throw; // rethrow
       }
+    } else if (!opts.count("file") && !opts.count("msg")) { // XXX: msg UNIMPLEMENTED
+        std::cerr << options.help() << '\n';
+        std::cerr << "Look up the usage help." << '\n'
+                  << "No files were provided, exit." << '\n';
+        exit(10);
     }
 
   } catch(cxxopts::exceptions::exception const& err) {
