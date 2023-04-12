@@ -68,22 +68,22 @@ int cmd_opts(int argc, const char *argv[])
     auto opts{ options.parse(argc, argv) };
 
     if (opts.count("help")) {
-      std::cout << options.help() << std::endl;
+      std::cout << options.help() << '\n';
       exit(0);
     }
 
   } catch(cxxopts::exceptions::exception const& err) {
     std::cerr << "ERROR: during parsing of the cmd options:" << '\n'
-      << err.what() << '\n';
+              << err.what() << '\n';
     return 1;
 #if CATCH_THEM_ALL
   } catch(std::exception const& err) {
     std::cerr << "CRITICAL ERROR: an unhandled std::exception was caught:" << '\n'
-      << err.what() << '\n';
+              << err.what() << '\n';
     return 2;
   } catch(...) {
     std::cerr << "CRITICAL ERROR: an unhandled anonymous exception occurred!" << '\n'
-      << "THIS IS VERY BAD!" << '\n';
+              << "THIS IS VERY BAD!" << '\n';
     return 3;
 #endif // CATCH_THEM_ALL
   }
