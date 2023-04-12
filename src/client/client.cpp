@@ -67,6 +67,7 @@ int cmd_opts(int argc, const char *argv[])
   {
     cxxopts::Options options("mqlqd_client",
         "Transfer file(s) over TCP/IP to the server running the mqlqd_daemon.");
+    options.set_width(80);
     options.add_options()
       ("a,addr", "Server IP address with the mqlqd_daemon.",
        cxxopts::value<cmd_opt_t>()->default_value(dvw(cfg::def_addr)))
