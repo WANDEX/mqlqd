@@ -68,7 +68,7 @@ int fcontent(char *mem_block, fs::path const& fpath)
     ifs.seekg(0, ifs.beg);
     ifs.read(mem_block, size);
 
-    std::cout << "'" << fpath << "'" << '\n'
+    std::cout << fpath << '\n'
               << "[INFO] ^ The entire contents of the file are in memory." << '\n';
 
   } catch(std::exception const& err) {
