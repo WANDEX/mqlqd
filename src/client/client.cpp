@@ -29,10 +29,6 @@ namespace fs = std::filesystem;
 #define CATCH_THEM_ALL 0
 #endif // !CATCH_THEM_ALL
 
-#ifndef PRINT_FILE_CONTENTS
-#define PRINT_FILE_CONTENTS 1
-#endif // !PRINT_FILE_CONTENTS
-
 // global for simplicity - no drawbacks => be able to use it in functions ->
 // without the need to pass it into every single function as the extra argument.
 // (usually cmd options are needed for the whole life of the program anyway!)
@@ -159,44 +155,10 @@ int cmd_opts(int argc, const char *argv[])
 
     if (opts_g.count("file")) {
       const fs::path fp{ opt_file_wrap("file") };
-      const std::size_t fsz{ fs::file_size(fp) };
-      // TODO: it is easy to use unique_ptr here for the mem_block
-      // but maybe there is the benefit in proper using of the raw pointers?
-      // easy to rewrite if requested!
-      char *mem_block{ new char[fsz] };
-      try {
-        int rrc { file::is_r(fp) };
-        std::cout << "file path: " << fp << '\n';
-        std::cout << "rrc - is the regular file: " << std::boolalpha << (rrc == 0) << '\n';
-        int frc { file::fcontent(mem_block, fp) };
-        std::cout << "frc: " << frc << '\n';
-        if (!mem_block) {
-          std::cerr << "FILE CRITICAL ERROR: mem_block == nullptr!" << '\n';
-          return 4;
-        }
-
-#if PRINT_FILE_CONTENTS
-        std::cout << ">>> [BEG] file contents >>>" << '\n';
-        for (std::size_t i = 0; i < fsz; i++) {
-          std::cout << mem_block[i];
-        }
-        std::cout << '\n';
-        std::cout << "<<< [END] file contents <<<" << '\n';
-#endif
-
-        // cleanup
-        delete[] mem_block;
-        mem_block = nullptr;
-      } catch(std::exception const& err) {
-        std::cerr << "FILE CRITICAL ERROR: an unhandled std::exception occurred!" << '\n'
-                  << "THIS IS VERY BAD!" << '\n'
-                  << err.what() << '\n';
-        return 5;
-      } catch(...) {
-        std::cerr << "FILE CRITICAL ERROR: an unhandled anonymous exception occurred!" << '\n'
-                  << "THIS IS EXTREMELY BAD!" << '\n';
-        return 6;
-      }
+      file::File file{ fp, fs::file_size(fp) };
+      auto rc{ file.read_to_block() };
+      std::cout << rc << " : rc file.read_to_block()" << '\n';
+      file.print_fcontent();
     }
 
   } catch(cxxopts::exceptions::exception const& err) {
