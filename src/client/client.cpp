@@ -2,24 +2,41 @@
 
 #include "aliases.hpp"
 #include "config.hpp"
+#include "file.hpp"
 
 #include <cxxopts.hpp>
 
+// TODO: clean unused includes
 #include <algorithm>            // std::copy
 #include <any>                  // std::any_cast()
 #include <exception>
+#include <filesystem>
 #include <iostream>
 #include <iterator>             // std::ostream_iterator
+#include <source_location>      // std::source_location
 #include <string>               // std::to_string
 #include <string_view>
 #include <utility>              // std::forward
 #include <vector>
+
+namespace mqlqd {
+
+namespace fs = std::filesystem;
 
 // catch all possible exceptions (like Pokemons)
 // disabled by default -> to not suppress core dumps etc.
 #ifndef CATCH_THEM_ALL
 #define CATCH_THEM_ALL 0
 #endif // !CATCH_THEM_ALL
+
+#ifndef PRINT_FILE_CONTENTS
+#define PRINT_FILE_CONTENTS 1
+#endif // !PRINT_FILE_CONTENTS
+
+// global for simplicity - no drawbacks => be able to use it in functions ->
+// without the need to pass it into every single function as the extra argument.
+// (usually cmd options are needed for the whole life of the program anyway!)
+static cxxopts::ParseResult opts_g;
 
 /*
 inline constexpr std::string
@@ -47,6 +64,50 @@ dvw(std::string_view const& value) noexcept
   // return std::string{ value };
 }
 
+
+/**
+ * @brief cxxopts option wrapper to unify & simplify exceptions handling.
+ */
+[[nodiscard]] constexpr cmd_opt_t
+opt_wrap(std::string_view const& in_opt)
+{
+  try {
+    return opts_g[dvw(in_opt)].as<cmd_opt_t>();
+  } catch(std::bad_cast const& err) {
+    std::cerr << "ERROR: cxxopts - option as miscast:" << '\n'
+              << err.what() << '\n';
+    throw; // rethrow
+  } catch(cxxopts::exceptions::exception const& err) {
+    std::cerr << "ERROR: cxxopts - option cxxopts::exceptions::exception:" << '\n'
+              << err.what() << '\n';
+    throw; // rethrow
+  } catch(std::exception const& err) {
+    std::cerr << "ERROR: THIS WAS UNEXPECTED! an unhandled std::exception!" << '\n'
+              << "in '" << __FILE__ << "' client.cpp opt_wrap():" << '\n'
+              << err.what() << '\n';
+    // std::clog << "ERROR: THIS WAS UNEXPECTED! an unhandled std::exception!" << '\n'
+              // << "in '" << (std::source_location::current()) << "' client.cpp opt_wrap():" << '\n'
+              // << err.what() << '\n';
+    throw; // rethrow
+  }
+}
+
+/**
+ * @brief cxxopts option wrapper for the files to unify & simplify exceptions handling.
+ */
+[[nodiscard]] fs::path
+opt_file_wrap(std::string_view const& in_opt)
+{
+  try {
+    return fs::path{ opt_wrap(in_opt) };
+  } catch(std::exception const& err) {
+    std::cerr << "ERROR: THIS WAS UNEXPECTED! an unhandled std::exception!" << '\n'
+              << "in '" << __FILE__ << "' client.cpp opt_file_wrap():" << '\n'
+              << err.what() << '\n';
+    throw; // rethrow
+  }
+}
+
 /**
  * @brief parse command line options.
  *
@@ -54,15 +115,12 @@ dvw(std::string_view const& value) noexcept
  * with an error message printed to std::cerr.
  * and with the return code / exit code.
  *
- * @param  argc - as in the usual main().
- * @param  argv - as in the usual main().
+ * @param  argc - as in the usual main() entry point.
+ * @param  argv - as in the usual main() entry point.
  * @return error code.
  */
 int cmd_opts(int argc, const char *argv[])
 {
-  using namespace std::literals; // XXX
-  using namespace mqlqd;
-
   try
   {
     cxxopts::Options options("mqlqd_client",
@@ -76,32 +134,69 @@ int cmd_opts(int argc, const char *argv[])
        cxxopts::value<cmd_opt_t>()->default_value(dvw(cfg::def_port)))
 
       ("f,file", "File path of the file to transmit.", cxxopts::value<cmd_opt_t>())
-      ("h,help", "Show usage help.")
-      ("file_paths", "File path(s) as trailing argument(s).",
-       cxxopts::value<std::vector<cmd_opt_t>>());
-    // to support multiple files as trailing arguments: file1.txt file2.txt file3.txt
-    // XXX: UNIMPLEMENTED
-    options.parse_positional({"file_paths"});
-    auto opts{ options.parse(argc, argv) };
+      ("h,help", "Show usage help.");
+    /*
+     *   ("file_paths", "File path(s) as trailing argument(s).",
+     *    cxxopts::value<std::vector<cmd_opt_t>>());
+     * // to support multiple files as trailing arguments: file1.txt file2.txt file3.txt
+     * options.parse_positional({"file_paths"});
+     * // XXX: UNIMPLEMENTED ^
+     */
 
-    if (opts.count("help")) {
+    opts_g = options.parse(argc, argv); // initialize global options variable
+
+    if (opts_g.count("help")) {
       std::cout << options.help() << '\n';
       exit(0);
     }
 
-    if (opts.count("file")) {
-      try {
-        std::cout << opts["file"].as<cmd_opt_t>() << '\n';
-      } catch(std::bad_cast const& err) {
-        std::cerr << "ERROR: cxxopts opts as miscast - during parsing of the cmd options:" << '\n'
-                  << err.what() << '\n';
-        throw; // rethrow
-      }
-    } else if (!opts.count("file") && !opts.count("msg")) { // XXX: msg UNIMPLEMENTED
+    if (!opts_g.count("file") && !opts_g.count("msg")) { // XXX: msg UNIMPLEMENTED
         std::cerr << options.help() << '\n';
         std::cerr << "Look up the usage help." << '\n'
                   << "No files were provided, exit." << '\n';
         exit(10);
+    }
+
+    if (opts_g.count("file")) {
+      const fs::path fp{ opt_file_wrap("file") };
+      const std::size_t fsz{ fs::file_size(fp) };
+      // TODO: it is easy to use unique_ptr here for the mem_block
+      // but maybe there is the benefit in proper using of the raw pointers?
+      // easy to rewrite if requested!
+      char *mem_block{ new char[fsz] };
+      try {
+        int rrc { file::is_r(fp) };
+        std::cout << "file path: " << fp << '\n';
+        std::cout << "rrc - is the regular file: " << std::boolalpha << (rrc == 0) << '\n';
+        int frc { file::fcontent(mem_block, fp) };
+        std::cout << "frc: " << frc << '\n';
+        if (!mem_block) {
+          std::cerr << "FILE CRITICAL ERROR: mem_block == nullptr!" << '\n';
+          return 4;
+        }
+
+#if PRINT_FILE_CONTENTS
+        std::cout << ">>> [BEG] file contents >>>" << '\n';
+        for (std::size_t i = 0; i < fsz; i++) {
+          std::cout << mem_block[i];
+        }
+        std::cout << '\n';
+        std::cout << "<<< [END] file contents <<<" << '\n';
+#endif
+
+        // cleanup
+        delete[] mem_block;
+        mem_block = nullptr;
+      } catch(std::exception const& err) {
+        std::cerr << "FILE CRITICAL ERROR: an unhandled std::exception occurred!" << '\n'
+                  << "THIS IS VERY BAD!" << '\n'
+                  << err.what() << '\n';
+        return 5;
+      } catch(...) {
+        std::cerr << "FILE CRITICAL ERROR: an unhandled anonymous exception occurred!" << '\n'
+                  << "THIS IS EXTREMELY BAD!" << '\n';
+        return 6;
+      }
     }
 
   } catch(cxxopts::exceptions::exception const& err) {
@@ -122,10 +217,12 @@ int cmd_opts(int argc, const char *argv[])
   return 0;
 }
 
+} // namespace mqlqd
+
 int main(int argc, const char *argv[])
 {
   int return_code{ -1 }; // also known as the error code
-  return_code = cmd_opts(argc, argv);
+  return_code = mqlqd::cmd_opts(argc, argv);
   if (return_code != 0) return return_code;
   // potential place for the extra steps (for the future build up)
 
