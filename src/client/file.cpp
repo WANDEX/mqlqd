@@ -33,21 +33,21 @@ int is_r(fs::path const& fpath) noexcept
 
 
 /**
- * @brief read file contents into the stream
+ * @brief read file contents into the memory block.
  *
- * @param  TODO
- * @return TODO
+ * @param  mem_block - memory block.
+ * @param  fpath - file path to the file.
  * @return 0 on success or return code based on the failed check.
  */
-// int fcontent(fs::path const& fpath, std::ofstream &ofs)
-// int fcontent(fs::path const& fpath, std::ofstream &out_ifs)
-// int fcontent(fs::path const& fpath, std::ofstream &out_ifs)
-int fcontent(fs::path const& fpath)
+int fcontent(char *mem_block, fs::path const& fpath)
 {
+  // TODO: use unique_ptr for the mem_block?
+  // TODO: DOUBTS: use enum instead of rc?
   int rc{ is_r(fpath) }; // return code
-  if (!rc) return rc;
+  if (rc != 0) return rc;
   // open file for reading
   std::ifstream ifs(fpath, openmode);
+  // invariants & validation/safety checks
   if (!ifs) {
     std::cerr << "ERROR: can not open input file!" << '\n';
     return 20;
@@ -61,24 +61,19 @@ int fcontent(fs::path const& fpath)
     return 22;
   }
 
-  char *mem_block;
   try {
     // NOTE: we check on the ifs.fail() => will not be negative!
     const auto size{ ifs.tellg() };
-    mem_block = { new char[static_cast<std::size_t>(size)] };
 
     ifs.seekg(0, ifs.beg);
     ifs.read(mem_block, size);
 
     std::cout << "'" << fpath << "'" << '\n'
               << "[INFO] ^ The entire contents of the file are in memory." << '\n';
-    // cleanup
-    ifs.close();
-    delete[] mem_block;
+
   } catch(std::exception const& err) {
-    // cleanup
-    ifs.close();
-    delete[] mem_block;
+    std::cerr << "ERROR: an unhandled std::exception was caught:" << '\n'
+              << err.what() << '\n' << __FILE__ << '\n';
     throw; // rethrow
   }
   return 0;
