@@ -80,7 +80,8 @@ vsep "BUILD" "${CYN}"
 cmake --build "$bdir" --config ${bt} ${clean_first}
 
 gtest_binary="./$bdir/tests/units/tests_units"
-if [ ! -x "$gtest_binary" ]; then
+# if [ ! -x "$gtest_binary" ]; then
+if false; then # XXX: disabled temporary, as there is no unit tests yet
   printf "%s\n^ %s\n" "$gtest_binary" \
     "File not found or not executable, exit."
   exit 5
