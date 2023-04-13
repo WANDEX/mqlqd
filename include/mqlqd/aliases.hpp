@@ -3,9 +3,12 @@
 
 #include <cinttypes>            // XXX format macro constants
 #include <cstdint>              // types, *_MIN, etc
+#include <filesystem>
 #include <string_view>
 
 namespace mqlqd {
+
+namespace fs = std::filesystem; // NOLINT(misc-unused-alias-decls)
 
 // easiest way to access the suffixes: s, sv, etc.
 using namespace std::literals;

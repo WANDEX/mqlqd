@@ -4,10 +4,9 @@
 
 #include <filesystem>
 
+
 namespace mqlqd {
 namespace file {
-
-namespace fs = std::filesystem;
 
 [[nodiscard]]
 int is_r(fs::path const& fpath) noexcept;

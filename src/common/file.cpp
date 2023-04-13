@@ -10,10 +10,9 @@
 #include <system_error>         // ec - error_code
 #include <memory>               // std::unique_ptr
 
+
 namespace mqlqd {
 namespace file {
-
-namespace fs = std::filesystem;
 
 /**
  * @brief check that the file is regular file.

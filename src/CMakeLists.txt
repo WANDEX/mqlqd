@@ -5,6 +5,7 @@ get_filename_component(common_src_dir ${CMAKE_CURRENT_SOURCE_DIR}/common REALPAT
 ## common sources for the both targets: client & daemon
 set(common_src
   ${common_src_dir}/file.cpp
+  ${common_src_dir}/op.cpp
 )
 
 add_library(mqlqd_bin_i INTERFACE)
