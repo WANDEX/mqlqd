@@ -124,7 +124,6 @@ int File::fcontent()
 int File::read_to_block()
 {
   int arc{ heap_alloc() };
-  // if(!arc) return arc;
   if (arc != 0) return arc;
   try {
     std::cout << "file path: " << m_fpath << '\n';
