@@ -32,8 +32,9 @@ using sv_t = std::string_view;
 using sz_t = std::size_t;
 
 using addr_t = sv_t;
+using port_t = int;
 // using addr_t = std::string;
-using port_t = u16;
+// using port_t = u16;
 
 // NOTE: cxxopts default_value() accepts std::string.
 // Also, looks like any other types make life unnecessarily harder working with the cxxopts.

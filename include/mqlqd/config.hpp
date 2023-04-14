@@ -5,7 +5,16 @@
 namespace mqlqd {
 namespace cfg {
 
-// NOTE: cxxopts default_value() accepts std::string
+inline constexpr addr_t addr{ "127.0.0.1"sv };
+inline constexpr port_t port{ 69042 };
+
+
+/**
+ * NOTE: Keep following variables up to date with the above!
+ * => following variables are only for the representation
+ * in the simple text form of the default config values!
+ * NOTE: cxxopts default_value() accepts std::string etc.
+ */
 
 inline constexpr sv_t def_addr{ "127.0.0.1"sv }; // i.e. localhost
 inline constexpr sv_t def_port{ "69042"sv };
