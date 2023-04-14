@@ -11,6 +11,11 @@
 #include <memory>               // std::unique_ptr
 
 
+// show boundaries of the files in the cat mode
+#ifndef FILE_CONTENTS_BOUNDARY
+#define FILE_CONTENTS_BOUNDARY 0
+#endif // !FILE_CONTENTS_BOUNDARY
+
 namespace mqlqd {
 namespace file {
 
@@ -149,12 +154,15 @@ void File::print_fcontent() const
   if (!m_block) {
     return;
   }
-  std::cout << ">>> [BEG] file content >>>" << '\n';
+#if FILE_CONTENTS_BOUNDARY
+  std::cout << ">>> [BEG] " << m_fpath << " - file content >>>" << '\n';
+#endif // FILE_CONTENTS_BOUNDARY
   for (std::size_t i = 0; i < m_block_size; i++) {
     std::cout << m_block[i];
   }
-  std::cout << '\n';
-  std::cout << "<<< [END] file content <<<" << '\n';
+#if FILE_CONTENTS_BOUNDARY
+  std::cout << "<<< [END] " << m_fpath << " - file content <<<" << '\n';
+#endif // FILE_CONTENTS_BOUNDARY
 }
 
 } // namespace file

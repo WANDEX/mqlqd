@@ -44,6 +44,7 @@ cmd_opts(int argc, const char *argv[])
       ("p,port", "Port number of the daemon on the server.",
        cxxopts::value<cmd_opt_t>()->default_value(dvw(cfg::def_port)))
 
+      ("c,cat",  "Print file content (cat like utility mode).")
       ("f,file", "File path of the file to transmit.", cxxopts::value<cmd_opt_t>())
       ("h,help", "Show usage help.");
     /*
@@ -71,9 +72,16 @@ cmd_opts(int argc, const char *argv[])
     if (opts_g.count("file")) {
       const fs::path fp{ opt_file_wrap("file") };
       file::File file{ fp, fs::file_size(fp) };
-      auto rc{ file.read_to_block() };
-      std::cout << rc << " : rc file.read_to_block()" << '\n';
-      file.print_fcontent();
+      auto brc{ file.read_to_block() };
+      if (brc != 0) {
+        std::cout << brc << " : brc file.read_to_block() [FAIL]" << '\n';
+      } else {
+        if (opts_g.count("cat")) {
+          file.print_fcontent();
+        } else {
+          std::cout << brc << " : brc file.read_to_block() [UNIMPLEMENTED]" << '\n';
+        }
+      }
     }
 
   } catch(cxxopts::exceptions::exception const& err) {
