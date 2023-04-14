@@ -9,6 +9,12 @@ inline constexpr addr_t addr{ "127.0.0.1"sv };
 inline constexpr port_t port{ 69042 };
 
 
+// log urgency level
+inline constexpr LL urgency{ LL::STAT };
+
+// default log file path
+inline constexpr sv_t log_fpath{ "/tmp/mqlqd/logs/default.log"sv };
+
 /**
  * NOTE: Keep following variables up to date with the above!
  * => following variables are only for the representation

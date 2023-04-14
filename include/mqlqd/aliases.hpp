@@ -1,6 +1,8 @@
 #pragma once
 // project-wide type aliases
 
+#include "LogUrgencyLevel.hpp"
+
 #include <cinttypes>            // XXX format macro constants
 #include <cstdint>              // types, *_MIN, etc
 #include <filesystem>
@@ -12,6 +14,9 @@ namespace fs = std::filesystem; // NOLINT(misc-unused-alias-decls)
 
 // easiest way to access the suffixes: s, sv, etc.
 using namespace std::literals;
+
+// alias for shortness & consistency across the project codebase.
+using LL = LogUrgencyLevel;
 
 // using i8  = int_least8_t;
 using i16 = int_least16_t;
