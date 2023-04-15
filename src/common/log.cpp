@@ -1,6 +1,6 @@
+// Logger implementation
 
 #include "log.hpp"
-#include "log_level.hpp"
 
 #include "aliases.hpp"
 

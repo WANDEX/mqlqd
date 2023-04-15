@@ -1,9 +1,6 @@
 #pragma once
 // project-wide type aliases
 
-#include "log_level.hpp"
-
-#include <cinttypes>            // XXX format macro constants
 #include <cstdint>              // types, *_MIN, etc
 #include <filesystem>
 #include <string_view>
@@ -20,6 +17,7 @@ namespace fs = std::filesystem; // NOLINT(misc-unused-alias-decls)
 using namespace std::literals;
 
 // alias for shortness & consistency across the project codebase.
+enum class LogLevel; // forward declare
 using LL = LogLevel;
 
 // using i8  = int_least8_t;
