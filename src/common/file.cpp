@@ -1,7 +1,7 @@
 
 #include "file.hpp"
 
-#include "aliases.hpp"          // sv_t & other project-wide aliases
+#include "aliases.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -38,7 +38,9 @@ int is_r(fs::path const& fpath) noexcept
 
 File::File(fs::path const& fpath, const std::size_t sz) noexcept
   : m_fpath{ fpath }, m_block_size{ sz }
-{}
+{
+  log_g.msg(LL::DBUG, "ctor - File instance.");
+}
 
 
 [[nodiscard]]
@@ -50,7 +52,7 @@ int File::heap_alloc() noexcept
   try {
     m_block = { new char[m_block_size] };
     if (!m_block) {
-      std::cerr << "FILE CRITICAL ERROR: memory block == nullptr!" << '\n';
+      log_g.msg(LL::CRIT, "File::heap_alloc() memory block == nullptr!");
       return 30;
     }
   } catch(std::bad_alloc const& err) {
@@ -94,15 +96,15 @@ int File::fcontent()
   std::ifstream ifs(m_fpath, openmode);
   // invariants & validation/safety checks
   if (!ifs) {
-    std::cerr << "ERROR: can not open input file!" << '\n';
+    log_g.msg(LL::ERRO, "can not open input file!");
     return 20;
   }
   if (ifs.fail()) {
-    std::cerr << "ERROR: ifs.fail()" << '\n';
+    log_g.msg(LL::ERRO, "ifs.fail()");
     return 21;
   }
   if (!ifs.good()) {
-    std::cerr << "ERROR: !ifs.good()" << '\n';
+    log_g.msg(LL::ERRO, "!ifs.good()");
     return 22;
   }
 
@@ -113,8 +115,7 @@ int File::fcontent()
     ifs.seekg(0, ifs.beg);
     ifs.read(m_block, size);
 
-    std::cout << m_fpath << '\n'
-              << "[INFO] ^ The entire contents of the file are in memory." << '\n';
+    log_g.msg(LL::INFO, "The entire contents of the file are in memory.");
 
   } catch(std::exception const& err) {
     std::cerr << "ERROR: an unhandled std::exception was caught:" << '\n'
@@ -130,11 +131,14 @@ int File::read_to_block()
   int arc{ heap_alloc() };
   if (arc != 0) return arc;
   try {
-    std::cout << "file path: " << m_fpath << '\n';
+    // XXX: this is not very convenient & certainly not terse.
+    log_g.msg(LL::INFO, "file path: {}\n", fmt::make_format_args(m_fpath.string()));
     int rrc { file::is_r(m_fpath) };
-    std::cout << "rrc - is the regular file: " << std::boolalpha << (rrc == 0) << '\n';
+    // TODO: make this work. (hard)
+    // log_g.msg(LL::INFO, "rrc - is the regular file: {}\n", (rrc == 0));
+    log_g.msg(LL::INFO, fmt::format("rrc - is the regular file: {}", (rrc == 0)));
     int crc { fcontent() };
-    std::cout << "crc: " << crc << '\n';
+    log_g.msg(LL::INFO, fmt::format("crc: {}", crc));
   }
   catch(std::exception const& err) {
     std::cerr << "FILE CRITICAL ERROR: an unhandled std::exception occurred!" << '\n'
