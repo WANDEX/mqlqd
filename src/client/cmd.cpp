@@ -3,7 +3,6 @@
 #include "aliases.hpp"
 #include "config.hpp"
 #include "file.hpp"
-#include "log.hpp"
 #include "op.hpp"
 
 #include <cxxopts.hpp>

@@ -8,7 +8,7 @@ namespace mqlqd {
 
 // log msg can have different log levels.
 // the bigger the level, the less messages:
-enum class LogUrgencyLevel
+enum class LogLevel
 {
   DBUG = 1, // DEBUG
   INFO,     // INFO
@@ -25,9 +25,9 @@ enum class LogUrgencyLevel
 // [template_spec_redecl_out_of_scope].
 // @brief format enum log levels in the readable text form.
 template <> struct
-fmt::formatter<mqlqd::LogUrgencyLevel> : formatter<string_view> {
+fmt::formatter<mqlqd::LogLevel> : formatter<string_view> {
   // parse is inherited from formatter<string_view>.
-  using LL = mqlqd::LogUrgencyLevel;
+  using LL = mqlqd::LogLevel;
   template <typename FormatContext>
   auto format(LL el, FormatContext& ctx) const {
     string_view name = "unknown";
@@ -44,8 +44,8 @@ fmt::formatter<mqlqd::LogUrgencyLevel> : formatter<string_view> {
   }
 };
 
-// overload for the std::ostream (to print LogUrgencyLevel in the readable text form)
-inline std::ostream& operator<<(std::ostream& os, mqlqd::LogUrgencyLevel const ll) {
+// overload for the std::ostream (to print LogLevel in the readable text form)
+inline std::ostream& operator<<(std::ostream& os, mqlqd::LogLevel const ll) {
   return os << fmt::to_string(ll);
 }
 

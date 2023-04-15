@@ -1,8 +1,8 @@
 
 #include "log.hpp"
+#include "log_level.hpp"
 
 #include "aliases.hpp"
-#include "LogUrgencyLevel.hpp"
 
 #include <fmt/core.h>
 #include <fmt/format.h>

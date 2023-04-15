@@ -1,7 +1,7 @@
 #pragma once
 // Logger class common for the both targets: client & daemon
 
-#include "LogUrgencyLevel.hpp"
+#include "log_level.hpp"
 
 #include "aliases.hpp"
 #include "config.hpp"
