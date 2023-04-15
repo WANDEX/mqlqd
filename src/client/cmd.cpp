@@ -3,6 +3,7 @@
 #include "aliases.hpp"
 #include "config.hpp"
 #include "file.hpp"
+#include "log.hpp"
 #include "op.hpp"
 
 #include <cxxopts.hpp>
@@ -46,7 +47,9 @@ cmd_opts(int argc, const char *argv[])
 
       ("c,cat",  "Print file content (cat like utility mode).")
       ("f,file", "File path of the file to transmit.", cxxopts::value<cmd_opt_t>())
-      ("h,help", "Show usage help.");
+      ("h,help", "Show usage help.")
+      ("u,urge", "Log urgency level. (All messages </> Only critical)",
+       cxxopts::value<int>(), "1-7");
     /*
      *   ("file_paths", "File path(s) as trailing argument(s).",
      *    cxxopts::value<std::vector<cmd_opt_t>>());
@@ -55,7 +58,11 @@ cmd_opts(int argc, const char *argv[])
      * // XXX: UNIMPLEMENTED ^
      */
 
-    opts_g = options.parse(argc, argv); // initialize global options variable
+    // initialize global options variable
+    opts_g = options.parse(argc, argv);
+
+    // initialize logger with the specific log file.
+    log_g  = Logger{ "/tmp/mqlqd/logs/client.log"sv };
 
     if (opts_g.count("help")) {
       std::cout << options.help() << '\n';
@@ -67,6 +74,13 @@ cmd_opts(int argc, const char *argv[])
       std::cerr << "Look up the usage help." << '\n'
                 << "No files were provided, exit." << '\n';
       exit(10);
+    }
+
+    if (opts_g.count("urge")) {
+      // force specific log urgency level.
+      // (has priority over the value in config).
+      LL urgency{ opts_g["urge"].as<int>() };
+      log_g.set_urgency(urgency);
     }
 
     if (opts_g.count("file")) {
