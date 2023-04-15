@@ -44,3 +44,8 @@ fmt::formatter<mqlqd::LogUrgencyLevel> : formatter<string_view> {
   }
 };
 
+// overload for the std::ostream (to print LogUrgencyLevel in the readable text form)
+inline std::ostream& operator<<(std::ostream& os, mqlqd::LogUrgencyLevel const ll) {
+  return os << fmt::to_string(ll);
+}
+
