@@ -10,7 +10,8 @@ inline constexpr port_t port{ 69042 };
 
 
 // log urgency level
-inline constexpr LL urgency{ LL::STAT };
+// inline constexpr LL urgency{ LL::NTFY }; // default for the basic users
+inline constexpr LL urgency{ LL::DBUG }; // development level (all messages)
 
 // default log file path
 inline constexpr sv_t log_fpath{ "/tmp/mqlqd/logs/default.log"sv };
