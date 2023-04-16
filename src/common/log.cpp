@@ -1,4 +1,6 @@
 // Logger implementation
+// TODO: trace with message content - file, line, (function name if possible)
+//       for the messages greater than LL:WARN -> (LL::ERRO, LL:CRIT)
 
 #include "log.hpp"
 
