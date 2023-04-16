@@ -39,14 +39,26 @@ cmd_opts(int argc, const char *argv[])
     options.add_options()
       ("p,port", "Use port number as identity of the daemon on the server.",
        cxxopts::value<cmd_opt_t>()->default_value(dvw(cfg::def_port)))
-      ("h,help", "Show usage help.");
-    // TODO: other options, if any needed.
+      ("h,help", "Show usage help.")
+      ("u,urge", "Log urgency level. (All messages </> Only critical)",
+       cxxopts::value<int>(), "1-7");
 
-    opts_g = options.parse(argc, argv); // initialize global options variable
+    // initialize global options variable
+    opts_g = options.parse(argc, argv);
+
+    // initialize logger with the specific log file.
+    log_g  = Logger{ "/tmp/mqlqd/logs/daemon.log"sv };
 
     if (opts_g.count("help")) {
       std::cout << options.help() << '\n';
       exit(0);
+    }
+
+    if (opts_g.count("urge")) {
+      // force specific log urgency level.
+      // (has priority over the value in config).
+      LL urgency{ opts_g["urge"].as<int>() };
+      log_g.set_urgency(urgency);
     }
 
   } catch(cxxopts::exceptions::exception const& err) {
