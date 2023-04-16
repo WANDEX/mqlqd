@@ -87,12 +87,13 @@ cmd_opts(int argc, const char *argv[])
       file::File file{ fp, fs::file_size(fp) };
       auto brc{ file.read_to_block() };
       if (brc != 0) {
-        std::cout << brc << " : brc file.read_to_block() [FAIL]" << '\n';
+        log_g.msg(LL::ERRO, fmt::format("Fail file.read_to_block() -> {}", brc));
+        return brc;
       } else {
         if (opts_g.count("cat")) {
           file.print_fcontent();
         } else {
-          std::cout << brc << " : brc file.read_to_block() [UNIMPLEMENTED]" << '\n';
+          log_g.msg(LL::NTFY, fmt::format("[UNIMPLEMENTED] file.read_to_block() -> {}", brc));
         }
       }
     }
