@@ -12,9 +12,9 @@
 namespace mqlqd {
 
 // catch all possible exceptions (like Pokemons)
-// disabled by default -> to not suppress core dumps etc.
+// to not suppress core dumps etc -> should be disabled => 0
 #ifndef CATCH_THEM_ALL
-#define CATCH_THEM_ALL 0
+#define CATCH_THEM_ALL 1
 #endif // !CATCH_THEM_ALL
 
 /**
@@ -62,17 +62,14 @@ cmd_opts(int argc, const char *argv[])
     }
 
   } catch(cxxopts::exceptions::exception const& err) {
-    std::cerr << "ERROR: during parsing of the cmd options:" << '\n'
-              << err.what() << '\n';
+    log_g.msg(LL::ERRO, fmt::format("Fail during parsing of the cmd options:\n{}\n", err.what()));
     return 1;
-#if CATCH_THEM_ALL
   } catch(std::exception const& err) {
-    std::cerr << "CRITICAL ERROR: an unhandled std::exception was caught:" << '\n'
-              << err.what() << '\n';
+    log_g.msg(LL::CRIT, fmt::format("Unhandled std::exception was caught:\n{}\n", err.what()));
     return 2;
+#if CATCH_THEM_ALL
   } catch(...) {
-    std::cerr << "CRITICAL ERROR: an unhandled anonymous exception occurred!" << '\n'
-              << "THIS IS VERY BAD!" << '\n';
+    log_g.msg(LL::CRIT, "Unhandled anonymous exception occurred but was caught!\nTHIS IS VERY BAD!\n");
     return 3;
 #endif // CATCH_THEM_ALL
   }
