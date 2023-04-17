@@ -13,6 +13,7 @@
 
 
 namespace mqlqd {
+// TODO maybe also nest this into the anonymous namespace for the internal linkage?
 extern "C" {
 
 /**
@@ -73,13 +74,20 @@ void freeaddrinfo(struct addrinfo *res);
  * declared in this header:
  */
 
-/*
+
 int socket(int domain, int type, int protocol);
 int   bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
 int listen(int sockfd, int backlog);
-int accept(int sockfd, struct sockaddr *_Nullable restrict addr,
-           socklen_t *_Nullable restrict addrlen);
-*/
+
+/*
+ * @brief look into $ man 2 accept .
+ *
+ * original function signature looks like this!
+ * int accept(int sockfd, struct sockaddr *_Nullable restrict addr,
+ *            socklen_t *_Nullable restrict addrlen);
+ * => FIXME
+ */
+int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 
 }
 
@@ -93,9 +101,35 @@ public:
   SocketBase &operator=(const SocketBase &) = delete;
   virtual ~SocketBase() noexcept;
 
-  // XXX: i am pretty sure that it will not work like this...
   [[nodiscard]] int
-  bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+  socket(int domain, int type, int protocol)
+  {
+    return mqlqd::socket(domain, type, protocol);
+  }
+
+  [[nodiscard]] int
+  bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+  {
+    return mqlqd::bind(sockfd, reinterpret_cast<struct sockaddr *>(&addr), addrlen);
+  }
+
+  [[nodiscard]] int
+  listen(int sockfd, int backlog)
+  {
+    return mqlqd::listen(sockfd, backlog);
+  }
+
+  // [[nodiscard]] int
+  // accept(int sockfd, struct sockaddr *restrict addr, socklen_t *restrict addrlen);
+
+  // FIXME: the method signature differ from the original function!
+  [[nodiscard]] int
+  accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
+  {
+    return mqlqd::accept(sockfd,
+        reinterpret_cast<struct sockaddr *>(&addr),
+        reinterpret_cast<socklen_t *>(&addrlen));
+  }
 
 protected:
   port_t m_port{ cfg::port };
