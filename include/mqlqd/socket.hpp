@@ -5,7 +5,11 @@
  * Socket Base class common to the both targets:
  * client (app) & server (daemon).
  * 'https://isocpp.org/wiki/faq/mixing-c-and-cpp'
- * TODO: !!! UNFINISHED !!!
+ *
+ * !!!!!!!!!!!!!!!!!!!!
+ * !!! EXPERIMENTAL !!!
+ * !!!  UNFINISHED  !!!
+ * !!!!!!!!!!!!!!!!!!!!
  */
 
 #include "aliases.hpp"
@@ -89,17 +93,62 @@ int listen(int sockfd, int backlog);
  */
 int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 
+/*
+ * @brief look into $ man 2 connect .
+ * #include <sys/socket.h>
+ *
+ * original function signature looks like this!
+ * int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+ * => FIXME: or ok?
+ */
+int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+
+/*
+ * @brief man manual send(2).
+ * #include <sys/socket.h>
+ *
+ * original function signature looks like this!
+ * ssize_t send(int sockfd, const void buf[.len], size_t len, int flags);
+ * => FIXME: or ok?
+ */
+ssize_t send(int sockfd, const void *buf, size_t len, int flags);
+
+/*
+ * @brief man manual recv(2).
+ * #include <sys/socket.h>
+ *
+ * original function signature looks like this!
+ * ssize_t recv(int sockfd, void buf[.len], size_t len, int flags);
+ * => FIXME: or ok?
+ */
+ssize_t recv(int sockfd, void *buf, size_t len, int flags);
+
+/*
+ * @brief man manual close(2).
+ * #include <unistd.h>
+ */
+int close(int fd);
+
 }
 
-class SocketBase
+
+/**
+ * @brief Socket RAW Wrapper
+ */
+class SocketRAW final
 {
 public:
-  SocketBase();
-  SocketBase(SocketBase &&) = delete;
-  SocketBase(const SocketBase &) = delete;
-  SocketBase &operator=(SocketBase &&) = delete;
-  SocketBase &operator=(const SocketBase &) = delete;
-  virtual ~SocketBase() noexcept;
+  SocketRAW();
+  SocketRAW(SocketRAW &&) = delete;
+  SocketRAW(const SocketRAW &) = delete;
+  SocketRAW &operator=(SocketRAW &&) = delete;
+  SocketRAW &operator=(const SocketRAW &) = delete;
+  // virtual ~SocketRAW() noexcept;
+  // ~SocketRAW() noexcept;
+  ~SocketRAW() = default;
+
+  // TODO getaddrinfo()
+
 
   [[nodiscard]] int
   socket(int domain, int type, int protocol)
@@ -126,14 +175,54 @@ public:
   [[nodiscard]] int
   accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
   {
+    // XXX do we need those casts or not? ...
     return mqlqd::accept(sockfd,
         reinterpret_cast<struct sockaddr *>(&addr),
         reinterpret_cast<socklen_t *>(&addrlen));
   }
 
+  [[nodiscard]] int
+  connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+  {
+    // XXX do we need those casts or not? ...
+    // FIXME: certainly not ok! (sizeof addr & multiplication is needed???)
+    return mqlqd::connect(sockfd,
+        reinterpret_cast<struct sockaddr *>(&addr),
+        addrlen); // XXX: ok?
+  }
+
+  // XXX: !!! originally returns ssize_t
+  //      Do i need to static_cast it?
+  // [[nodiscard]] ssize_t
+  [[nodiscard]] intmax_t
+  send(int sockfd, const void *buf, size_t len, int flags)
+  {
+    // FIXME do i wrote it correct?
+    return mqlqd::send(sockfd, &buf, len, flags);
+  }
+
+
+  // XXX: !!! originally returns ssize_t
+  //      Do i need to static_cast it?
+  // [[nodiscard]] ssize_t
+  [[nodiscard]] intmax_t
+  recv(int sockfd, const void *buf, size_t len, int flags)
+  {
+    // FIXME do i wrote it correct?
+    return mqlqd::recv(sockfd, &buf, len, flags);
+  }
+
+  [[nodiscard]] int
+  close(int fd) noexcept
+  {
+    return mqlqd::close(fd);
+  }
+
+
 protected:
-  port_t m_port{ cfg::port };
-  addr_t m_addr{ cfg::addr };
+  // TODO: maybe i should move this into another class.
+  // port_t m_port{ cfg::port };
+  // addr_t m_addr{ cfg::addr };
 
 };
 
