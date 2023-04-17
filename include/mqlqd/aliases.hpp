@@ -1,7 +1,8 @@
 #pragma once
 // project-wide type aliases
 
-#include <cstdint>              // types, *_MIN, etc
+#include <cstdint>              // types, MIN/MAX, etc
+
 #include <filesystem>
 #include <string_view>
 
@@ -20,15 +21,27 @@ using namespace std::literals;
 enum class LogLevel; // forward declare
 using LL = LogLevel;
 
-// using i8  = int_least8_t;
+#if 1
+using i8  = int_least8_t;
 using i16 = int_least16_t;
 using i32 = int_least32_t;
-// using i64 = int_least64_t;
+using i64 = int_least64_t;
 
-// using u8  = uint_least8_t;
+using u8  = uint_least8_t;
 using u16 = uint_least16_t;
 using u32 = uint_least32_t;
-// using u64 = uint_least64_t;
+using u64 = uint_least64_t;
+#else
+using i8  = int8_t;
+using i16 = int16_t;
+using i32 = int32_t;
+using i64 = int64_t;
+
+using u8  = uint8_t;
+using u16 = uint16_t;
+using u32 = uint32_t;
+using u64 = uint64_t;
+#endif
 
 /*
  * NOTE: I heard that it is not very good idea to alias standard types.
@@ -38,15 +51,27 @@ using u32 = uint_least32_t;
 using sv_t = std::string_view;
 using sz_t = std::size_t;
 
-using addr_t = sv_t;
-using port_t = int;
 // using addr_t = std::string;
-// using port_t = u16;
+// using port_t = int;
 
 // NOTE: cxxopts default_value() accepts std::string.
 // Also, looks like any other types make life unnecessarily harder working with the cxxopts.
 // => Common type for the command line options.
 using cmd_opt_t = std::string;
+
+using addr_t = sv_t;
+using port_t = u16;
+
+/*
+ * Following for the consistency with the (POSIX)
+ * Linux User Socket API. [$ man 3type sockaddr ] etc.
+ */
+using in_addr_t = addr_t;
+using in_port_t = port_t;
+
+using socklen_t   = u32; // at least 32 bits.
+using sa_family_t = u32; // u but ? bits (how small can be to be safe?)
+
 
 } // namespace mqlqd
 
