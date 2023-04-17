@@ -6,7 +6,7 @@ namespace mqlqd {
 namespace cfg {
 
 inline constexpr addr_t addr{ "127.0.0.1"sv };
-inline constexpr port_t port{ 69042 };
+inline constexpr port_t port{ 42069 }; // u16 max!
 
 
 // log urgency level
