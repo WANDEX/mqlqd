@@ -1,5 +1,6 @@
 #pragma once
 /**
+ * !!! Project Does Not Use This Header !!!
  * Abstraction layer on top of the Linux socket API.
  * (wrapper around the user API C language functions).
  * Socket Base class common to the both targets:
@@ -9,15 +10,18 @@
  * !!!!!!!!!!!!!!!!!!!!
  * !!! EXPERIMENTAL !!!
  * !!!  UNFINISHED  !!!
+ * !!!   NOT USED   !!!
  * !!!!!!!!!!!!!!!!!!!!
+ *
+ * Now it seems like a bad idea...
+ * I left this header here just for my notes!
+ * !!! Project Does Not Use This Header !!!
  */
-
-#include "aliases.hpp"
-#include "config.hpp"
-
 
 namespace mqlqd {
 // TODO maybe also nest this into the anonymous namespace for the internal linkage?
+namespace /* (anonymous) */ {
+
 extern "C" {
 
 /**
@@ -54,8 +58,6 @@ extern "C" {
 /*
  * forward declare Linux socket API C functions:
  */
-
-// TODO
 
 /*
  * #include <sys/types.h>
@@ -128,119 +130,99 @@ ssize_t recv(int sockfd, void *buf, size_t len, int flags);
  */
 int close(int fd);
 
-}
+} // extern "C"
+} // (anonymous) [internal_linkage]
 
 
 /**
  * @brief Socket RAW Wrapper
  */
-// class SocketRAW final
-namespace sok {
+namespace sucks {
 
-// {
-// public:
-  // SocketRAW();
-  // SocketRAW(SocketRAW &&) = delete;
-  // SocketRAW(const SocketRAW &) = delete;
-  // SocketRAW &operator=(SocketRAW &&) = delete;
-  // SocketRAW &operator=(const SocketRAW &) = delete;
-  // // virtual ~SocketRAW() noexcept;
-  // // ~SocketRAW() noexcept;
-  // ~SocketRAW() = default;
+[[nodiscard]] int inline
+getaddrinfo(const char *node,
+            const char *service,
+            const struct addrinfo *hints,
+            struct addrinfo **res)
+{
+  return mqlqd::getaddrinfo
+    (
+      reinterpret_cast<char *>(&node),
+      reinterpret_cast<char *>(&service),
+      reinterpret_cast<struct addrinfo *>(&hints),
+      reinterpret_cast<struct addrinfo **>(&res)
+    ); // XXX: ok or wrong?
+}
 
-  // TODO getaddrinfo()
+[[nodiscard]] int inline
+socket(int domain, int type, int protocol)
+{
+  return mqlqd::socket(domain, type, protocol);
+}
 
-  [[nodiscard]] int inline
-  getaddrinfo(const char *node,
-              const char *service,
-              const struct addrinfo *hints,
-              struct addrinfo **res)
-  {
-    return mqlqd::getaddrinfo
-      (
-        reinterpret_cast<char *>(&node),
-        reinterpret_cast<char *>(&service),
-        reinterpret_cast<struct addrinfo *>(&hints),
-        reinterpret_cast<struct addrinfo **>(&res)
-      ); // XXX: ok or wrong?
-  }
+[[nodiscard]] int inline
+bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+{
+  return mqlqd::bind(sockfd, reinterpret_cast<struct sockaddr *>(&addr), addrlen);
+}
 
-  [[nodiscard]] int inline
-  socket(int domain, int type, int protocol)
-  {
-    return mqlqd::socket(domain, type, protocol);
-  }
+[[nodiscard]] int inline
+listen(int sockfd, int backlog)
+{
+  return mqlqd::listen(sockfd, backlog);
+}
 
-  [[nodiscard]] int inline
-  bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
-  {
-    return mqlqd::bind(sockfd, reinterpret_cast<struct sockaddr *>(&addr), addrlen);
-  }
+// [[nodiscard]] int
+// accept(int sockfd, struct sockaddr *restrict addr, socklen_t *restrict addrlen);
 
-  [[nodiscard]] int inline
-  listen(int sockfd, int backlog)
-  {
-    return mqlqd::listen(sockfd, backlog);
-  }
+// FIXME: the method signature differ from the original function!
+[[nodiscard]] int inline
+accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
+{
+  // XXX do we need those casts or not? ...
+  return mqlqd::accept(sockfd,
+      reinterpret_cast<struct sockaddr *>(&addr),
+      reinterpret_cast<socklen_t *>(&addrlen));
+}
 
-  // [[nodiscard]] int
-  // accept(int sockfd, struct sockaddr *restrict addr, socklen_t *restrict addrlen);
+[[nodiscard]] int inline
+connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+{
+  // XXX do we need those casts or not? ...
+  // FIXME: certainly not ok! (sizeof addr & multiplication is needed???)
+  return mqlqd::connect(sockfd,
+      reinterpret_cast<struct sockaddr *>(&addr),
+      addrlen); // XXX: ok?
+}
 
-  // FIXME: the method signature differ from the original function!
-  [[nodiscard]] int inline
-  accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
-  {
-    // XXX do we need those casts or not? ...
-    return mqlqd::accept(sockfd,
-        reinterpret_cast<struct sockaddr *>(&addr),
-        reinterpret_cast<socklen_t *>(&addrlen));
-  }
-
-  [[nodiscard]] int inline
-  connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
-  {
-    // XXX do we need those casts or not? ...
-    // FIXME: certainly not ok! (sizeof addr & multiplication is needed???)
-    return mqlqd::connect(sockfd,
-        reinterpret_cast<struct sockaddr *>(&addr),
-        addrlen); // XXX: ok?
-  }
-
-  // XXX: !!! originally returns ssize_t
-  //      Do i need to static_cast it?
-  // [[nodiscard]] ssize_t
-  [[nodiscard]] intmax_t inline
-  send(int sockfd, const void *buf, size_t len, int flags)
-  {
-    // FIXME do i wrote it correct?
-    return mqlqd::send(sockfd, &buf, len, flags);
-  }
+// XXX: !!! originally returns ssize_t
+//      Do i need to static_cast it?
+// [[nodiscard]] ssize_t
+[[nodiscard]] intmax_t inline
+send(int sockfd, const void *buf, size_t len, int flags)
+{
+  // FIXME do i wrote it correct?
+  return mqlqd::send(sockfd, &buf, len, flags);
+}
 
 
-  // XXX: !!! originally returns ssize_t
-  //      Do i need to static_cast it?
-  // [[nodiscard]] ssize_t
-  [[nodiscard]] intmax_t inline
-  recv(int sockfd, const void *buf, size_t len, int flags)
-  {
-    // FIXME do i wrote it correct?
-    return mqlqd::recv(sockfd, &buf, len, flags);
-  }
+// XXX: !!! originally returns ssize_t
+//      Do i need to static_cast it?
+// [[nodiscard]] ssize_t
+[[nodiscard]] intmax_t inline
+recv(int sockfd, const void *buf, size_t len, int flags)
+{
+  // FIXME do i wrote it correct?
+  return mqlqd::recv(sockfd, &buf, len, flags);
+}
 
-  [[nodiscard]] int inline
-  close(int fd) noexcept
-  {
-    return mqlqd::close(fd);
-  }
+[[nodiscard]] int inline
+close(int fd) noexcept
+{
+  return mqlqd::close(fd);
+}
 
-
-// protected:
-  // TODO: maybe i should move this into another class.
-  // port_t m_port{ cfg::port };
-  // addr_t m_addr{ cfg::addr };
-
-// };
-} // namespace sok
+} // namespace sucks
 
 } // namespace mqlqd
 
