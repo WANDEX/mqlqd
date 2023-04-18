@@ -6,7 +6,24 @@
 #include "aliases.hpp"
 // #include "config.hpp"
 
-#include "structs_net_soc.hpp"
+// XXX connect() does not want to work with this...
+// => not recognizes - struct sockaddr*
+// => other stuff also brakes.
+// #include "structs_net_soc.hpp"
+
+namespace /* (anonymous) */ {
+extern "C" {
+
+// seems like it has most of the needed type definitions.
+#include <netdb.h>              // XXX needed?
+
+// #include <sys/socket.h>
+// #include <sys/types.h>
+
+// #include <netinet/in.h>         // Internet domain sockets | sockaddr(3type)
+
+} // extern "C"
+} // (anonymous) [internal_linkage]
 
 
 namespace mqlqd {
@@ -67,12 +84,14 @@ private:
   // -1 is the socket() return value on error. ref: socket(2)
   int m_fd{ -1 };
 
-  // struct sockaddr
+  // struct sockaddr;
 
   // port_t m_port{ cfg::port };
   // addr_t m_addr{ cfg::addr };
 
-  sockaddr_in m_sockaddr_in {};
+  // sockaddr_in m_sockaddr_in {};
+  struct sockaddr_in m_sockaddr_in {};
+  // struct sockaddr_in m_sockaddr_in;
 
   addrinfo    m_addrinfo    {};
 
