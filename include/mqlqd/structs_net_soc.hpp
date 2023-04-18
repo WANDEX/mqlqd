@@ -1,6 +1,7 @@
 #pragma once
 /*
  * For reference visit man manual pages:
+ * getaddrinfo(3)
  * socket(2)
  * sockaddr(3type)
  * netdb.h(0P)
@@ -17,7 +18,9 @@
 namespace /* (anonymous) */ {
 extern "C" {
 
-// #include <sys/socket.h>
+// For the operating system specific stuff.
+// here it specifically for the - struct sockaddr!
+#include <sys/socket.h>
 
 } // extern "C"
 } // (anonymous) [internal_linkage]
@@ -26,7 +29,8 @@ extern "C" {
 namespace mqlqd {
 
 
-struct sockaddr; // ok?
+// struct sockaddr; NOTE: Not ok! DO NOT UNCOMMENT THIS!
+// looks like not all things in the world could be easily forward declared/defined...
 
 // struct sockaddr {
 //   sa_family_t     sa_family;      /* Address family */
