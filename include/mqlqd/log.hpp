@@ -25,6 +25,10 @@ public:
 
   void set_urgency(LL const ll) noexcept;
 
+  // @brief specific log message format for the errno.
+  // https://en.cppreference.com/w/cpp/error/errno
+  void errnum(int errnum, sv_t const& message) noexcept;
+
   // msg - explicit level of urgency
   void msg(LL const ll, sv_t const& message) noexcept;
 

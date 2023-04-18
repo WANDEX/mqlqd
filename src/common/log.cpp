@@ -12,6 +12,8 @@
 // https://fmt.dev/latest/api.html#standard-library-types-formatting ^
 // #include <fmt/ostream.h>
 
+
+#include <cerrno>               // for errno messages std::strerror
 #include <iostream>
 // #include <filesystem>
 // #include <utility>              // std::forward
@@ -36,6 +38,11 @@ void Logger::set_urgency(LL const ll) noexcept
   // log_g.msg(LL::NTFY, "forced urgency level = {}.\n", ll);
 }
 
+void Logger::errnum(int errnum, sv_t const& message) noexcept
+{
+  fmt::print(stderr, "[{}]: {}\nerrno: {}\n", LL::CRIT, message, std::strerror(errnum));
+  // TODO: also write message into the log file.
+}
 
 void Logger::msg(LL const ll, sv_t const& msg) noexcept
 {
