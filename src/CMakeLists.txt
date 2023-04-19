@@ -7,6 +7,8 @@ set(common_src
   ${common_src_dir}/file.cpp
   ${common_src_dir}/log.cpp
   ${common_src_dir}/op.cpp
+  ${common_src_dir}/fclient.cpp
+  ${common_src_dir}/fserver.cpp
 )
 
 add_library(mqlqd_bin_i INTERFACE)
@@ -16,6 +18,9 @@ target_link_libraries(mqlqd_bin_i INTERFACE cxxopts)
 
 target_link_libraries(mqlqd_bin_i INTERFACE fmt::fmt)
 # target_link_libraries(mqlqd_bin_i INTERFACE fmt::fmt-header-only)
+
+## link with the libc -lc (to work with the Linux socket API interface)
+target_link_libraries(mqlqd_bin_i INTERFACE c)
 
 target_link_libraries(mqlqd_bin_i INTERFACE wandex::mqlqd::dev)
 
