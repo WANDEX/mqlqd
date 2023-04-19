@@ -28,21 +28,17 @@ extern "C" {
 
 namespace mqlqd {
 
-class Fserver final
+class Fclient final
 {
 public:
-  // Fserver();
-  Fserver() = delete; // XXX: or not delete...
-  Fserver(Fserver &&) = default;
-  Fserver(const Fserver &) = default;
-  Fserver &operator=(Fserver &&) = default;
-  Fserver &operator=(const Fserver &) = default;
-  ~Fserver() = default;
+  // Fclient();
+  Fclient() = delete; // XXX: or not delete...
+  Fclient(Fclient &&) = default;
+  Fclient(const Fclient &) = default;
+  Fclient &operator=(Fclient &&) = default;
+  Fclient &operator=(const Fclient &) = default;
+  ~Fclient() = default;
 
-
-  /**
-   * @brief @return 0 on success, else return fail code of the underlying functions.
-   */
 
   /**
    * @brief man socket(2).

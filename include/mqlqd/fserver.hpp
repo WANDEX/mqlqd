@@ -17,16 +17,16 @@ extern "C" {
 
 namespace mqlqd {
 
-class Fclient final
+class Fserver final
 {
 public:
-  // Fclient();
-  Fclient() = delete; // XXX: or not delete...
-  Fclient(Fclient &&) = default;
-  Fclient(const Fclient &) = default;
-  Fclient &operator=(Fclient &&) = default;
-  Fclient &operator=(const Fclient &) = default;
-  ~Fclient() = default;
+  // Fserver();
+  Fserver() = delete; // XXX: or not delete...
+  Fserver(Fserver &&) = default;
+  Fserver(const Fserver &) = default;
+  Fserver &operator=(Fserver &&) = default;
+  Fserver &operator=(const Fserver &) = default;
+  ~Fserver() = default;
 
 
   /**
