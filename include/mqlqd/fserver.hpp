@@ -94,6 +94,10 @@ private:
   // -1 is the accept() return value on error. ref: accept(2)
   int m_fd_con{ -1 };
 
+  // The backlog defines the maximum length to which
+  // the queue of pending connections may grow. ref: listen(2)
+  const int m_backlog{ 5 }; // (default val chosen arbitrarily)
+
   struct sockaddr_in m_sockaddr_in {};
 
   socklen_t   m_addrlen     {}; // XXX: part of addrinfo
