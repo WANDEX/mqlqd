@@ -1,8 +1,11 @@
 #pragma once
 /*
+ * This header file used only for the Notes!
+ *
  * For reference visit man manual pages:
  * getaddrinfo(3)
  * socket(2)
+ * bind(2)
  * sockaddr(3type)
  * netdb.h(0P)
  *
@@ -29,14 +32,23 @@ extern "C" {
 namespace mqlqd {
 
 
-// struct sockaddr; NOTE: Not ok! DO NOT UNCOMMENT THIS!
-// looks like not all things in the world could be easily forward declared/defined...
-
-// struct sockaddr {
-//   sa_family_t     sa_family;      /* Address family */
-//   char            sa_data[];      /* Socket address */
-// }; // FIXME: what to do   ^ with this?
-// XXX Flexible array members are a C99 feature [-Wc99-extensions]
+/**
+ * Reference and description/explanation taken from and can be found in the manual page:
+ * man 2 bind
+ *
+ * The actual structure passed for the addr argument will depend on the address family.
+ * The sockaddr structure is defined as something like:
+ *
+ * struct sockaddr {
+ *   sa_family_t sa_family;
+ *   char        sa_data[14];
+ * }
+ *
+ * The only purpose of this structure is
+ * to cast the structure pointer passed in addr in order to avoid compiler warnings.
+ *
+ * Look up examples in the bind(2) manual page.
+ */
 
 struct sockaddr_storage {
   sa_family_t     ss_family;      /* Address family */
