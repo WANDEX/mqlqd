@@ -33,10 +33,10 @@ class Fclient final
 public:
   // Fclient();
   Fclient() = delete; // XXX: or not delete...
-  Fclient(Fclient &&) = default;
-  Fclient(const Fclient &) = default;
-  Fclient &operator=(Fclient &&) = default;
-  Fclient &operator=(const Fclient &) = default;
+  Fclient(Fclient &&) = delete;
+  Fclient(const Fclient &) = delete;
+  Fclient &operator=(Fclient &&) = delete;
+  Fclient &operator=(const Fclient &) = delete;
   ~Fclient() = default;
 
 

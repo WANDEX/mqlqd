@@ -22,10 +22,10 @@ class Fserver final
 public:
   // Fserver();
   Fserver() = delete; // XXX: or not delete...
-  Fserver(Fserver &&) = default;
-  Fserver(const Fserver &) = default;
-  Fserver &operator=(Fserver &&) = default;
-  Fserver &operator=(const Fserver &) = default;
+  Fserver(Fserver &&) = delete;
+  Fserver(const Fserver &) = delete;
+  Fserver &operator=(Fserver &&) = delete;
+  Fserver &operator=(const Fserver &) = delete;
   ~Fserver() = default;
 
 
