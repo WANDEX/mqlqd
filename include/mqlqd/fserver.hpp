@@ -61,7 +61,7 @@ public:
   /**
    * @brief man accept(2).
    *
-   * @return TODO
+   * @return file descriptor for the new connected socket (on success).
    * @return -1 on error.
    */
   [[nodiscard]] int
