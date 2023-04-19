@@ -1,26 +1,15 @@
 #pragma once
 /**
- * file server (receive side).
+ * file client (sender side).
+ * FIXME: seems like i flipped sides...
  */
 
 #include "aliases.hpp"
-// #include "config.hpp"
-
-// XXX connect() does not want to work with this...
-// => not recognizes - struct sockaddr*
-// => other stuff also brakes.
-// #include "structs_net_soc.hpp"
 
 namespace /* (anonymous) */ {
 extern "C" {
 
-// seems like it has most of the needed type definitions.
-#include <netdb.h>              // XXX needed?
-
-// #include <sys/socket.h>
-// #include <sys/types.h>
-
-// #include <netinet/in.h>         // Internet domain sockets | sockaddr(3type)
+#include <netdb.h>
 
 } // extern "C"
 } // (anonymous) [internal_linkage]
@@ -28,21 +17,17 @@ extern "C" {
 
 namespace mqlqd {
 
-class Fserver final
+class Fclient final
 {
 public:
-  // Fserver();
-  Fserver() = delete; // XXX: or not delete...
-  Fserver(Fserver &&) = default;
-  Fserver(const Fserver &) = default;
-  Fserver &operator=(Fserver &&) = default;
-  Fserver &operator=(const Fserver &) = default;
-  ~Fserver() = default;
+  // Fclient();
+  Fclient() = delete; // XXX: or not delete...
+  Fclient(Fclient &&) = default;
+  Fclient(const Fclient &) = default;
+  Fclient &operator=(Fclient &&) = default;
+  Fclient &operator=(const Fclient &) = default;
+  ~Fclient() = default;
 
-
-  /**
-   * @brief @return 0 on success, else return fail code of the underlying functions.
-   */
 
   /**
    * @brief man socket(2).
@@ -53,20 +38,34 @@ public:
   [[nodiscard]] int
   create_socket();
 
+
   /**
-   * @brief man connect(2).
+   * @brief man bind(2).
    *
    * @return  0 on success.
    * @return -1 on error.
    */
   [[nodiscard]] int
-  create_connection();
+  bind_socket();
+
 
   /**
-   * @brief @return 0 on success, else return fail code of the underlying functions.
+   * @brief man listen(2).
+   *
+   * @return  0 on success.
+   * @return -1 on error.
    */
   [[nodiscard]] int
-  wait_for_connections();
+  set_socket_in_listen_state();
+
+  /**
+   * @brief man accept(2).
+   *
+   * @return TODO
+   * @return -1 on error.
+   */
+  [[nodiscard]] int
+  accept_connection();
 
   /**
    * @brief @return 0 on success, else return fail code of the underlying functions.
@@ -91,21 +90,11 @@ private:
   // -1 is the socket() return value on error. ref: socket(2)
   int m_fd{ -1 };
 
-  // struct sockaddr;
-
-  // port_t m_port{ cfg::port };
-  // addr_t m_addr{ cfg::addr };
-
-  // sockaddr_in m_sockaddr_in {};
   struct sockaddr_in m_sockaddr_in {};
-  // struct sockaddr_in m_sockaddr_in;
-
-  addrinfo    m_addrinfo    {};
 
   socklen_t   m_addrlen     {}; // XXX: part of addrinfo
-  // TODO: probably better to rewrite later using addrinfo structure.
-  //       If it make sense!
 
 };
 
 } // namespace mqlqd
+
