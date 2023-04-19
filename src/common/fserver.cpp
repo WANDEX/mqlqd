@@ -49,18 +49,33 @@ Fserver::create_socket()
 }
 
 [[nodiscard]] int
+Fserver::set_socket_in_listen_state()
+{
+  // Mark socket as a passive socket, that is, as a socket that
+  // will be used to accept incoming connection requests using accept(2).
+  m_rc = listen(m_fd, m_backlog);
+  switch (m_rc) {
+  case -1: log_g.errnum(errno, "[FAIL] listen()"); break;
+  case  0: log_g.msg(LL::INFO, "Marked socket to accept incoming connection requests."); break;
+  default: log_g.msg(LL::CRIT, fmt::format("Unexpected return code: listen() -> {}", m_rc));
+  }
+  log_g.msg(LL::NTFY, fmt::format("Backlog: {} (Max queue len of pending connections).", m_backlog));
+  return m_rc;
+}
+
+[[nodiscard]] int
 Fserver::accept_connection()
 {
-  // XXX: is the cast here inevitable?
-  // XXX: with struct addrinfo it might be that
-  //      we do not need to cast it here, i think...
-  m_fd_con = accept(m_fd, reinterpret_cast<struct sockaddr *>(&m_sockaddr_in),
-                          reinterpret_cast<socklen_t *>(&m_addrlen));
-  switch (m_fd_con) {
-  case -1: log_g.errnum(errno, "[FAIL] accept()"); break;
-  default: log_g.msg(LL::INFO, "New connected socket created."); break;
-  }
-  return m_fd_con;
+// XXX: is the cast here inevitable?
+// XXX: with struct addrinfo it might be that
+//      we do not need to cast it here, i think...
+m_fd_con = accept(m_fd, reinterpret_cast<struct sockaddr *>(&m_sockaddr_in),
+                        reinterpret_cast<socklen_t *>(&m_addrlen));
+switch (m_fd_con) {
+case -1: log_g.errnum(errno, "[FAIL] accept()"); break;
+default: log_g.msg(LL::INFO, "New connected socket created."); break;
+}
+return m_fd_con;
 }
 
 [[nodiscard]] int
