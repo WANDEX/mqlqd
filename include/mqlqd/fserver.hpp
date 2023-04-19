@@ -30,6 +30,16 @@ public:
 
 
   /**
+   * @brief initialize everything & start on success of all underlying functions.
+   *
+   * @brief @return 0 on success, else return fail code of the underlying functions.
+   */
+  [[nodiscard]] int
+  init();
+
+protected:
+
+  /**
    * @brief man socket(2).
    *
    * @return file descriptor for the new socket (on success).
@@ -67,19 +77,15 @@ public:
   [[nodiscard]] int
   accept_connection();
 
-  /**
-   * @brief initialize everything & start on success of all underlying functions.
-   *
-   * @brief @return 0 on success, else return fail code of the underlying functions.
+protected:
+  /****************************************************************************
+   * following are the helper methods.
    */
-  [[nodiscard]] int
-  init();
 
-/*
- * following are the helper methods.
- */
 
-private:
+  /**
+   * @brief fill the sockaddr_in structure.
+   */
   [[nodiscard]] int
   fill_sockaddr_in();
 
