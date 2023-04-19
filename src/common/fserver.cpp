@@ -104,6 +104,18 @@ Fserver::init()
     return m_rc;
   }
 
+  m_rc = bind_socket();
+  if (m_rc != 0) {
+    log_g.msg(LL::ERRO, "[FAIL] in init() : bind_socket()");
+    return m_rc;
+  }
+
+  m_rc = set_socket_in_listen_state();
+  if (m_rc != 0) {
+    log_g.msg(LL::ERRO, "[FAIL] in init() : set_socket_in_listen_state()");
+    return m_rc;
+  }
+
   m_rc = accept_connection();
   if (m_rc < 1) { // a nonnegative integer on success (XXX: excluding 0 i guess... right?)
     log_g.msg(LL::ERRO, "[FAIL] in init() : accept_connection()");
