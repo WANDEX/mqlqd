@@ -49,19 +49,18 @@ Fserver::create_socket()
 }
 
 [[nodiscard]] int
-Fserver::create_connection()
+Fserver::accept_connection()
 {
   // XXX: is the cast here inevitable?
   // XXX: with struct addrinfo it might be that
   //      we do not need to cast it here, i think...
-  // NOTE: Not marked with __THROW
-  m_rc = connect(m_fd, reinterpret_cast<const struct sockaddr *>(&m_sockaddr_in), m_addrlen);
-  switch (m_rc) {
-  case -1: log_g.errnum(errno, "[FAIL] connect()"); break;
-  case  0: log_g.msg(LL::INFO, "connection/binding success"); break;
-  default: log_g.msg(LL::CRIT, fmt::format("Unexpected return code: connect() -> {}", m_rc));
+  m_fd_con = accept(m_fd, reinterpret_cast<struct sockaddr *>(&m_sockaddr_in),
+                          reinterpret_cast<socklen_t *>(&m_addrlen));
+  switch (m_fd_con) {
+  case -1: log_g.errnum(errno, "[FAIL] accept()"); break;
+  default: log_g.msg(LL::INFO, "New connected socket created."); break;
   }
-  return m_rc;
+  return m_fd_con;
 }
 
 [[nodiscard]] int
@@ -79,9 +78,9 @@ Fserver::init()
     return m_rc;
   }
 
-  m_rc = create_connection();
-  if (m_rc != 0) {
-    log_g.msg(LL::ERRO, "[FAIL] in init() : create_connection()");
+  m_rc = accept_connection();
+  if (m_rc < 1) { // a nonnegative integer on success (XXX: excluding 0 i guess... right?)
+    log_g.msg(LL::ERRO, "[FAIL] in init() : accept_connection()");
     return m_rc;
   }
 

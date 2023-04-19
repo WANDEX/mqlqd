@@ -90,6 +90,10 @@ private:
   // -1 is the socket() return value on error. ref: socket(2)
   int m_fd{ -1 };
 
+  // new fd (connected socket) returned by the accept().
+  // -1 is the accept() return value on error. ref: accept(2)
+  int m_fd_con{ -1 };
+
   struct sockaddr_in m_sockaddr_in {};
 
   socklen_t   m_addrlen     {}; // XXX: part of addrinfo
