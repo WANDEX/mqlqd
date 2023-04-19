@@ -6,24 +6,17 @@
 #include "aliases.hpp"
 // #include "config.hpp"
 
-// XXX connect() does not want to work with this...
-// => not recognizes - struct sockaddr*
-// => other stuff also brakes.
-// #include "structs_net_soc.hpp"
-
-namespace /* (anonymous) */ {
 extern "C" {
 
 // seems like it has most of the needed type definitions.
-#include <netdb.h>              // XXX needed?
+// #include <netdb.h>
 
 // #include <sys/socket.h>
 // #include <sys/types.h>
 
-// #include <netinet/in.h>         // Internet domain sockets | sockaddr(3type)
+#include <netinet/in.h>         // Internet domain sockets | sockaddr(3type)
 
 } // extern "C"
-} // (anonymous) [internal_linkage]
 
 
 namespace mqlqd {
@@ -31,8 +24,8 @@ namespace mqlqd {
 class Fclient final
 {
 public:
-  // Fclient();
-  Fclient() = delete; // XXX: or not delete...
+  Fclient() = default;
+  // Fclient() = delete; // XXX: or not delete...
   Fclient(Fclient &&) = delete;
   Fclient(const Fclient &) = delete;
   Fclient &operator=(Fclient &&) = delete;
@@ -96,11 +89,11 @@ private:
   struct sockaddr_in m_sockaddr_in {};
   // struct sockaddr_in m_sockaddr_in;
 
-  addrinfo    m_addrinfo    {};
-
   socklen_t   m_addrlen     {}; // XXX: part of addrinfo
+
   // TODO: probably better to rewrite later using addrinfo structure.
   //       If it make sense!
+  // addrinfo    m_addrinfo    {};
 
 };
 

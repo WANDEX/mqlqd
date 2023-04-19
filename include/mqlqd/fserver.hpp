@@ -6,13 +6,14 @@
 
 #include "aliases.hpp"
 
-namespace /* (anonymous) */ {
 extern "C" {
 
-#include <netdb.h>
+// seems like it has most of the needed type definitions.
+// #include <netdb.h>
+
+#include <netinet/in.h>         // Internet domain sockets | sockaddr(3type)
 
 } // extern "C"
-} // (anonymous) [internal_linkage]
 
 
 namespace mqlqd {
@@ -20,8 +21,8 @@ namespace mqlqd {
 class Fserver final
 {
 public:
-  // Fserver();
-  Fserver() = delete; // XXX: or not delete...
+  Fserver() = default;
+  // Fserver() = delete; // XXX: or not delete...
   Fserver(Fserver &&) = delete;
   Fserver(const Fserver &) = delete;
   Fserver &operator=(Fserver &&) = delete;
