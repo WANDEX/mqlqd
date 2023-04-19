@@ -5,6 +5,8 @@
 #include "file.hpp"
 #include "op.hpp"
 
+#include "fclient.hpp"
+
 #include <cxxopts.hpp>
 
 #include <iostream>
@@ -97,6 +99,14 @@ cmd_opts(int argc, const char *argv[])
         }
       }
     }
+
+    Fclient fclient;
+    // initialize file client.
+    int fc_rc = fclient.init();
+    if (fc_rc != 0) {
+      log_g.msg(LL::ERRO, fmt::format("fclient.init() -> {}", fc_rc));
+    }
+    // TODO: send files
 
   } catch(cxxopts::exceptions::exception const& err) {
     log_g.msg(LL::ERRO, fmt::format("Fail during parsing of the cmd options:\n{}\n", err.what()));

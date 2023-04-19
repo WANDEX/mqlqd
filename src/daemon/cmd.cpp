@@ -4,6 +4,8 @@
 #include "config.hpp"
 #include "op.hpp"
 
+#include "fserver.hpp"
+
 #include <cxxopts.hpp>
 
 #include <iostream>
@@ -59,6 +61,14 @@ cmd_opts(int argc, const char *argv[])
       // (has priority over the value in config).
       LL urgency{ opts_g["urge"].as<int>() };
       log_g.set_urgency(urgency);
+    }
+
+
+    Fserver fserver;
+    // initialize file server.
+    int fs_rc = fserver.init();
+    if (fs_rc != 0) {
+      log_g.msg(LL::ERRO, fmt::format("fserver.init() -> {}", fs_rc));
     }
 
   } catch(cxxopts::exceptions::exception const& err) {
