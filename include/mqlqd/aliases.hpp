@@ -66,11 +66,12 @@ using port_t = u16;
  * Following for the consistency with the (POSIX)
  * Linux User Socket API. [$ man 3type sockaddr ] etc.
  */
-using in_addr_t = addr_t;
-using in_port_t = port_t;
+// NOTE: cannot be redefined! INADDR_ANY will not allow that!
+// using in_addr_t = addr_t;
+// using in_port_t = port_t;
 
-using socklen_t   = u32; // at least 32 bits.
-using sa_family_t = u32; // u but ? bits (how small can be to be safe?)
+// using socklen_t   = u32; // at least 32 bits.
+// using sa_family_t = u32; // u but ? bits (how small can be to be safe?)
 
 
 } // namespace mqlqd
