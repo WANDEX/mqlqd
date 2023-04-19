@@ -47,14 +47,17 @@ public:
   /**
    * @brief man socket(2).
    *
-   * On success, a file descriptor for the new socket is returned.
-   * On error, -1 is returned, and errno is set to indicate the error.
+   * @return file descriptor for the new socket (on success).
+   * @return -1 on error.
    */
   [[nodiscard]] int
   create_socket();
 
   /**
-   * @brief @return 0 on success, else return fail code of the underlying functions.
+   * @brief man connect(2).
+   *
+   * @return  0 on success.
+   * @return -1 on error.
    */
   [[nodiscard]] int
   create_connection();
@@ -70,6 +73,10 @@ public:
    */
   [[nodiscard]] int
   init();
+
+/*
+ * following are the helper methods.
+ */
 
 private:
   [[nodiscard]] int
