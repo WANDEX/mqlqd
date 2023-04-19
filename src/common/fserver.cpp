@@ -17,8 +17,9 @@ extern "C" {
 #include <netinet/in.h>         // Internet domain sockets | sockaddr(3type)
 #include <netinet/tcp.h>        // TCP protocol | tcp(7)
 
-// man manual close(2).
-#include <unistd.h>
+#include <unistd.h>             // | close(2).
+
+// #include <stdlib.h>             // XXX needed?
 
 } // extern "C"
 
@@ -36,6 +37,7 @@ namespace mqlqd {
 Fserver::create_socket()
 {
   // errno is set to indicate the error.
+  // TODO: AF_UNSPEC everywhere instead of AF_INET?
   m_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (m_fd == -1) {
     // XXX works? maybe i do not need to pass errno as the argument? -> integrate inside function?
@@ -44,6 +46,22 @@ Fserver::create_socket()
   }
   log_g.msg(LL::DBUG, "[ OK ] socket()");
   return m_fd; // return file descriptor
+}
+
+[[nodiscard]] int
+Fserver::create_connection()
+{
+  // XXX: is the cast here inevitable?
+  // XXX: with struct addrinfo it might be that
+  //      we do not need to cast it here, i think...
+  // NOTE: Not marked with __THROW
+  m_rc = connect(m_fd, reinterpret_cast<const struct sockaddr *>(&m_sockaddr_in), m_addrlen);
+  switch (m_rc) {
+  case -1: log_g.errnum(errno, "[FAIL] connect()"); break;
+  case  0: log_g.msg(LL::INFO, "connection/binding success"); break;
+  default: log_g.msg(LL::CRIT, fmt::format("Unexpected return code: connect() -> {}", m_rc));
+  }
+  return m_rc;
 }
 
 [[nodiscard]] int
@@ -58,6 +76,12 @@ Fserver::init()
   m_rc = fill_sockaddr_in();
   if (m_rc != 1) {
     log_g.msg(LL::ERRO, "[FAIL] in init() : fill_sockaddr_in()");
+    return m_rc;
+  }
+
+  m_rc = create_connection();
+  if (m_rc != 0) {
+    log_g.msg(LL::ERRO, "[FAIL] in init() : create_connection()");
     return m_rc;
   }
 
