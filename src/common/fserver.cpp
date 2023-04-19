@@ -121,39 +121,20 @@ Fserver::init()
 [[nodiscard]] int
 Fserver::fill_sockaddr_in()
 {
-
   // m_addrinfo.ai_family  = AF_INET;
   // m_addrinfo.ai_addrlen = sizeof(m_sockaddr_in);
 
   // XXX: htons() - uint16_t
   // FIXME: check - does it work for the all u16 types?
-  m_sockaddr_in.sin_family  = AF_INET;
-  // FIXME support cmd option port
-  m_sockaddr_in.sin_port    = htons(cfg::port);
+  // TODO: support cmd option port
+  m_sockaddr_in.sin_family      = AF_INET;
+  m_sockaddr_in.sin_port        = htons(cfg::port);
+  m_sockaddr_in.sin_addr.s_addr = INADDR_ANY;
   m_addrlen = sizeof(m_sockaddr_in);
 
-  // FIXME: support cmd option addr
-  // convert IPv4 and IPv6 addresses from text to binary form
-  m_rc = inet_pton(AF_INET, cfg::addr.data(), &m_sockaddr_in.sin_addr);
-#if 1 // XXX: I like this more! What do you like more?
-  switch (m_rc) {
-  case -1: log_g.errnum(errno, "[FAIL] inet_pton()"); break;
-  case  0: log_g.msg(LL::ERRO, "Not valid network address in the specified address family!"); break;
-  case  1: log_g.msg(LL::INFO, "Network address was successfully converted"); break;
-  default: log_g.msg(LL::CRIT, fmt::format("Unexpected return code: inet_pton() -> {}", m_rc));
-  }
-#else
-  if (m_rc == -1) {
-    log_g.errnum(errno, "[FAIL] inet_pton()");
-  } else if (m_rc == 0) {
-    log_g.msg(LL::ERRO, "Not valid network address in the specified address family!");
-  } else if (m_rc == 1) {
-    log_g.msg(LL::INFO, "Network address was successfully converted");
-  } else {
-    log_g.msg(LL::CRIT, fmt::format("Unexpected return code: inet_pton() -> {}", m_rc));
-  }
-#endif
-  return m_rc;
+  // 1 as success for consistency with
+  // fclient fill_sockaddr_in() success return value.
+  return 1;
 }
 
 } // namespace mqlqd
