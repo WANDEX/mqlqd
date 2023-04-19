@@ -49,6 +49,19 @@ Fserver::create_socket()
 }
 
 [[nodiscard]] int
+Fserver::bind_socket()
+{
+  // ref: bind(2) - for the explanation about the cast etc.
+  m_rc = bind(m_fd, reinterpret_cast<const struct sockaddr *>(&m_sockaddr_in), m_addrlen);
+  if (m_rc == -1) {
+    log_g.errnum(errno, "[FAIL] bind()");
+    return -1;
+  }
+  log_g.msg(LL::DBUG, "[ OK ] bind()");
+  return m_rc; // return the return code (written like this for the consistency)
+}
+
+[[nodiscard]] int
 Fserver::set_socket_in_listen_state()
 {
   // Mark socket as a passive socket, that is, as a socket that
