@@ -1,7 +1,6 @@
 #pragma once
 /**
- * file client (sender side).
- * FIXME: seems like i flipped sides...
+ * file server (receiving side / host party).
  */
 
 #include "aliases.hpp"
@@ -69,6 +68,8 @@ public:
   accept_connection();
 
   /**
+   * @brief initialize everything & start on success of all underlying functions.
+   *
    * @brief @return 0 on success, else return fail code of the underlying functions.
    */
   [[nodiscard]] int

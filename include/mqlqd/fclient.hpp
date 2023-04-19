@@ -1,6 +1,6 @@
 #pragma once
 /**
- * file server (receive side).
+ * file client (sending side / sending party).
  */
 
 #include "aliases.hpp"
@@ -52,13 +52,9 @@ public:
   create_connection();
 
   /**
-   * @brief @return 0 on success, else return fail code of the underlying functions.
-   */
-  [[nodiscard]] int
-  wait_for_connections();
-
-  /**
-   * @brief @return 0 on success, else return fail code of the underlying functions.
+   * @brief initialize everything & start on success of all underlying functions.
+   *
+   * @return 0 on success, else return fail code of the underlying functions.
    */
   [[nodiscard]] int
   init();
