@@ -9,6 +9,8 @@
  * sockaddr(3type)
  * netdb.h(0P)
  *
+ * tcp(7)
+ *
  * etc.
  * $ man 3type sock
  * TAB compl. here ^
