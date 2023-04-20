@@ -37,7 +37,9 @@ cmd_opts(int argc, const char *argv[])
   try
   {
     cxxopts::Options options("mqlqd_client",
-        "Transfer file(s) over TCP/IP to the server running the mqlqd_daemon.");
+      "Transfer file(s) over TCP/IP to the server running the mqlqd_daemon.");
+    options.custom_help("[OPTIONS]");
+    options.positional_help("[file paths as trailing arguments ...]");
     options.set_width(80);
     options.add_options()
       ("a,addr", "Server IP address with the mqlqd_daemon.",
@@ -47,17 +49,16 @@ cmd_opts(int argc, const char *argv[])
        cxxopts::value<cmd_opt_t>()->default_value(dvw(cfg::def_port)))
 
       ("c,cat",  "Print file content (cat like utility mode).")
-      ("f,file", "File path of the file to transmit.", cxxopts::value<cmd_opt_t>())
+      ("f,file", "File path of the file to transmit.",
+       cxxopts::value<std::vector<fs::path>>())
       ("h,help", "Show usage help.")
       ("u,urge", "Log urgency level. (All messages </> Only critical)",
-       cxxopts::value<int>(), "1-7");
-    /*
-     *   ("file_paths", "File path(s) as trailing argument(s).",
-     *    cxxopts::value<std::vector<cmd_opt_t>>());
-     * // to support multiple files as trailing arguments: file1.txt file2.txt file3.txt
-     * options.parse_positional({"file_paths"});
-     * // XXX: UNIMPLEMENTED ^
-     */
+       cxxopts::value<int>(), "1-7")
+      ("files_trail", "File path(s) as trailing argument(s).",
+       cxxopts::value<std::vector<fs::path>>());
+    // to support file paths supplied as trailing arguments:
+    // e.g. (after all options) file1.txt file2.txt file3.txt
+    options.parse_positional({"files_trail"});
 
     // initialize global options variable
     opts_g = options.parse(argc, argv);
@@ -70,7 +71,7 @@ cmd_opts(int argc, const char *argv[])
       exit(0);
     }
 
-    if (!opts_g.count("file") && !opts_g.count("msg")) { // XXX: msg UNIMPLEMENTED
+    if (!opts_g.count("file") && !opts_g.count("files_trail")) {
       std::cerr << options.help() << '\n';
       std::cerr << "Look up the usage help." << '\n'
                 << "No files were provided, exit." << '\n';
@@ -84,16 +85,28 @@ cmd_opts(int argc, const char *argv[])
       log_g.set_urgency(urgency);
     }
 
-    // TODO: + number of fpaths passed via positional arguments.
-    const std::size_t n_files_passed{ opts_g.count("file") };
-    // single allocation to fit all required files without extra resizing of the vector.
-    std::vector<file::File> vfiles(n_files_passed);
+    // total number of file paths passed via all options: via option & positional arguments.
+    const std::size_t n_files_passed{ opts_g.count("file") + opts_g.count("files_trail") };
+    std::vector<file::File> vfiles;
+    vfiles.reserve(n_files_passed);
+
+    if (opts_g.count("file")) {
+      // add files passed via -f --file cmd options.
+      for (fs::path const &fp : opts_g["file"].as<std::vector<fs::path>>()) {
+        vfiles.emplace_back(file::File{ fp, fs::file_size(fp) });
+      }
+    }
+    if (opts_g.count("files_trail")) {
+      // add files passed via trailing cmd arguments.
+      for (fs::path const &fp : opts_g["files_trail"].as<std::vector<fs::path>>()) {
+        vfiles.emplace_back(file::File{ fp, fs::file_size(fp) });
+      }
+    }
+
     // loop over each file path passed via the cmd arguments (optional + positional).
-    for (size_t i = 0; i < n_files_passed; i++) {
-      const fs::path fp{ opt_file_wrap("file") };
-      file::File file{ fp, fs::file_size(fp) };
+    for (file::File &file : vfiles) {
       /**
-       * Read contents of the file into the block of memory.
+       * Read contents of the file(s) into the block(s) of memory.
        * We are doing this here to not have potential bottleneck later -> on the transmission step.
        * (especially in terms of reading speed from the users block devices e.g. Slow HDD drive etc.).
        */
@@ -104,10 +117,6 @@ cmd_opts(int argc, const char *argv[])
       } else {
         if (opts_g.count("cat")) {
           file.print_fcontent();
-        } else {
-          // log_g.msg(LL::NTFY, fmt::format("[UNIMPLEMENTED] file.read_to_block() -> {}", brc));
-          // FIXME: currenly pushes only one - the first passed file.
-          vfiles.push_back(file);
         }
       }
     }
