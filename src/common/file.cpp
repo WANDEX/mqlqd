@@ -91,7 +91,7 @@ int File::fcontent()
   int rc{ is_r(m_fpath) }; // return code
   if (rc != 0) return rc;
   // open file for reading
-  std::ifstream ifs(m_fpath, openmode);
+  std::ifstream ifs(m_fpath, openmode_r);
   // invariants & validation/safety checks
   if (!ifs) {
     log_g.msg(LL::ERRO, "can not open input file!");

@@ -16,8 +16,13 @@ int is_r(fs::path const& fpath) noexcept;
 class File final
 {
 public:
-  inline static constexpr auto openmode{
-    std::ios::in | std::ios::binary | std::ios::ate
+  inline static constexpr auto openmode_r{
+    std::ios::in  | std::ios::binary | std::ios::ate
+  };
+
+  inline static constexpr auto openmode_w{
+    std::ios::out | std::ios::binary
+    // std::ios::out | std::ios::binary | std::ios::ate
   };
 
   File() = delete;
