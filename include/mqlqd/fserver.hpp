@@ -26,7 +26,7 @@ public:
   Fserver(const Fserver &) = delete;
   Fserver &operator=(Fserver &&) = delete;
   Fserver &operator=(const Fserver &) = delete;
-  ~Fserver() = default;
+  ~Fserver();
 
 
   /**
@@ -36,6 +36,9 @@ public:
    */
   [[nodiscard]] int
   init();
+
+  [[nodiscard]] int
+  recv_file();
 
 protected:
 
@@ -82,12 +85,20 @@ protected:
    * following are the helper methods.
    */
 
-
   /**
    * @brief fill the sockaddr_in structure.
    */
   [[nodiscard]] int
   fill_sockaddr_in();
+
+  /**
+   * @brief recv info files structure, with the files information.
+   *
+   * @param  TODO
+   * @return TODO
+   */
+  [[nodiscard]] int
+  recv_info_files();
 
 
 private:

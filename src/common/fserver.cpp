@@ -3,6 +3,7 @@
 
 #include "aliases.hpp"
 #include "config.hpp"           // for the: addr, port, uid
+#include "file.hpp"
 
 
 extern "C" {
@@ -29,9 +30,35 @@ namespace mqlqd {
 // {
 // }
 
-// Fserver::~Fserver()
-// {
-// }
+Fserver::~Fserver()
+{
+  // TODO: close file descriptors
+  // TODO: close_fd() | close(2) wrapper
+  if (m_fd_con > 0) {
+    // close file descriptor. ref: close(2).
+    m_rc = close(m_fd_con);
+    switch (m_rc) {
+    case -1: log_g.errnum(errno, "[FAIL] fd close()"); break;
+    case  0: log_g.msg(LL::DBUG, "[ OK ] fd close()"); break;
+    default: log_g.msg(LL::CRIT, fmt::format("Unexpected return code: fd close() -> {}", m_rc));
+    }
+  }
+}
+
+// XXX: primitive tmp version
+[[nodiscard]] int
+Fserver::recv_file()
+{
+  return 0; // XXX
+}
+
+
+[[nodiscard]] int
+Fserver::recv_info_files()
+{
+  // TODO
+  return 0; // XXX
+}
 
 [[nodiscard]] int
 Fserver::create_socket()
