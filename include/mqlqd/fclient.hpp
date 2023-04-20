@@ -5,6 +5,7 @@
 
 #include "aliases.hpp"
 // #include "config.hpp"
+#include "file.hpp"
 
 extern "C" {
 
@@ -30,7 +31,7 @@ public:
   Fclient(const Fclient &) = delete;
   Fclient &operator=(Fclient &&) = delete;
   Fclient &operator=(const Fclient &) = delete;
-  ~Fclient() = default;
+  ~Fclient();
 
   /**
    * @brief initialize everything & start on success of all underlying functions.
@@ -39,6 +40,17 @@ public:
    */
   [[nodiscard]] int
   init();
+
+
+  /**
+   * @brief description
+   *
+   * @param  TODO
+   * @return TODO
+   *
+   */
+  [[nodiscard]] int
+  send_file(const file::File &file);
 
 protected:
 

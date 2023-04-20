@@ -3,6 +3,7 @@
 
 #include "aliases.hpp"
 #include "config.hpp"           // for the: addr, port, uid
+#include "file.hpp"
 
 
 extern "C" {
@@ -12,7 +13,7 @@ extern "C" {
 #include <netdb.h>              // XXX needed?
 
 #include <sys/socket.h>
-#include <sys/types.h>
+#include <sys/types.h>          // ssize_t
 
 #include <netinet/in.h>         // Internet domain sockets | sockaddr(3type)
 #include <netinet/tcp.h>        // TCP protocol | tcp(7)
@@ -29,9 +30,36 @@ namespace mqlqd {
 // {
 // }
 
-// Fclient::~Fclient()
-// {
-// }
+Fclient::~Fclient()
+{
+  // TODO: close file descriptors
+  // TODO: close_fd() | close(2) wrapper
+}
+
+[[nodiscard]] int
+Fclient::send_file(const file::File &file)
+{
+  /**
+   * ref: send(2).
+   * On success, return the number of bytes sent.
+   * On error, -1 is returned, and errno is set to indicate the error.
+   */
+  log_g.msg(LL::DBUG, fmt::format("fname: {}", file.m_fpath.filename().string()));
+  log_g.msg(LL::INFO, fmt::format("bytes to send: {}", file.m_block_size));
+  // int fd_con =
+  // m_rc = send(m_fd_con, file.m_block, file.m_block_size, 0);
+  ssize_t rsz{ -1 }; // n bytes sent || -1 - error val. ref: send(2).
+  // loop till all bytes are sent or till the error.
+  while ((rsz = send(m_fd, file.m_block, file.m_block_size, 0)) > 0) {
+    switch (rsz) {
+    case -1: log_g.errnum(errno, "[FAIL] send()"); break; // TODO ?: close()
+    case  0: log_g.msg(LL::STAT, "File was successfully sent."); break;
+    default: log_g.msg(LL::DBUG, fmt::format("Sent bytes: {}", file.m_block_size));
+    }
+  }
+  // return ssz;
+  return 0; // XXX
+}
 
 [[nodiscard]] int
 Fclient::create_socket()
@@ -51,9 +79,6 @@ Fclient::create_socket()
 [[nodiscard]] int
 Fclient::create_connection()
 {
-  // XXX: is the cast here inevitable?
-  // XXX: with struct addrinfo it might be that
-  //      we do not need to cast it here, i think...
   // NOTE: Not marked with __THROW
   m_rc = connect(m_fd, reinterpret_cast<const struct sockaddr *>(&m_sockaddr_in), m_addrlen);
   switch (m_rc) {
