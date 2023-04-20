@@ -84,9 +84,19 @@ cmd_opts(int argc, const char *argv[])
       log_g.set_urgency(urgency);
     }
 
-    if (opts_g.count("file")) {
+    // TODO: + number of fpaths passed via positional arguments.
+    const std::size_t n_files_passed{ opts_g.count("file") };
+    // single allocation to fit all required files without extra resizing of the vector.
+    std::vector<file::File> vfiles(n_files_passed);
+    // loop over each file path passed via the cmd arguments (optional + positional).
+    for (size_t i = 0; i < n_files_passed; i++) {
       const fs::path fp{ opt_file_wrap("file") };
       file::File file{ fp, fs::file_size(fp) };
+      /**
+       * Read contents of the file into the block of memory.
+       * We are doing this here to not have potential bottleneck later -> on the transmission step.
+       * (especially in terms of reading speed from the users block devices e.g. Slow HDD drive etc.).
+       */
       auto brc{ file.read_to_block() };
       if (brc != 0) {
         log_g.msg(LL::ERRO, fmt::format("Fail file.read_to_block() -> {}", brc));
@@ -95,9 +105,17 @@ cmd_opts(int argc, const char *argv[])
         if (opts_g.count("cat")) {
           file.print_fcontent();
         } else {
-          log_g.msg(LL::NTFY, fmt::format("[UNIMPLEMENTED] file.read_to_block() -> {}", brc));
+          // log_g.msg(LL::NTFY, fmt::format("[UNIMPLEMENTED] file.read_to_block() -> {}", brc));
+          // FIXME: currenly pushes only one - the first passed file.
+          vfiles.push_back(file);
         }
       }
+    }
+
+    // if we are in the cat mode -> simply finish =>
+    // as user do not need to initialize file client & do transmission.
+    if (opts_g.count("cat")) {
+      return 0;
     }
 
     Fclient fclient;
@@ -107,6 +125,19 @@ cmd_opts(int argc, const char *argv[])
       log_g.msg(LL::ERRO, fmt::format("fclient.init() -> {}", fc_rc));
     }
     // TODO: send files
+    int sf_rc{ -1 };
+    int sent_files_count{ 0 };
+    for (const file::File &f : vfiles) {
+      sf_rc = fclient.send_file(f);
+      if (sf_rc != 0) {
+        log_g.msg(LL::ERRO, fmt::format("Fail fclient.send_file(f) -> {}", sf_rc));
+      } else {
+        ++sent_files_count;
+        log_g.msg(LL::STAT, fmt::format("Successfully sent file: {}", f.m_fpath.string()));
+      }
+    }
+    log_g.msg(LL::NTFY, fmt::format("[{}/{}] files were successfully sent.",
+              sent_files_count, n_files_passed));
 
   } catch(cxxopts::exceptions::exception const& err) {
     log_g.msg(LL::ERRO, fmt::format("Fail during parsing of the cmd options:\n{}\n", err.what()));
