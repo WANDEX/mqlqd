@@ -46,7 +46,7 @@ public:
   // void clone_perms();
 
 
-private:
+public:
   fs::path    m_fpath{ };
   std::size_t m_block_size{ 0 };
   char       *m_block{ nullptr }; // memory block -> contiguous chunk of memory.
