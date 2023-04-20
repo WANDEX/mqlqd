@@ -70,6 +70,21 @@ cmd_opts(int argc, const char *argv[])
     if (fs_rc != 0) {
       log_g.msg(LL::ERRO, fmt::format("fserver.init() -> {}", fs_rc));
     }
+    // TODO: recv number of files to receive, their file names etc.
+    //       before starting receiving files.
+    // TODO: recv files
+    int rf_rc{ -1 };
+    int recv_files_count{ 0 };
+    rf_rc = fserver.recv_file();
+    if (rf_rc != 0) {
+      log_g.msg(LL::ERRO, fmt::format("Fail fserver.recv_file() -> {}", rf_rc));
+    } else {
+      ++recv_files_count;
+      // log_g.msg(LL::STAT, fmt::format("Successfully recv file: {}", f.m_fpath.string()));
+      log_g.msg(LL::STAT, fmt::format("Successfully recv file: {}", "UNIMP: filename")); // TODO filename
+    }
+    log_g.msg(LL::NTFY, fmt::format("[{}/{}] files were successfully recv. UNIMP: N files!",
+              recv_files_count, "1")); // FIXME: hardcoded 1
 
   } catch(cxxopts::exceptions::exception const& err) {
     log_g.msg(LL::ERRO, fmt::format("Fail during parsing of the cmd options:\n{}\n", err.what()));
