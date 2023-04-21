@@ -87,6 +87,10 @@ cmd_opts(int argc, const char *argv[])
 
     // total number of file paths passed via all options: via option & positional arguments.
     const std::size_t n_files_passed{ opts_g.count("file") + opts_g.count("files_trail") };
+    // vector of files info (subset of the File classes, helper info for the transmission)
+    std::vector<file::mqlqd_finfo> vfinfo;
+    vfinfo.reserve(n_files_passed);
+    // vector of class instances
     std::vector<file::File> vfiles;
     vfiles.reserve(n_files_passed);
 
@@ -117,6 +121,8 @@ cmd_opts(int argc, const char *argv[])
       } else {
         if (opts_g.count("cat")) {
           file.print_fcontent();
+        } else {
+          vfinfo.emplace_back(file.to_finfo());
         }
       }
     }
@@ -126,6 +132,13 @@ cmd_opts(int argc, const char *argv[])
     if (opts_g.count("cat")) {
       return 0;
     }
+
+#if 1
+    for(auto const& finfo : vfinfo) {
+      std::cerr  << finfo << '\n';
+    }
+    return 8; // XXX
+#endif
 
     Fclient fclient;
     // initialize file client.
