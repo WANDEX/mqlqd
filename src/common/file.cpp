@@ -45,7 +45,7 @@ is_r(fs::path const& fpath) noexcept
  * @return 0 on success, else non zero return code.
  */
 [[nodiscard]] int
-mkdir(fs::path const& dpath, fs::perms const& perms = fs::perms::group_all, bool force=false) noexcept
+mkdir(fs::path const& dpath, fs::perms const& perms, bool force) noexcept
 {
   std::error_code ec {};
   if (fs::is_directory(dpath, ec)) {

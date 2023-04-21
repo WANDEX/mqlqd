@@ -12,7 +12,7 @@ namespace file {
 is_r(fs::path const& fpath) noexcept;
 
 [[nodiscard]] int
-mkdir(fs::path const& dpath, fs::perms const& perms, bool force) noexcept;
+mkdir(fs::path const& dpath, fs::perms const& perms = fs::perms::group_all, bool force=false) noexcept;
 
 // TODO: DOUBTS: should i use enum instead of simple int rc - return codes?
 
