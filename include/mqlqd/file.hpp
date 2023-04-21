@@ -17,11 +17,21 @@ int is_r(fs::path const& fpath) noexcept;
 // (to fit the largest number of file names into the array)
 static constexpr size_t fname_max_len{ 79 };
 
+struct mqlqd_msg {
+  // size_t      sz { sizeof("mqlqd_default_message_text\0") };
+  // const char *msg{        "mqlqd_default_message_text\0"  };
+  size_t      sz { sizeof("mqlqd_default_message_text") };
+  std::string msg{        "mqlqd_default_message_text"  };
+};
+
 // @brief struct file info.
 struct mqlqd_finfo {
   size_t block_size{ 0 };
-  std::string fname{ "default_file_name" };
+  struct mqlqd_msg fname;
+  // std::string fname{ "default_file_name" };
   // sv_t   fname{ "default_file_name" };
+  // char   fname[fname_max_len]{ "mqlqd_default_file_name" };
+  // char const  *fname;
   // char   *block{ nullptr }; // memory block -> contiguous chunk of memory.
 };
 
@@ -103,7 +113,7 @@ public:
 
 // overload for the std::ostream (to print file info structure in the readable text form)
 inline std::ostream& operator<<(std::ostream& os, mqlqd::file::mqlqd_finfo const &finfo) {
-  return os << "     finfo.fname: " << finfo.fname << '\n'
+  return os << "     finfo.fname: " << finfo.fname.msg << '\n'
             << "finfo.block_size: " << '[' << finfo.block_size << ']' << '\n';
 }
 
