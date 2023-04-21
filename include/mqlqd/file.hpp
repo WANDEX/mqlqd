@@ -97,7 +97,7 @@ public:
   [[nodiscard]]
   int read_to_block();
 
-  void print_fcontent() const;
+  void print_fcontent() const noexcept;
 
   // TODO: DOUBTS: clone file permissions
   // void clone_perms();

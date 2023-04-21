@@ -262,7 +262,7 @@ int File::read_to_block()
   return 0;
 }
 
-void File::print_fcontent() const
+void File::print_fcontent() const noexcept
 {
   if (!m_block) {
     return;
@@ -270,9 +270,7 @@ void File::print_fcontent() const
 #if FILE_CONTENTS_BOUNDARY
   std::cerr << ">>> [BEG] " << m_fpath << " - file content >>>" << '\n';
 #endif // FILE_CONTENTS_BOUNDARY
-  for (std::size_t i = 0; i < m_block_size; i++) {
-    std::cout << m_block[i];
-  }
+  std::cout << m_block;
 #if FILE_CONTENTS_BOUNDARY
   std::cerr << "<<< [END] " << m_fpath << " - file content <<<" << '\n';
 #endif // FILE_CONTENTS_BOUNDARY
