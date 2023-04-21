@@ -25,13 +25,72 @@ namespace file {
  * @param  fpath - file path to the file.
  * @return 0 on success or return code based on the failed check.
  */
-[[nodiscard]]
-int is_r(fs::path const& fpath) noexcept
+[[nodiscard]] int
+is_r(fs::path const& fpath) noexcept
 {
   auto ec{ std::make_error_code(std::errc::operation_not_permitted) }; // XXX: mock
   fs::file_status s{ fs::status(fpath, ec) }; // for the noexcept
   // TODO: check file permissions (maybe it is a good idea to have)
   if (!fs::is_regular_file(s)) return 1;
+  return 0;
+}
+
+
+/**
+ * @brief make dir and set required perms. (should be safe)
+ *
+ * @param  new dir path.
+ * @param  new dir permissions.
+ * @param  force/insist on importance of the access rights to the dir.
+ * @return 0 on success, else non zero return code.
+ */
+[[nodiscard]] int
+mkdir(fs::path const& dpath, fs::perms const& perms = fs::perms::group_all, bool force=false) noexcept
+{
+  std::error_code ec {};
+  if (fs::is_directory(dpath, ec)) {
+    log_g.msg(LL::DBUG, "Directory exist, and will be used as is.");
+    if (force) {
+      // TODO: validate that directory permissions are set as requested.
+    }
+  } else {
+    if (!fs::exists(dpath, ec)) {
+      if (fs::create_directory(dpath, dpath.parent_path(), ec)) {
+        fs::permissions(dpath, perms, ec);
+        if (ec.value() == 0) {
+          log_g.msg(LL::NTFY, "Created new directory with requested access permissions.");
+        } else {
+          log_g.msg(LL::ERRO, "Created new directory, but failed to set requested perms.");
+          if (fs::remove(dpath, ec)) {
+            log_g.msg(LL::NTFY, "Removed empty directory created with incorrect perms.");
+            return 7;
+          } else {
+            log_g.msg(LL::CRIT, fmt::format(
+                      "{}\n^ failed to remove this dir "
+                      "that was created with incorrect access rights.\n"
+                      "Because of the perms, do it yourself manually!\n"
+                      "Additionally take a look at the origin of the error:\n{}\n",
+                      dpath.string(), ec.message() ));
+            return ec.value();
+          }
+        }
+      } else {
+        log_g.msg(LL::CRIT, fmt::format("{}\n^ fs::create_directory error:\n{}\n",
+                                        dpath.string(), ec.message() ));
+        return ec.value();
+      }
+    } else {
+      auto realpath{ fs::canonical(dpath, ec) };
+      if (ec) {
+        log_g.msg(LL::CRIT, fmt::format("{}\n^ canonical path error:\n{}\n",
+                                        dpath.string(), ec.message() ));
+        return ec.value();
+      }
+      log_g.msg(LL::CRIT, fmt::format("{}\n^ path cannot be used as the new directory!\n",
+                                      realpath.string() ));
+      return 6;
+    }
+  }
   return 0;
 }
 

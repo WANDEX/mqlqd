@@ -8,8 +8,11 @@
 namespace mqlqd {
 namespace file {
 
-[[nodiscard]]
-int is_r(fs::path const& fpath) noexcept;
+[[nodiscard]] int
+is_r(fs::path const& fpath) noexcept;
+
+[[nodiscard]] int
+mkdir(fs::path const& dpath, fs::perms const& perms, bool force) noexcept;
 
 // TODO: DOUBTS: should i use enum instead of simple int rc - return codes?
 
