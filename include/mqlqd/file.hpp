@@ -50,7 +50,6 @@ public:
 
   inline static constexpr auto openmode_w{
     std::ios::out | std::ios::binary
-    // std::ios::out | std::ios::binary | std::ios::ate
   };
 
   File() = default;
@@ -74,11 +73,14 @@ public:
    *
    * mostly for files constructed from the info file structure.
    */
-  void write(fs::path const& dest_dir, sv_t const& fname);
+  [[nodiscard]] int
+  write();
 
-  void write(fs::path const& new_file_dest_path);
+  // void write(fs::path const& dest_dir, sv_t const& fname);
 
-  void write(sv_t const& new_file_dest_path);
+  // void write(fs::path const& new_file_dest_path);
+
+  // void write(sv_t const& new_file_dest_path);
 
 
   void heap_cleanup() noexcept;

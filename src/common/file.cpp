@@ -60,6 +60,39 @@ File::to_finfo() const noexcept
   // return { m_block_size, { sizeof(m_fpath.filename()), m_fpath.filename().c_str() } };
 }
 
+[[nodiscard]] int
+File::write()
+{
+  if (!m_block) {
+    log_g.msg(LL::CRIT, "empty memory block, nothing to write!");
+    return 33;
+  }
+  // open file for writing
+  std::ofstream ofs(m_fpath, openmode_w);
+  // TODO: reinspect checks
+  if (!ofs) {
+    log_g.msg(LL::ERRO, "can not open output file!");
+    return 30;
+  }
+  if (ofs.fail()) {
+    log_g.msg(LL::ERRO, "ofs.fail()");
+    return 31;
+  }
+  if (!ofs.good()) {
+    log_g.msg(LL::ERRO, "!ofs.good()");
+    return 32;
+  }
+
+  try {
+    ofs << m_block;
+    log_g.msg(LL::DBUG, "The entire contents of the memory block were written to the file.");
+  } catch(std::exception const& err) {
+    log_g.msg(LL::CRIT, fmt::format("File::write() unhandled std::exception suppressed:\n{}\n", err.what()));
+    return 35;
+  }
+  return 0;
+}
+
 [[nodiscard]]
 int File::heap_alloc() noexcept
 {
