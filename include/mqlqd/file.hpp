@@ -20,7 +20,7 @@ static constexpr size_t fname_max_len{ 79 };
 // @brief struct file info.
 struct mqlqd_finfo {
   size_t block_size{ 0 };
-  char   fname[fname_max_len]{ "mqlqd_default_file_name" };
+  std::string fname{ "default_file_name" };
   // sv_t   fname{ "default_file_name" };
   // char   *block{ nullptr }; // memory block -> contiguous chunk of memory.
 };
@@ -53,8 +53,11 @@ public:
   explicit File(fs::path const& fpath, const std::size_t sz) noexcept;
 
   // @brief construct class instance from the file info structure.
-  // TODO: IMPL
-  // explicit File(fs::path const& dpath, mqlqd_finfo const& info_file) noexcept;
+  explicit File(fs::path &dpath, mqlqd_finfo const& finfo) noexcept;
+
+  // @bief convert essentials of the instance into file info structure.
+  [[nodiscard]] mqlqd_finfo
+  to_finfo() const noexcept;
 
   /**
    * @brief for writing file to the disk.
@@ -93,4 +96,10 @@ public:
 
 } // namespace file
 } // namespace mqlqd
+
+// overload for the std::ostream (to print file info structure in the readable text form)
+inline std::ostream& operator<<(std::ostream& os, mqlqd::file::mqlqd_finfo const &finfo) {
+  return os << "     finfo.fname: " << finfo.fname << '\n'
+            << "finfo.block_size: " << '[' << finfo.block_size << ']' << '\n';
+}
 
