@@ -87,6 +87,10 @@ public:
   // TODO: DOUBTS: clone file permissions
   // void clone_perms();
 
+  friend std::ostream& operator<<(std::ostream& os, File const &file) {
+    return os << "File file.fpath : " << file.m_fpath << '\n'
+              << "file.block_size : " << '[' << file.m_block_size << ']' << '\n';
+  }
 
 public:
   fs::path    m_fpath{ };
