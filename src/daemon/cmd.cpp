@@ -2,12 +2,14 @@
 
 #include "aliases.hpp"
 #include "config.hpp"
+#include "file.hpp"
 #include "op.hpp"
 
 #include "fserver.hpp"
 
 #include <cxxopts.hpp>
 
+#include <filesystem>
 #include <iostream>
 
 
@@ -39,8 +41,12 @@ cmd_opts(int argc, const char *argv[])
         "Accept file(s) over TCP/IP from the clients running the mqlqd_client.");
     options.set_width(80);
     options.add_options()
+      ("d,dir", "Path to the storage dir, else default storage under cwd.",
+       cxxopts::value<fs::path>()->default_value(dvw("./mqlqd_storage")))
+
       ("p,port", "Use port number as identity of the daemon on the server.",
        cxxopts::value<cmd_opt_t>()->default_value(dvw(cfg::def_port)))
+
       ("h,help", "Show usage help.")
       ("u,urge", "Log urgency level. (All messages </> Only critical)",
        cxxopts::value<int>(), "1-7");
@@ -63,6 +69,17 @@ cmd_opts(int argc, const char *argv[])
       log_g.set_urgency(urgency);
     }
 
+    // path to the storage dir. (storage for incoming files)
+    const fs::path storage_dir{ opts_g["dir"].as<fs::path>() };
+
+    std::error_code ec {};
+    if (fs::is_directory(storage_dir, ec)) {
+      log_g.msg(LL::NTFY, "Directory exist, and will be used as the storage dir.");
+    } else {
+      // make dir for the storage with permissions for owner only.
+      int rc = file::mkdir(storage_dir, fs::perms::owner_all);
+      if (rc != 0) return rc;
+    }
 
     Fserver fserver;
     // initialize file server.
