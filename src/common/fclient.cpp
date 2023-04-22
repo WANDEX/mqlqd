@@ -34,6 +34,15 @@ Fclient::~Fclient()
 {
   // TODO: close file descriptors
   // TODO: close_fd() | close(2) wrapper
+  if (m_fd > 0) {
+    // close file descriptor. ref: close(2).
+    m_rc = close(m_fd);
+    switch (m_rc) {
+    case -1: log_g.errnum(errno, "[FAIL] m_fd close()"); break;
+    case  0: log_g.msg(LL::DBUG, "[ OK ] m_fd close()"); break;
+    default: log_g.msg(LL::CRIT, fmt::format("Unexpected return code: m_fd close() -> {}", m_rc));
+    }
+  }
 }
 
 [[nodiscard]] int
