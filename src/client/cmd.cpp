@@ -140,7 +140,9 @@ cmd_opts(int argc, const char *argv[])
     return 8; // XXX
 #endif
 
-    Fclient fclient;
+    // TODO: pass port number into ctor
+    // TODO: pass addr into ctor
+    Fclient fclient{  };
     // initialize file client.
     int fc_rc = fclient.init();
     if (fc_rc != 0) {
@@ -151,6 +153,13 @@ cmd_opts(int argc, const char *argv[])
     // TODO: if server is ready to accept provided files => begin files transfer.
     // TODO: if server rejected request on transmission => notify user about that.
 
+    // attempt to send info of the upcoming transmission of the files.
+    fc_rc = fclient.send_files_info(vfinfo);
+    if (fc_rc != 0) {
+      log_g.msg(LL::ERRO, fmt::format("fclient.send_files_info() -> {}", fc_rc));
+      return fc_rc;
+    }
+    log_g.msg(LL::STAT, "Sent info of the upcoming transmission of the files.");
 
 
     // XXX: obsolete rewrite or delete me!

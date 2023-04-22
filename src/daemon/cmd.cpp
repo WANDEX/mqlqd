@@ -81,7 +81,8 @@ cmd_opts(int argc, const char *argv[])
       if (rc != 0) return rc;
     }
 
-    Fserver fserver;
+    // TODO: pass port number into ctor
+    Fserver fserver{ storage_dir };
     // initialize file server.
     int fs_rc = fserver.init();
     if (fs_rc != 0) {
@@ -92,6 +93,14 @@ cmd_opts(int argc, const char *argv[])
     //       before starting receiving files.
     // TODO: recv files
     // TODO: rewrite with the new proper logic like in the file client
+
+    // attempt to receive info of the upcoming transmission of the files.
+    fs_rc = fserver.recv_files_info();
+    if (fs_rc != 0) {
+      log_g.msg(LL::ERRO, fmt::format("fserver.recv_files_info() -> {}", fs_rc));
+      return fs_rc;
+    }
+    log_g.msg(LL::STAT, "Received info of the upcoming transmission of the files.");
 
 
     // XXX: obsolete rewrite or delete me!
