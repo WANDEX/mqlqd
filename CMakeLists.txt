@@ -41,6 +41,7 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
   include(cmake/comp_opts_cxx.cmake)
 
   include(cmake/cxxopts.cmake)
+  include(cmake/fmt.cmake)
   add_subdirectory(src)
 
   if(MQLQD_BUILD_PACKAGE)
