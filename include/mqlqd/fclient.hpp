@@ -94,8 +94,8 @@ protected:
    * @return  0 on success - when all bytes are sent (finish) (simplified).
    * @return -1 on error   - and errno is set to indicate the error.
    */
-  [[nodiscard]] int
-  send();
+  [[nodiscard]] ssize_t
+  send_loop(int fd, const char *buf, size_t len);
 
 protected:
   /****************************************************************************

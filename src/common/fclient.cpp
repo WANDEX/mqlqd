@@ -87,6 +87,24 @@ Fclient::send_file(file::File const& file)
   return 0;
 }
 
+[[nodiscard]] ssize_t
+Fclient::send_loop(int fd, const char *buf, size_t len)
+{
+  ssize_t nbytes{ -1 }; // nbytes sent || -1 - error val. ref: send(2).
+  // loop till all bytes are sent or till the error.
+  while ((nbytes = send(fd, buf, len, 0)) > 0) {
+    switch (nbytes) {
+    case -1: log_g.errnum(errno, "[FAIL] send() error occured"); return -1;
+    case  0: log_g.msg(LL::DBUG, "[ OK ] send() all bytes sent"); return 0;
+    default: log_g.msg(LL::DBUG, fmt::format("send_loop() bytes: {}", nbytes));
+    }
+    // XXX: not sure about this! (made up myself!)
+    buf += nbytes;
+    len -= static_cast<size_t>(nbytes);
+  }
+  return nbytes; // XXX: what to return in this unreal case?
+}
+
 [[nodiscard]] int
 Fclient::create_socket()
 {
