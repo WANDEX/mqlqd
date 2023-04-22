@@ -68,7 +68,9 @@ opt_wrap(std::string_view const& in_opt)
 opt_file_wrap(std::string_view const& in_opt)
 {
   try {
-    return fs::path{ opt_wrap(in_opt) };
+    // return fs::path{ opt_wrap(in_opt) };
+    // return static_cast<fs::path>(in_opt);
+    return in_opt;
   } catch(std::exception const& err) {
     std::cerr << "ERROR: THIS WAS UNEXPECTED! an unhandled std::exception!" << '\n'
               << "in '" << __FILE__ << "' client.cpp opt_file_wrap():" << '\n'
