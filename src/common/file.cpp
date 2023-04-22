@@ -80,8 +80,12 @@ mkdir(fs::path const& dpath, fs::perms const& perms, bool force) noexcept
           }
         }
       } else {
-        log_g.msg(LL::CRIT, fmt::format("{}\n^ fs::create_directory error:\n{}\n",
-                                        dpath.string(), ec.message() ));
+        log_g.msg(LL::CRIT, fmt::format(
+                  "If your intent was to make this dir under current cwd:\n"
+                  "{}\n^ precede your path with './' i.e. ./{}\n"
+                  "Additionally take a look at the origin of the error:\n"
+                  "fs::create_directory error: {}\n",
+                  dpath.string(), dpath.string(), ec.message() ));
         return ec.value();
       }
     } else {
