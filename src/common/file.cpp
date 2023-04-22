@@ -28,7 +28,7 @@ namespace file {
 [[nodiscard]] int
 is_r(fs::path const& fpath) noexcept
 {
-  auto ec{ std::make_error_code(std::errc::operation_not_permitted) }; // XXX: mock
+  std::error_code ec {};
   fs::file_status s{ fs::status(fpath, ec) }; // for the noexcept
   // TODO: check file permissions (maybe it is a good idea to have)
   if (!fs::is_regular_file(s)) return 1;
