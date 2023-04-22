@@ -112,7 +112,7 @@ cmd_opts(int argc, const char *argv[])
       /**
        * Read contents of the file(s) into the block(s) of memory.
        * We are doing this here to not have potential bottleneck later -> on the transmission step.
-       * (especially in terms of reading speed from the users block devices e.g. Slow HDD drive etc.).
+       * (especially in terms of reading speed from the users block devices e.g. Slow HDD etc.).
        */
       auto brc{ file.read_to_block() };
       if (brc != 0) {
@@ -145,8 +145,16 @@ cmd_opts(int argc, const char *argv[])
     int fc_rc = fclient.init();
     if (fc_rc != 0) {
       log_g.msg(LL::ERRO, fmt::format("fclient.init() -> {}", fc_rc));
+      return fc_rc;
     }
-    // TODO: send files
+    // TODO: send info structures of the files.
+    // TODO: if server is ready to accept provided files => begin files transfer.
+    // TODO: if server rejected request on transmission => notify user about that.
+
+
+
+    // XXX: obsolete rewrite or delete me!
+    /*
     int sf_rc{ -1 };
     int sent_files_count{ 0 };
     for (const file::File &f : vfiles) {
@@ -160,6 +168,7 @@ cmd_opts(int argc, const char *argv[])
     }
     log_g.msg(LL::NTFY, fmt::format("[{}/{}] files were successfully sent.",
               sent_files_count, n_files_passed));
+    */
 
   } catch(cxxopts::exceptions::exception const& err) {
     log_g.msg(LL::ERRO, fmt::format("Fail during parsing of the cmd options:\n{}\n", err.what()));

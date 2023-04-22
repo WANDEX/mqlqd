@@ -69,10 +69,16 @@ cmd_opts(int argc, const char *argv[])
     int fs_rc = fserver.init();
     if (fs_rc != 0) {
       log_g.msg(LL::ERRO, fmt::format("fserver.init() -> {}", fs_rc));
+      return fs_rc;
     }
     // TODO: recv number of files to receive, their file names etc.
     //       before starting receiving files.
     // TODO: recv files
+    // TODO: rewrite with the new proper logic like in the file client
+
+
+    // XXX: obsolete rewrite or delete me!
+    /*
     int rf_rc{ -1 };
     int recv_files_count{ 0 };
     rf_rc = fserver.recv_file();
@@ -85,6 +91,7 @@ cmd_opts(int argc, const char *argv[])
     }
     log_g.msg(LL::NTFY, fmt::format("[{}/{}] files were successfully recv. UNIMP: N files!",
               recv_files_count, "1")); // FIXME: hardcoded 1
+    */
 
   } catch(cxxopts::exceptions::exception const& err) {
     log_g.msg(LL::ERRO, fmt::format("Fail during parsing of the cmd options:\n{}\n", err.what()));
