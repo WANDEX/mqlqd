@@ -37,28 +37,45 @@ Fclient::~Fclient()
 }
 
 [[nodiscard]] int
-Fclient::send_file(const file::File &file)
+Fclient::send_files_info(std::vector<file::mqlqd_finfo> const& vfinfo)
 {
-  /**
-   * ref: send(2).
-   * On success, return the number of bytes sent.
-   * On error, -1 is returned, and errno is set to indicate the error.
-   */
-  log_g.msg(LL::DBUG, fmt::format("fname: {}", file.m_fpath.filename().string()));
-  log_g.msg(LL::INFO, fmt::format("bytes to send: {}", file.m_block_size));
-  // int fd_con =
-  // m_rc = send(m_fd_con, file.m_block, file.m_block_size, 0);
-  ssize_t rsz{ -1 }; // n bytes sent || -1 - error val. ref: send(2).
-  // loop till all bytes are sent or till the error.
-  while ((rsz = send(m_fd, file.m_block, file.m_block_size, 0)) > 0) {
-    switch (rsz) {
-    case -1: log_g.errnum(errno, "[FAIL] send()"); break; // TODO ?: close()
-    case  0: log_g.msg(LL::STAT, "File was successfully sent."); break;
-    default: log_g.msg(LL::DBUG, fmt::format("Sent bytes: {}", file.m_block_size));
-    }
+  // TODO
+  for (const auto& finfo : vfinfo) {
+    m_rc = send_file_info(finfo);
+
   }
-  // return ssz;
-  return 0; // XXX
+
+  return 0;
+}
+
+[[nodiscard]] int
+Fclient::send_file_info(file::mqlqd_finfo const& finfo)
+{
+  log_g.msg(LL::INFO, fmt::format("Fclient::send_file_info()\t{}", finfo));
+  // TODO
+
+  return 0;
+}
+
+[[nodiscard]] int
+Fclient::send_files(std::vector<file::File> const& vfiles)
+{
+  // TODO
+  for (const auto& file : vfiles) {
+    m_rc = send_file(file);
+
+  }
+
+  return 0;
+}
+
+[[nodiscard]] int
+Fclient::send_file(file::File const& file)
+{
+  log_g.msg(LL::INFO, fmt::format("Fclient::send_file()\t\t{}", file));
+  // TODO
+
+  return 0;
 }
 
 [[nodiscard]] int

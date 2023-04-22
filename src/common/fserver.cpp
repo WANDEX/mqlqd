@@ -26,9 +26,10 @@ extern "C" {
 
 namespace mqlqd {
 
-// Fserver::Fserver()
-// {
-// }
+Fserver::Fserver(fs::path const& storage_dir) noexcept
+  : m_storage_dir{ storage_dir }
+{
+}
 
 Fserver::~Fserver()
 {
@@ -45,19 +46,22 @@ Fserver::~Fserver()
   }
 }
 
-// XXX: primitive tmp version
+
 [[nodiscard]] int
-Fserver::recv_file()
+Fserver::recv_files_info()
 {
-  return 0; // XXX
+  // TODO
+
+  return 0;
 }
 
 
 [[nodiscard]] int
-Fserver::recv_info_files()
+Fserver::recv_files()
 {
   // TODO
-  return 0; // XXX
+
+  return 0;
 }
 
 [[nodiscard]] int

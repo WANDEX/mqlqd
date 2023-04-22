@@ -4,6 +4,7 @@
  */
 
 #include "aliases.hpp"
+#include "file.hpp"
 
 extern "C" {
 
@@ -20,14 +21,14 @@ namespace mqlqd {
 class Fserver final
 {
 public:
-  Fserver() = default;
-  // Fserver() = delete; // XXX: or not delete...
+  Fserver() = delete; // XXX: or not delete...
   Fserver(Fserver &&) = delete;
   Fserver(const Fserver &) = delete;
   Fserver &operator=(Fserver &&) = delete;
   Fserver &operator=(const Fserver &) = delete;
   ~Fserver();
 
+  explicit Fserver(fs::path const& storage_dir) noexcept;
 
   /**
    * @brief initialize everything & start on success of all underlying functions.
@@ -37,8 +38,24 @@ public:
   [[nodiscard]] int
   init();
 
+  /**
+   * @brief recv info files structures, with the files information.
+   *
+   * @param  TODO
+   * @return TODO
+   */
   [[nodiscard]] int
-  recv_file();
+  recv_files_info();
+
+
+  /**
+   * @brief description
+   *
+   * @param  TODO
+   * @return TODO
+   */
+  [[nodiscard]] int
+  recv_files();
 
 protected:
 
@@ -80,6 +97,16 @@ protected:
   [[nodiscard]] int
   accept_connection();
 
+  /**
+   * @brief man recv(2).
+   *
+   * @return  N on success - the number of bytes received.
+   * @return  0 on success - when all bytes are received (finish) (simplified).
+   * @return -1 on error   - and errno is set to indicate the error.
+   */
+  [[nodiscard]] int
+  recv();
+
 protected:
   /****************************************************************************
    * following are the helper methods.
@@ -92,13 +119,23 @@ protected:
   fill_sockaddr_in();
 
   /**
-   * @brief recv info files structure, with the files information.
+   * @brief recv info file structure, with the file information.
    *
    * @param  TODO
    * @return TODO
    */
   [[nodiscard]] int
-  recv_info_files();
+  recv_file_info();
+
+
+  /**
+   * @brief recv file.
+   *
+   * @param  TODO
+   * @return TODO
+   */
+  [[nodiscard]] int
+  recv_file();
 
 
 private:
@@ -116,6 +153,9 @@ private:
   // The backlog defines the maximum length to which
   // the queue of pending connections may grow. ref: listen(2)
   const int m_backlog{ 5 }; // (default val chosen arbitrarily)
+
+  // path to the storage dir. (storage for incoming files)
+  const fs::path &m_storage_dir; // initialized via explicit ctor
 
   struct sockaddr_in m_sockaddr_in {};
 

@@ -7,6 +7,8 @@
 // #include "config.hpp"
 #include "file.hpp"
 
+#include <vector>
+
 extern "C" {
 
 // seems like it has most of the needed type definitions.
@@ -33,6 +35,11 @@ public:
   Fclient &operator=(const Fclient &) = delete;
   ~Fclient();
 
+
+  // TODO: pass port number into ctor
+  // TODO: pass addr into ctor
+  // explicit Fclient() noexcept;
+
   /**
    * @brief initialize everything & start on success of all underlying functions.
    *
@@ -41,16 +48,24 @@ public:
   [[nodiscard]] int
   init();
 
+  /**
+   * @brief description
+   *
+   * @param  TODO
+   * @return TODO
+   */
+  [[nodiscard]] int
+  send_files_info(std::vector<file::mqlqd_finfo> const& vfinfo);
+
 
   /**
    * @brief description
    *
    * @param  TODO
    * @return TODO
-   *
    */
   [[nodiscard]] int
-  send_file(const file::File &file);
+  send_files(std::vector<file::File> const& vfiles);
 
 protected:
 
@@ -72,6 +87,16 @@ protected:
   [[nodiscard]] int
   create_connection();
 
+  /**
+   * @brief man send(2).
+   *
+   * @return  N on success - the number of bytes sent.
+   * @return  0 on success - when all bytes are sent (finish) (simplified).
+   * @return -1 on error   - and errno is set to indicate the error.
+   */
+  [[nodiscard]] int
+  send();
+
 protected:
   /****************************************************************************
    * following are the helper methods.
@@ -82,6 +107,25 @@ protected:
    */
   [[nodiscard]] int
   fill_sockaddr_in();
+
+  /**
+   * @brief description
+   *
+   * @param  TODO
+   * @return TODO
+   */
+  [[nodiscard]] int
+  send_file_info(file::mqlqd_finfo const& finfo);
+
+  /**
+   * @brief description
+   *
+   * @param  TODO
+   * @return TODO
+   *
+   */
+  [[nodiscard]] int
+  send_file(file::File const& file);
 
 
 private:
