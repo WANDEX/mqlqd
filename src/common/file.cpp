@@ -30,6 +30,11 @@ is_r(fs::path const& fpath) noexcept
 {
   std::error_code ec {};
   fs::file_status s{ fs::status(fpath, ec) }; // for the noexcept
+  if (ec) {
+    log_g.msg(LL::CRIT, fmt::format("{}\n^ fs::status error:\n{}\n",
+                                    fpath.string(), ec.message() ));
+    return ec.value();
+  }
   // TODO: check file permissions (maybe it is a good idea to have)
   if (!fs::is_regular_file(s)) return 1;
   return 0;
