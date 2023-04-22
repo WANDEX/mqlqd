@@ -81,6 +81,7 @@ cmd_opts(int argc, const char *argv[])
       if (rc != 0) return rc;
     }
 
+
     // TODO: pass port number into ctor
     Fserver fserver{ storage_dir };
     // initialize file server.
@@ -89,10 +90,6 @@ cmd_opts(int argc, const char *argv[])
       log_g.msg(LL::ERRO, fmt::format("fserver.init() -> {}", fs_rc));
       return fs_rc;
     }
-    // TODO: recv number of files to receive, their file names etc.
-    //       before starting receiving files.
-    // TODO: recv files
-    // TODO: rewrite with the new proper logic like in the file client
 
     // attempt to receive info of the upcoming transmission of the files.
     fs_rc = fserver.recv_files_info();
@@ -100,24 +97,16 @@ cmd_opts(int argc, const char *argv[])
       log_g.msg(LL::ERRO, fmt::format("fserver.recv_files_info() -> {}", fs_rc));
       return fs_rc;
     }
-    log_g.msg(LL::STAT, "Received info of the upcoming transmission of the files.");
+    log_g.msg(LL::STAT, "Received info of the upcoming transfer of the files.");
 
-
-    // XXX: obsolete rewrite or delete me!
-    /*
-    int rf_rc{ -1 };
-    int recv_files_count{ 0 };
-    rf_rc = fserver.recv_file();
-    if (rf_rc != 0) {
-      log_g.msg(LL::ERRO, fmt::format("Fail fserver.recv_file() -> {}", rf_rc));
-    } else {
-      ++recv_files_count;
-      // log_g.msg(LL::STAT, fmt::format("Successfully recv file: {}", f.m_fpath.string()));
-      log_g.msg(LL::STAT, fmt::format("Successfully recv file: {}", "UNIMP: filename")); // TODO filename
+    // server is ready to accept provided files => start accepting files.
+    fs_rc = fserver.recv_files();
+    if (fs_rc != 0) {
+      log_g.msg(LL::ERRO, fmt::format("fserver.recv_files() -> {}", fs_rc));
+      return fs_rc;
     }
-    log_g.msg(LL::NTFY, fmt::format("[{}/{}] files were successfully recv. UNIMP: N files!",
-              recv_files_count, "1")); // FIXME: hardcoded 1
-    */
+    log_g.msg(LL::NTFY, "All files were successfully received.");
+
 
   } catch(cxxopts::exceptions::exception const& err) {
     log_g.msg(LL::ERRO, fmt::format("Fail during parsing of the cmd options:\n{}\n", err.what()));

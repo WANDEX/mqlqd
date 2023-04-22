@@ -133,12 +133,6 @@ cmd_opts(int argc, const char *argv[])
       return 0;
     }
 
-#if 1
-    for(auto const& finfo : vfinfo) {
-      std::cerr  << finfo << '\n';
-    }
-    return 8; // XXX
-#endif
 
     // TODO: pass port number into ctor
     // TODO: pass addr into ctor
@@ -149,9 +143,6 @@ cmd_opts(int argc, const char *argv[])
       log_g.msg(LL::ERRO, fmt::format("fclient.init() -> {}", fc_rc));
       return fc_rc;
     }
-    // TODO: send info structures of the files.
-    // TODO: if server is ready to accept provided files => begin files transfer.
-    // TODO: if server rejected request on transmission => notify user about that.
 
     // attempt to send info of the upcoming transmission of the files.
     fc_rc = fclient.send_files_info(vfinfo);
@@ -159,25 +150,16 @@ cmd_opts(int argc, const char *argv[])
       log_g.msg(LL::ERRO, fmt::format("fclient.send_files_info() -> {}", fc_rc));
       return fc_rc;
     }
-    log_g.msg(LL::STAT, "Sent info of the upcoming transmission of the files.");
+    log_g.msg(LL::INFO, "Sent info of the upcoming transfer of the files.");
 
-
-    // XXX: obsolete rewrite or delete me!
-    /*
-    int sf_rc{ -1 };
-    int sent_files_count{ 0 };
-    for (const file::File &f : vfiles) {
-      sf_rc = fclient.send_file(f);
-      if (sf_rc != 0) {
-        log_g.msg(LL::ERRO, fmt::format("Fail fclient.send_file(f) -> {}", sf_rc));
-      } else {
-        ++sent_files_count;
-        log_g.msg(LL::STAT, fmt::format("Successfully sent file: {}", f.m_fpath.string()));
-      }
+    // server is ready to accept provided files => start sending files.
+    fc_rc = fclient.send_files(vfiles);
+    if (fc_rc != 0) {
+      log_g.msg(LL::ERRO, fmt::format("fclient.send_files() -> {}", fc_rc));
+      return fc_rc;
     }
-    log_g.msg(LL::NTFY, fmt::format("[{}/{}] files were successfully sent.",
-              sent_files_count, n_files_passed));
-    */
+    log_g.msg(LL::NTFY, "All files were successfully sent and received.");
+
 
   } catch(cxxopts::exceptions::exception const& err) {
     log_g.msg(LL::ERRO, fmt::format("Fail during parsing of the cmd options:\n{}\n", err.what()));
