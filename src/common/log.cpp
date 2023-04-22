@@ -40,7 +40,7 @@ void Logger::set_urgency(LL const ll) noexcept
 
 void Logger::errnum(int errnum, sv_t const& message) noexcept
 {
-  fmt::print(stderr, "[{}]: {}\nerrno: {}\n", LL::CRIT, message, std::strerror(errnum));
+  fmt::print(stderr, "[{}]: {}\n\terrno: {}\n", LL::CRIT, message, std::strerror(errnum));
   // TODO: also write message into the log file.
 }
 
