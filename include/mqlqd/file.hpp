@@ -2,6 +2,8 @@
 
 #include "aliases.hpp"          // sv_t & other project-wide aliases
 
+#include <fmt/format.h>         // for the fmt formatter specialization of the custom types.
+
 #include <filesystem>
 
 
@@ -121,4 +123,22 @@ inline std::ostream& operator<<(std::ostream& os, mqlqd::file::mqlqd_finfo const
   return os << "     finfo.fname: " << finfo.fname.msg << '\n'
             << "finfo.block_size: " << '[' << finfo.block_size << ']' << '\n';
 }
+
+// fmt formatter specialization for finfo (one-liner -> more terse + also faster than ostream)
+template <> struct fmt::formatter<mqlqd::file::mqlqd_finfo> {
+  constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
+  template <typename FormatContext>
+  auto format(mqlqd::file::mqlqd_finfo const& finfo, FormatContext &ctx) const {
+    return format_to(ctx.out(), "[{}]\tfname: {}", finfo.block_size, finfo.fname.msg);
+  }
+};
+
+// fmt formatter specialization for File (one-liner -> more terse + also faster than ostream)
+template <> struct fmt::formatter<mqlqd::file::File> {
+  constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
+  template <typename FormatContext>
+  auto format(mqlqd::file::File const& file, FormatContext &ctx) const {
+    return format_to(ctx.out(), "[{}]\tfpath: {}", file.m_block_size, file.m_fpath.c_str());
+  }
+};
 
