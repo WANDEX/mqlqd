@@ -6,6 +6,8 @@
 #include "aliases.hpp"
 #include "file.hpp"
 
+#include <vector>
+
 extern "C" {
 
 // seems like it has most of the needed type definitions.
@@ -104,8 +106,9 @@ protected:
    * @return  0 on success - when all bytes are received (finish) (simplified).
    * @return -1 on error   - and errno is set to indicate the error.
    */
+  // FIXME: ^ update the docs!
   [[nodiscard]] int
-  recv();
+  recv_loop();
 
 protected:
   /****************************************************************************
@@ -144,23 +147,26 @@ private:
 
   // file descriptor returned by the socket().
   // -1 is the socket() return value on error. ref: socket(2)
-  int m_fd{ -1 };
+  int m_fd{ 0 };
 
   // new fd (connected socket) returned by the accept().
   // -1 is the accept() return value on error. ref: accept(2)
-  int m_fd_con{ -1 };
+  int m_fd_con{ 0 };
 
   // The backlog defines the maximum length to which
   // the queue of pending connections may grow. ref: listen(2)
   const int m_backlog{ 5 }; // (default val chosen arbitrarily)
 
   // path to the storage dir. (storage for incoming files)
+  // const fs::path m_storage_dir; // initialized via explicit ctor
   const fs::path &m_storage_dir; // initialized via explicit ctor
 
   struct sockaddr_in m_sockaddr_in {};
 
   socklen_t   m_addrlen     {}; // XXX: part of addrinfo
 
+  std::vector<file::mqlqd_finfo> vfinfo;
+  std::vector<file::File> vfiles;
 };
 
 } // namespace mqlqd
