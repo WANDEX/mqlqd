@@ -48,22 +48,49 @@ Fclient::~Fclient()
 [[nodiscard]] int
 Fclient::send_files_info(std::vector<file::mqlqd_finfo> const& vfinfo)
 {
-  // TODO
   for (const auto& finfo : vfinfo) {
     m_rc = send_file_info(finfo);
-
+    if (m_rc != 0) return m_rc;
   }
-
   return 0;
 }
 
 [[nodiscard]] int
 Fclient::send_file_info(file::mqlqd_finfo const& finfo)
 {
-  log_g.msg(LL::INFO, fmt::format("Fclient::send_file_info()\t{}", finfo));
-  // TODO
+  log_g.msg(LL::DBUG, fmt::format("Fclient::send_file_info() entered into function.\t{}", finfo));
+  ssize_t nbytes{ -1 }; // nbytes sent || -1 - error val. ref: send(2).
+  ssize_t tbytes{ sizeof(finfo) }; // total bytes
+  size_t  zbytes{ sizeof(finfo) }; // total bytes
 
-  return 0;
+  while ((nbytes = send(m_fd, &finfo, zbytes, 0)) > 0) {
+    switch (nbytes) {
+    case -1: log_g.errnum(errno, "[FAIL] send() error occurred"); return -1;
+    case  0: log_g.msg(LL::WARN, "[DOUBTS] send() -> 0 => all bytes sent? or only orderly shutdown?"); break;
+    default: log_g.msg(LL::DBUG, fmt::format("send_files_info() bytes: {}", nbytes));
+    }
+    if (nbytes < 1) break; // -1 error || 0 orderly shutdown
+    if (tbytes <= nbytes) break; // XXX: not sure
+    // TODO: maybe i also should -= += here etc.
+  }
+  if (tbytes == nbytes) {
+    log_g.msg(LL::INFO, fmt::format("Fclient::send_file_info() (tbytes == nbytes) OK \t{}", finfo));
+    return 0;
+  }
+  if (nbytes < 1) {
+    log_g.msg(LL::WARN, fmt::format("Fclient::send_file_info()"
+          "NOT SURE ABOUT THIS! nbytes:{} tbytes:{}", nbytes, tbytes));
+  }
+  if (tbytes <= nbytes) {
+    log_g.msg(LL::WARN, fmt::format("Fclient::send_file_info() (tbytes <= nbytes)\n\t"
+          "NOT SURE ABOUT THIS! nbytes:{} tbytes:{}", nbytes, tbytes));
+    return 0; // XXX
+  } else {
+    log_g.msg(LL::CRIT, fmt::format("Fclient::send_file_info()\n\t"
+          "FIXME: UNEXPECTED BRANCH! nbytes:{} tbytes:{}", nbytes, tbytes));
+    return -2;
+  }
+  return 0; // XXX
 }
 
 [[nodiscard]] int
@@ -87,22 +114,26 @@ Fclient::send_file(file::File const& file)
   return 0;
 }
 
-[[nodiscard]] ssize_t
+// XXX or better return ssize_t nbytes... dunno yet...
+[[nodiscard]] int
 Fclient::send_loop(int fd, const char *buf, size_t len)
 {
   ssize_t nbytes{ -1 }; // nbytes sent || -1 - error val. ref: send(2).
   // loop till all bytes are sent or till the error.
-  while ((nbytes = send(fd, buf, len, 0)) > 0) {
+  while ((nbytes = send(fd, buf, len, 0)) >= 0) {
     switch (nbytes) {
-    case -1: log_g.errnum(errno, "[FAIL] send() error occured"); return -1;
-    case  0: log_g.msg(LL::DBUG, "[ OK ] send() all bytes sent"); return 0;
+    case -1: log_g.errnum(errno, "[FAIL] send() error occurred"); return -1;
+    // case  0: log_g.msg(LL::DBUG, "[ OK ] send() all bytes sent"); return  0; // XXX: not sure about that!
+    case  0: log_g.msg(LL::DBUG, "[ OK ] send() 0 - all bytes sent?"); return  0; // XXX: not sure about that!
     default: log_g.msg(LL::DBUG, fmt::format("send_loop() bytes: {}", nbytes));
     }
     // XXX: not sure about this! (made up myself!)
     buf += nbytes;
     len -= static_cast<size_t>(nbytes);
   }
-  return nbytes; // XXX: what to return in this unreal case?
+
+  log_g.msg(LL::CRIT, fmt::format("Unexpected branch in : send_loop() -> {}", -2));
+  return -2; // XXX: what to return in this unreal case?
 }
 
 [[nodiscard]] int

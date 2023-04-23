@@ -90,11 +90,12 @@ protected:
   /**
    * @brief man send(2).
    *
-   * @return  N on success - the number of bytes sent.
+   * XXX @return  N on success - the number of bytes sent.
    * @return  0 on success - when all bytes are sent (finish) (simplified).
    * @return -1 on error   - and errno is set to indicate the error.
+   * @return -2 on error   - unexpected branch (logic error in the function!?).
    */
-  [[nodiscard]] ssize_t
+  [[nodiscard]] int
   send_loop(int fd, const char *buf, size_t len);
 
 protected:
@@ -134,7 +135,8 @@ private:
 
   // file descriptor returned by the socket().
   // -1 is the socket() return value on error. ref: socket(2)
-  int m_fd{ -1 };
+  // => XXX: lets try 0 as default.
+  int m_fd{ 0 };
 
   // struct sockaddr;
 
