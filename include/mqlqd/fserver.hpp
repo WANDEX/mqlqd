@@ -128,6 +128,7 @@ protected:
    */
   [[nodiscard]] int
   recv_num_files_total();
+
   /**
    * @brief recv info file structure, with the file information.
    *
@@ -174,7 +175,7 @@ private:
 
   socklen_t   m_addrlen     {}; // XXX: part of addrinfo
 
-  std::vector<file::mqlqd_finfo> m_vfinfo;
+  // std::vector<file::mqlqd_finfo> m_vfinfo;
   std::vector<file::File>        m_vfiles;
 };
 

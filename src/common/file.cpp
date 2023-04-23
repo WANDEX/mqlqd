@@ -110,6 +110,7 @@ File::File(fs::path const& fpath, const std::size_t sz) noexcept
   log_g.msg(LL::DBUG, "ctor - File instance.");
 }
 
+/*
 File::File(fs::path &dpath, mqlqd_finfo const& finfo) noexcept
   // : m_fpath{ dpath.concat(std::begin(finfo.fname), std::end(finfo.fname)) } // XXX or this is more robust?
   // : m_fpath{ dpath.concat(finfo.fname.begin(), finfo.fname.end()) }
@@ -123,6 +124,13 @@ File::File(fs::path &dpath, mqlqd_finfo const& finfo) noexcept
 {
   log_g.msg(LL::DBUG, "ctor - File instance from finfo.");
   log_g.msg(LL::CRIT, fmt::format("XXX: {} <- dpath, unused param", dpath.c_str()));
+}
+*/
+
+File::File(fs::path const& fpath, mqlqd_finfo const& finfo) noexcept
+  : m_fpath{ fpath }, m_block_size{ finfo.block_size }
+{
+  log_g.msg(LL::DBUG, "ctor - File instance from finfo.");
 }
 
 [[nodiscard]] mqlqd_finfo

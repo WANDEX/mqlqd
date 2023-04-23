@@ -5,6 +5,7 @@
 #include "config.hpp"           // for the: addr, port, uid
 #include "file.hpp"
 
+#include <fmt/format.h>
 
 extern "C" {
 
@@ -79,7 +80,7 @@ Fserver::recv_files_info()
   m_rc = recv_num_files_total();
   if (m_rc != 0) return m_rc;
   // reserve in order to avoid potential reallocations later. (if many files)
-  m_vfinfo.reserve(m_num_files_total);
+  // m_vfinfo.reserve(m_num_files_total);
   m_vfiles.reserve(m_num_files_total);
 
   for (std::size_t i = 0; i < m_num_files_total; i++) {
@@ -94,7 +95,6 @@ Fserver::recv_file_info(const std::size_t i)
 {
   log_g.msg(LL::DBUG, "Fserver::recv_file_info() entered into function.");
 
-  // TODO: Move into sub-function
   file::mqlqd_finfo finfo {};
   ssize_t nbytes{ -1 }; // nbytes sent || -1 - error val. ref: send(2).
   ssize_t tbytes{ sizeof(finfo) }; // total bytes
@@ -111,10 +111,12 @@ Fserver::recv_file_info(const std::size_t i)
     // TODO: maybe i also should -= += here etc.
   }
 
-  log_g.msg(LL::INFO, fmt::format("i: {}, finfo: {}", i, finfo));
+  // log_g.msg(LL::DBUG, fmt::format("i: {}, finfo: {}", i, finfo));
+  // m_vfinfo.emplace_back(finfo);
 
-  // m_vfiles.emplace_back(file::File{ fp, fs::file_size(fp) });
-  // m_vfinfo.emplace_back(file::mqlqd_finfo{ fp, fs::file_size(fp) });
+  // TODO: concatenate storage dir with file name
+  m_vfiles.emplace_back(file::File{ fmt::format("{}/{}", m_storage_dir.c_str(), i), finfo });
+  log_g.msg(LL::INFO, fmt::format("i: {}, fpath: {}", i, m_vfiles.at(i)));
 
   return 0;
 }

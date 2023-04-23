@@ -67,7 +67,10 @@ public:
   explicit File(fs::path const& fpath, const std::size_t sz) noexcept;
 
   // @brief construct class instance from the file info structure.
-  explicit File(fs::path &dpath, mqlqd_finfo const& finfo) noexcept;
+  // explicit File(fs::path &dpath, mqlqd_finfo const& finfo) noexcept;
+
+  // @brief construct class instance from the file info structure.
+  explicit File(fs::path const& fpath, mqlqd_finfo const& finfo) noexcept;
 
   // @bief convert essentials of the instance into file info structure.
   [[nodiscard]] mqlqd_finfo
