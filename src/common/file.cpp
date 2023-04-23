@@ -32,11 +32,17 @@ is_r(fs::path const& fpath) noexcept
   fs::file_status s{ fs::status(fpath, ec) }; // for the noexcept
   if (ec) {
     log_g.msg(LL::CRIT, fmt::format("{}\n^ fs::status error:\n{}\n",
-                                    fpath.string(), ec.message() ));
+                                    fpath.c_str(), ec.message() ));
     return ec.value();
   }
   // TODO: check file permissions (maybe it is a good idea to have)
-  if (!fs::is_regular_file(s)) return 1;
+  if (!fs::is_regular_file(s)) {
+    // TODO: make this work. (hard)
+    // log_g.msg(LL::INFO, "Is NOT the regular file: {}\n", fpath.c_str());
+    log_g.msg(LL::ERRO, fmt::format("IS NOT the regular file: {}", fpath.c_str()));
+    return 1;
+  }
+  log_g.msg(LL::DBUG, fmt::format("Is the regular file: {}", fpath.c_str()));
   return 0;
 }
 
@@ -107,7 +113,7 @@ mkdir(fs::path const& dpath, fs::perms const& perms, bool force) noexcept
 File::File(fs::path const& fpath, const std::size_t sz) noexcept
   : m_fpath{ fpath }, m_block_size{ sz }
 {
-  log_g.msg(LL::DBUG, "ctor - File instance.");
+  log_g.msg(LL::DBUG, fmt::format("ctor - File instance. {}", fpath.c_str()));
 }
 
 /*
@@ -130,7 +136,7 @@ File::File(fs::path &dpath, mqlqd_finfo const& finfo) noexcept
 File::File(fs::path const& fpath, mqlqd_finfo const& finfo) noexcept
   : m_fpath{ fpath }, m_block_size{ finfo.block_size }
 {
-  log_g.msg(LL::DBUG, "ctor - File instance from finfo.");
+  log_g.msg(LL::DBUG, fmt::format("ctor - File instance from finfo. {}", fpath.c_str()));
 }
 
 [[nodiscard]] mqlqd_finfo
@@ -263,23 +269,22 @@ int File::fcontent()
 [[nodiscard]]
 int File::read_to_block()
 {
-  int arc{ heap_alloc() };
-  if (arc != 0) return arc;
+  int rc{ -10 }; // return code
+  rc = { heap_alloc() };
+  if (rc != 0) return rc;
   try {
     // XXX: this is not very convenient & certainly not terse.
-    log_g.msg(LL::DBUG, "file path: {}\n", fmt::make_format_args(m_fpath.string()));
-    int rrc { file::is_r(m_fpath) };
-    // TODO: make this work. (hard)
-    // log_g.msg(LL::INFO, "rrc - is the regular file: {}\n", (rrc == 0));
-    log_g.msg(LL::DBUG, fmt::format("rrc - is the regular file: {}", (rrc == 0)));
-    int crc { fcontent() };
-    log_g.msg(LL::DBUG, fmt::format("crc: {}", crc));
+    log_g.msg(LL::DBUG, "file path: {}\n", fmt::make_format_args(m_fpath.c_str()));
+    rc = { fcontent() };
+    if (rc != 0) return rc;
   }
   catch(std::exception const& err) {
-    log_g.msg(LL::CRIT, fmt::format("File::read_to_block() unhandled std::exception suppressed:\n{}\n", err.what()));
+    log_g.msg(LL::CRIT, fmt::format("File::read_to_block() unhandled std::exception suppressed:\n"
+                                    "{}\n", err.what()));
     return 5;
   } catch(...) {
-    log_g.msg(LL::CRIT, "File::read_to_block() unhandled anonymous exception occurred but was caught!\nTHIS IS EXTREMELY BAD!\n");
+    log_g.msg(LL::CRIT, "File::read_to_block() unhandled anonymous exception occurred but was caught!\n"
+                        "THIS IS EXTREMELY BAD!\n");
     return 6;
   }
   return 0;
