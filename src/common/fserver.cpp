@@ -58,7 +58,28 @@ Fserver::~Fserver()
 [[nodiscard]] int
 Fserver::recv_files_info()
 {
-  // TODO
+  log_g.msg(LL::DBUG, "Fserver::recv_files_info() entered into function.");
+  // TODO: first recv N - the number files
+  // TODO: and loop over i in the basic for loop.
+
+  // TODO: Move into sub-function
+  file::mqlqd_finfo finfo {};
+  ssize_t nbytes{ -1 }; // nbytes sent || -1 - error val. ref: send(2).
+  ssize_t tbytes{ sizeof(finfo) }; // total bytes
+  size_t  zbytes{ sizeof(finfo) }; // total bytes
+
+  while ((nbytes = recv(m_fd_con, &finfo, zbytes, 0)) > 0) {
+    switch (nbytes) {
+    case -1: log_g.errnum(errno, "[FAIL] recv() error occurred"); return -1;
+    case  0: log_g.msg(LL::WARN, "[DOUBTS] recv() -> 0 => orderly shutdown or what?"); break;
+    default: log_g.msg(LL::DBUG, fmt::format("recv_file_info() bytes: {}", nbytes));
+    }
+    if (nbytes < 1) break; // -1 error || 0 orderly shutdown
+    if (tbytes <= nbytes) break; // XXX: not sure
+    // TODO: maybe i also should -= += here etc.
+  }
+
+  log_g.msg(LL::INFO, fmt::format("finfo: {}", finfo));
 
   return 0;
 }
