@@ -54,13 +54,45 @@ Fserver::~Fserver()
   }
 }
 
+[[nodiscard]] int
+Fserver::recv_num_files_total()
+{
+  ssize_t nbytes = recv(m_fd_con, &m_num_files_total, sizeof(m_num_files_total), 0);
+  if (nbytes != sizeof(m_num_files_total)) {
+    switch (nbytes) {
+    case -1: log_g.errnum(errno, "[FAIL] to recv() m_num_files_total, error occurred:"); return -1;
+    default: log_g.msg(LL::ERRO, fmt::format("recv m_num_files_total out of all bytes: {}/{}",
+                                             nbytes, sizeof(m_num_files_total)));
+    }
+    return -2;
+  } else {
+    log_g.msg(LL::DBUG, fmt::format("recv m_num_files_total: {} out of total bytes: {}/{}",
+                                    m_num_files_total, nbytes, sizeof(m_num_files_total)));
+  }
+  return 0;
+}
 
 [[nodiscard]] int
 Fserver::recv_files_info()
 {
   log_g.msg(LL::DBUG, "Fserver::recv_files_info() entered into function.");
-  // TODO: first recv N - the number files
-  // TODO: and loop over i in the basic for loop.
+  m_rc = recv_num_files_total();
+  if (m_rc != 0) return m_rc;
+  // reserve in order to avoid potential reallocations later. (if many files)
+  m_vfinfo.reserve(m_num_files_total);
+  m_vfiles.reserve(m_num_files_total);
+
+  for (std::size_t i = 0; i < m_num_files_total; i++) {
+    m_rc = recv_file_info(i);
+    if (m_rc != 0) return m_rc;
+  }
+  return 0;
+}
+
+[[nodiscard]] int
+Fserver::recv_file_info(const std::size_t i)
+{
+  log_g.msg(LL::DBUG, "Fserver::recv_file_info() entered into function.");
 
   // TODO: Move into sub-function
   file::mqlqd_finfo finfo {};
@@ -79,7 +111,10 @@ Fserver::recv_files_info()
     // TODO: maybe i also should -= += here etc.
   }
 
-  log_g.msg(LL::INFO, fmt::format("finfo: {}", finfo));
+  log_g.msg(LL::INFO, fmt::format("i: {}, finfo: {}", i, finfo));
+
+  // m_vfiles.emplace_back(file::File{ fp, fs::file_size(fp) });
+  // m_vfinfo.emplace_back(file::mqlqd_finfo{ fp, fs::file_size(fp) });
 
   return 0;
 }

@@ -110,6 +110,15 @@ protected:
   fill_sockaddr_in();
 
   /**
+   * @brief send num_files_total, so that the server knows how many to expect.
+   *
+   * @param  TODO
+   * @return TODO
+   */
+  [[nodiscard]] int
+  send_num_files_total(const size_t num_files_total);
+
+  /**
    * @brief description
    *
    * @param  TODO

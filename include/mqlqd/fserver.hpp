@@ -122,13 +122,20 @@ protected:
   fill_sockaddr_in();
 
   /**
+   * @brief recv num_files_total, so that the server knows how many to expect.
+   *
+   * @return TODO
+   */
+  [[nodiscard]] int
+  recv_num_files_total();
+  /**
    * @brief recv info file structure, with the file information.
    *
    * @param  TODO
    * @return TODO
    */
   [[nodiscard]] int
-  recv_file_info();
+  recv_file_info(const std::size_t i);
 
 
   /**
@@ -157,6 +164,8 @@ private:
   // the queue of pending connections may grow. ref: listen(2)
   const int m_backlog{ 5 }; // (default val chosen arbitrarily)
 
+  size_t m_num_files_total{ 0 };
+
   // path to the storage dir. (storage for incoming files)
   // const fs::path m_storage_dir; // initialized via explicit ctor
   const fs::path &m_storage_dir; // initialized via explicit ctor
@@ -165,8 +174,8 @@ private:
 
   socklen_t   m_addrlen     {}; // XXX: part of addrinfo
 
-  std::vector<file::mqlqd_finfo> vfinfo;
-  std::vector<file::File> vfiles;
+  std::vector<file::mqlqd_finfo> m_vfinfo;
+  std::vector<file::File>        m_vfiles;
 };
 
 } // namespace mqlqd

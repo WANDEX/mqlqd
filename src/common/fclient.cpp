@@ -46,8 +46,31 @@ Fclient::~Fclient()
 }
 
 [[nodiscard]] int
+Fclient::send_num_files_total(const size_t num_files_total)
+{
+  // const size_t num_files_total{ vfinfo.size() };
+  ssize_t nbytes = send(m_fd, &num_files_total, sizeof(num_files_total), 0);
+  if (nbytes != sizeof(num_files_total)) {
+    switch (nbytes) {
+    case -1: log_g.errnum(errno, "[FAIL] to send() num_files_total, error occurred"); return -1;
+    default: log_g.msg(LL::ERRO, fmt::format("sent num_files_total out of all bytes: {}/{}",
+                                             nbytes, sizeof(num_files_total)));
+    }
+    return -2;
+  } else {
+    log_g.msg(LL::DBUG, fmt::format("sent num_files_total: {} out of total bytes: {}/{}",
+                                    num_files_total, nbytes, sizeof(num_files_total)));
+  }
+  return 0;
+}
+
+[[nodiscard]] int
 Fclient::send_files_info(std::vector<file::mqlqd_finfo> const& vfinfo)
 {
+  // send num_files_total first => so that the server knows how many files to expect.
+  m_rc = send_num_files_total(vfinfo.size());
+  if (m_rc != 0) return m_rc;
+
   for (const auto& finfo : vfinfo) {
     m_rc = send_file_info(finfo);
     if (m_rc != 0) return m_rc;
