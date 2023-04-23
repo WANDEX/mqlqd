@@ -50,12 +50,12 @@ cmd_opts(int argc, const char *argv[])
 
       ("c,cat",  "Print file content (cat like utility mode).")
       ("f,file", "File path of the file to transmit.",
-       cxxopts::value<std::vector<fs::path>>())
+       cxxopts::value<std::vector<cmd_opt_t>>())
       ("h,help", "Show usage help.")
       ("u,urge", "Log urgency level. (All messages </> Only critical)",
        cxxopts::value<int>(), "1-7")
       ("files_trail", "File path(s) as trailing argument(s).",
-       cxxopts::value<std::vector<fs::path>>());
+       cxxopts::value<std::vector<cmd_opt_t>>());
     // to support file paths supplied as trailing arguments:
     // e.g. (after all options) file1.txt file2.txt file3.txt
     options.parse_positional({"files_trail"});
@@ -96,13 +96,13 @@ cmd_opts(int argc, const char *argv[])
 
     if (opts_g.count("file")) {
       // add files passed via -f --file cmd options.
-      for (fs::path const &fp : opts_g["file"].as<std::vector<fs::path>>()) {
+      for (fs::path const fp : opts_g["file"].as<std::vector<cmd_opt_t>>()) {
         vfiles.emplace_back(file::File{ fp, fs::file_size(fp) });
       }
     }
     if (opts_g.count("files_trail")) {
       // add files passed via trailing cmd arguments.
-      for (fs::path const &fp : opts_g["files_trail"].as<std::vector<fs::path>>()) {
+      for (fs::path const fp : opts_g["files_trail"].as<std::vector<cmd_opt_t>>()) {
         vfiles.emplace_back(file::File{ fp, fs::file_size(fp) });
       }
     }
