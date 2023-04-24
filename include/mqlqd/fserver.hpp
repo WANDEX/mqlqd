@@ -30,7 +30,7 @@ public:
   Fserver &operator=(const Fserver &) = delete;
   ~Fserver();
 
-  explicit Fserver(fs::path const& storage_dir) noexcept;
+  explicit Fserver(port_t const& port, fs::path const& storage_dir) noexcept;
 
   /**
    * @brief initialize everything & start on success of all underlying functions.
@@ -150,6 +150,9 @@ protected:
 
 
 private:
+  // initialized via explicit ctor
+  const port_t m_port {};
+
   // for the simple return code. (val chosen arbitrarily)
   int m_rc{ -42 };
 

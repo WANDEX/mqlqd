@@ -11,6 +11,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <string>
 
 
 namespace mqlqd {
@@ -42,10 +43,11 @@ cmd_opts(int argc, const char *argv[])
     options.set_width(80);
     options.add_options()
       ("d,dir", "Path to the storage dir, else default storage under cwd.",
-       cxxopts::value<fs::path>()->default_value(dvw("./mqlqd_storage")))
+       cxxopts::value<cmd_opt_t>()->default_value(dvw("./mqlqd_storage")))
 
-      ("p,port", "Use port number as identity of the daemon on the server.",
-       cxxopts::value<cmd_opt_t>()->default_value(dvw(cfg::def_port)))
+      ("p,port", "Use port number as identity of the daemon on the server. "
+                 "(default: " + std::to_string(cfg::port) + ')',
+       cxxopts::value<port_t>())
 
       ("h,help", "Show usage help.")
       ("u,urge", "Log urgency level. (All messages </> Only critical)",
@@ -70,7 +72,7 @@ cmd_opts(int argc, const char *argv[])
     }
 
     // path to the storage dir. (storage for incoming files)
-    const fs::path storage_dir{ opts_g["dir"].as<fs::path>() };
+    const fs::path storage_dir{ opts_g["dir"].as<cmd_opt_t>() };
 
     std::error_code ec {};
     if (fs::is_directory(storage_dir, ec)) {
@@ -81,9 +83,10 @@ cmd_opts(int argc, const char *argv[])
       if (rc != 0) return rc;
     }
 
+    // use port number as identity on the server. (cmd option overrides value from config)
+    const port_t port{ opts_g.count("port") ? opts_g["port"].as<port_t>() : cfg::port };
 
-    // TODO: pass port number into ctor
-    Fserver fserver{ storage_dir };
+    Fserver fserver{ port, storage_dir };
     // initialize file server.
     int fs_rc = fserver.init();
     if (fs_rc != 0) {

@@ -2,7 +2,6 @@
 #include "fserver.hpp"
 
 #include "aliases.hpp"
-#include "config.hpp"           // for the: addr, port, uid
 #include "file.hpp"
 
 #include <fmt/format.h>
@@ -27,8 +26,8 @@ extern "C" {
 
 namespace mqlqd {
 
-Fserver::Fserver(fs::path const& storage_dir) noexcept
-  : m_storage_dir{ storage_dir }
+Fserver::Fserver(port_t const& port, fs::path const& storage_dir) noexcept
+  : m_port{ port }, m_storage_dir{ storage_dir }
 {
 }
 
@@ -237,7 +236,7 @@ Fserver::fill_sockaddr_in()
   // FIXME: check - does it work for the all u16 types?
   // TODO: support cmd option port
   m_sockaddr_in.sin_family      = AF_INET;
-  m_sockaddr_in.sin_port        = htons(cfg::port);
+  m_sockaddr_in.sin_port        = htons(m_port);
   m_sockaddr_in.sin_addr.s_addr = INADDR_ANY;
   m_addrlen = sizeof(m_sockaddr_in);
 
