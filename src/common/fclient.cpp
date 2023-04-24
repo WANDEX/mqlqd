@@ -7,7 +7,7 @@
 
 extern "C" {
 
-#include <arpa/inet.h>          // inet_pton()
+#include <arpa/inet.h>          // inet_pton(), inet_ntoa()
 
 #include <netdb.h>              // XXX needed?
 
@@ -119,12 +119,12 @@ Fclient::send_file_info(file::mqlqd_finfo const& finfo)
 [[nodiscard]] int
 Fclient::send_files(std::vector<file::File> const& vfiles)
 {
-  // TODO
   for (const auto& file : vfiles) {
     m_rc = send_file(file);
-
+    if (m_rc != 0) return m_rc;
   }
-
+  log_g.msg(LL::NTFY, fmt::format("[ OK ] all files are sent and received: {}/{}",
+                                  vfiles.size(), vfiles.size()));
   return 0;
 }
 
@@ -132,8 +132,13 @@ Fclient::send_files(std::vector<file::File> const& vfiles)
 Fclient::send_file(file::File const& file)
 {
   log_g.msg(LL::INFO, fmt::format("Fclient::send_file()\t\t{}", file));
-  // TODO
-
+  m_rc = send_loop(m_fd, file.m_block, file.m_block_size);
+  if (m_rc != 0) {
+    log_g.msg(LL::ERRO, fmt::format("[FAIL] to send file: {} : in send_loop() -> {}",
+                                    file.m_fpath.c_str(), m_rc));
+    return m_rc;
+  }
+  log_g.msg(LL::STAT, fmt::format("[ OK ] sent file: {}", file.m_fpath.c_str()));
   return 0;
 }
 
@@ -142,21 +147,51 @@ Fclient::send_file(file::File const& file)
 Fclient::send_loop(int fd, const char *buf, size_t len)
 {
   ssize_t nbytes{ -1 }; // nbytes sent || -1 - error val. ref: send(2).
+  ssize_t tbytes{ static_cast<ssize_t>(len) }; // total bytes
+  size_t  zbytes{ len }; // total bytes
+
   // loop till all bytes are sent or till the error.
-  while ((nbytes = send(fd, buf, len, 0)) >= 0) {
+  while ((nbytes = send(fd, buf, zbytes, 0)) >= 0) { // OK!
     switch (nbytes) {
     case -1: log_g.errnum(errno, "[FAIL] send() error occurred"); return -1;
-    // case  0: log_g.msg(LL::DBUG, "[ OK ] send() all bytes sent"); return  0; // XXX: not sure about that!
-    case  0: log_g.msg(LL::DBUG, "[ OK ] send() 0 - all bytes sent?"); return  0; // XXX: not sure about that!
+    case  0: log_g.msg(LL::WARN, "[FAIL] send() -> 0 - ???"); return -2;
     default: log_g.msg(LL::DBUG, fmt::format("send_loop() bytes: {}", nbytes));
     }
     // XXX: not sure about this! (made up myself!)
+    if (nbytes < 1) break; // -1 error || 0 orderly shutdown
+    if (tbytes <= nbytes) break; // XXX: not sure
+    // XXX: not sure about this! (made up myself!)
     buf += nbytes;
-    len -= static_cast<size_t>(nbytes);
+    zbytes -= static_cast<size_t>(nbytes);
   }
+  // TODO: there should be checks i guess...
 
-  log_g.msg(LL::CRIT, fmt::format("Unexpected branch in : send_loop() -> {}", -2));
-  return -2; // XXX: what to return in this unreal case?
+  // XXX: REWRITE => just copyed from my other function
+  if (tbytes == nbytes) {
+    log_g.msg(LL::INFO, fmt::format("Fclient::send_loop() (tbytes == nbytes) OK"));
+    return 0;
+  }
+  if (nbytes < 1) {
+    log_g.msg(LL::WARN, fmt::format("Fclient::send_loop()"
+          "NOT SURE ABOUT THIS! nbytes:{} tbytes:{}", nbytes, tbytes));
+  }
+  if (tbytes <= nbytes) {
+    log_g.msg(LL::WARN, fmt::format("Fclient::send_loop() (tbytes <= nbytes)\n\t"
+          "NOT SURE ABOUT THIS! nbytes:{} tbytes:{}", nbytes, tbytes));
+    return 0; // XXX
+  } else {
+    log_g.msg(LL::CRIT, fmt::format("Fclient::send_loop()\n\t"
+          "FIXME: UNEXPECTED BRANCH! nbytes:{} tbytes:{}", nbytes, tbytes));
+    return -2;
+  }
+  // XXX: <= REWRITE just copyed from my other function
+
+  log_g.msg(LL::INFO, fmt::format("[ OK?] in send_loop() ")); // XXX
+
+  // log_g.msg(LL::CRIT, fmt::format("Unexpected branch in : send_loop() -> {}", -3));
+  // return -3; // XXX: what to return in this unreal case?
+
+  return 0; // XXX
 }
 
 [[nodiscard]] int
@@ -184,6 +219,7 @@ Fclient::create_connection()
   case  0: log_g.msg(LL::INFO, "connection/binding success"); break;
   default: log_g.msg(LL::CRIT, fmt::format("Unexpected return code: connect() -> {}", m_rc));
   }
+  log_g.msg(LL::NTFY, fmt::format("Connection established: {}", inet_ntoa(m_sockaddr_in.sin_addr)));
   return m_rc;
 }
 
