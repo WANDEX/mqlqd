@@ -1,4 +1,7 @@
 // cxxopts & options related code
+// XXX: this file is not used!
+// XXX: following functions are disabled in the paired header as we do not use this anymore!
+//      but not yet sure that i am ready to fully remove op.cpp
 
 #include "op.hpp"
 

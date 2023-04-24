@@ -18,6 +18,10 @@ namespace mqlqd {
 inline cxxopts::ParseResult opts_g;
 
 
+// XXX: disabled as we do not use this anymore!
+//      but i not yet ready to fully remove op.cpp
+#if 0
+
 [[nodiscard]] cmd_opt_t
 dvw(std::string_view const& value);
 
@@ -26,6 +30,8 @@ opt_wrap(std::string_view const& in_opt);
 
 [[nodiscard]] fs::path
 opt_file_wrap(std::string_view const& in_opt);
+
+#endif
 
 } // namespace mqlqd
 
