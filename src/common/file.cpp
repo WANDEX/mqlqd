@@ -113,7 +113,9 @@ mkdir(fs::path const& dpath, fs::perms const& perms, bool force) noexcept
 File::File(fs::path const& fpath, const std::size_t sz) noexcept
   : m_fpath{ fpath }, m_block_size{ sz }
 {
-  log_g.msg(LL::DBUG, fmt::format("ctor - File instance. {}", fpath.c_str()));
+  log_g.msg(LL::DBUG, fmt::format("ctor - File instance from file & size.\n\t"
+                                  "m_block_size:\t[{}]\tm_fpath: {}",
+                                  m_block_size, m_fpath.c_str() ));
 }
 
 /*
@@ -136,7 +138,9 @@ File::File(fs::path &dpath, mqlqd_finfo const& finfo) noexcept
 File::File(fs::path const& fpath, mqlqd_finfo const& finfo) noexcept
   : m_fpath{ fpath }, m_block_size{ finfo.block_size }
 {
-  log_g.msg(LL::DBUG, fmt::format("ctor - File instance from finfo. {}", fpath.c_str()));
+  log_g.msg(LL::DBUG, fmt::format("ctor - File instance from finfo.\n\t"
+                                  "m_block_size:\t[{}]\tm_fpath: {}",
+                                  m_block_size, m_fpath.c_str() ));
 }
 
 [[nodiscard]] mqlqd_finfo
@@ -173,7 +177,8 @@ File::write()
 
   try {
     ofs << m_block;
-    log_g.msg(LL::DBUG, "The entire contents of the memory block were written to the file.");
+    log_g.msg(LL::STAT, fmt::format("Contents of the memory block were written to the file:\n\t{}",
+                                    m_fpath.c_str()));
   } catch(std::exception const& err) {
     log_g.msg(LL::CRIT, fmt::format("File::write() unhandled std::exception suppressed:\n{}\n", err.what()));
     return 35;
@@ -188,7 +193,7 @@ int File::heap_alloc() noexcept
   // but maybe there is the benefit in proper using of the raw pointers?
   // It is easy to rewrite if requested!
   try {
-    m_block = { new char[m_block_size] };
+    m_block = { new char[m_block_size]{} };
     if (!m_block) {
       log_g.msg(LL::CRIT, "File::heap_alloc() memory block == nullptr!");
       return 30;
