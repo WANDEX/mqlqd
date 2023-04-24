@@ -136,7 +136,7 @@ protected:
    * @return TODO
    */
   [[nodiscard]] int
-  recv_file_info(const std::size_t i);
+  recv_file_info(const size_t i);
 
 
   /**
@@ -146,7 +146,7 @@ protected:
    * @return TODO
    */
   [[nodiscard]] int
-  recv_file();
+  recv_file(const size_t i);
 
 
 private:
