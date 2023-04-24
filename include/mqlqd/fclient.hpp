@@ -4,7 +4,6 @@
  */
 
 #include "aliases.hpp"
-// #include "config.hpp"
 #include "file.hpp"
 
 #include <vector>
@@ -27,18 +26,14 @@ namespace mqlqd {
 class Fclient final
 {
 public:
-  Fclient() = default;
-  // Fclient() = delete; // XXX: or not delete...
+  Fclient() = delete;
   Fclient(Fclient &&) = delete;
   Fclient(const Fclient &) = delete;
   Fclient &operator=(Fclient &&) = delete;
   Fclient &operator=(const Fclient &) = delete;
   ~Fclient();
 
-
-  // TODO: pass port number into ctor
-  // TODO: pass addr into ctor
-  // explicit Fclient() noexcept;
+  explicit Fclient(addr_t const& addr, port_t const& port) noexcept;
 
   /**
    * @brief initialize everything & start on success of all underlying functions.
@@ -139,6 +134,10 @@ protected:
 
 
 private:
+  // initialized via explicit ctor
+  const addr_t m_addr {};
+  const port_t m_port {};
+
   // for the simple return code. (val chosen arbitrarily)
   int m_rc{ -42 };
 
@@ -148,9 +147,6 @@ private:
   int m_fd{ 0 };
 
   // struct sockaddr;
-
-  // port_t m_port{ cfg::port };
-  // addr_t m_addr{ cfg::addr };
 
   // sockaddr_in m_sockaddr_in {};
   struct sockaddr_in m_sockaddr_in {};

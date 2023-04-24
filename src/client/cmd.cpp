@@ -42,11 +42,13 @@ cmd_opts(int argc, const char *argv[])
     options.positional_help("[file paths as trailing arguments ...]");
     options.set_width(80);
     options.add_options()
-      ("a,addr", "Server IP address with the mqlqd_daemon.",
-       cxxopts::value<cmd_opt_t>()->default_value(dvw(cfg::def_addr)))
+      ("a,addr", "Server IP address with the mqlqd_daemon. "
+                 "(default: " + std::string{cfg::addr} + ')',
+       cxxopts::value<cmd_opt_t>())
 
-      ("p,port", "Port number of the daemon on the server.",
-       cxxopts::value<cmd_opt_t>()->default_value(dvw(cfg::def_port)))
+      ("p,port", "Port number of the daemon on the server. "
+                 "(default: " + std::to_string(cfg::port) + ')',
+       cxxopts::value<port_t>())
 
       ("c,cat",  "Print file content (cat like utility mode).")
       ("f,file", "File path of the file to transmit.",
@@ -133,10 +135,13 @@ cmd_opts(int argc, const char *argv[])
       return 0;
     }
 
+    // server address with the running mqlqd daemon. (file server)
+    const addr_t addr{ opts_g.count("addr") ? opts_g["addr"].as<cmd_opt_t>() : cfg::addr };
 
-    // TODO: pass port number into ctor
-    // TODO: pass addr into ctor
-    Fclient fclient{  };
+    // port number of the daemon on the server. (cmd option overrides value from config)
+    const port_t port{ opts_g.count("port") ? opts_g["port"].as<port_t>() : cfg::port };
+
+    Fclient fclient{ addr, port };
     // initialize file client.
     int fc_rc = fclient.init();
     if (fc_rc != 0) {

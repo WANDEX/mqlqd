@@ -43,7 +43,7 @@ cmd_opts(int argc, const char *argv[])
     options.set_width(80);
     options.add_options()
       ("d,dir", "Path to the storage dir, else default storage under cwd.",
-       cxxopts::value<cmd_opt_t>()->default_value(dvw("./mqlqd_storage")))
+       cxxopts::value<cmd_opt_t>()->default_value("./mqlqd_storage"))
 
       ("p,port", "Use port number as identity of the daemon on the server. "
                  "(default: " + std::to_string(cfg::port) + ')',

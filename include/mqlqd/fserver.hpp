@@ -23,7 +23,7 @@ namespace mqlqd {
 class Fserver final
 {
 public:
-  Fserver() = delete; // XXX: or not delete...
+  Fserver() = delete;
   Fserver(Fserver &&) = delete;
   Fserver(const Fserver &) = delete;
   Fserver &operator=(Fserver &&) = delete;

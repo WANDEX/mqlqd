@@ -2,7 +2,6 @@
 #include "fclient.hpp"
 
 #include "aliases.hpp"
-#include "config.hpp"           // for the: addr, port, uid
 #include "file.hpp"
 
 
@@ -26,9 +25,10 @@ extern "C" {
 
 namespace mqlqd {
 
-// Fclient::Fclient()
-// {
-// }
+Fclient::Fclient(addr_t const& addr, port_t const& port) noexcept
+  : m_addr{ addr }, m_port{ port }
+{
+}
 
 Fclient::~Fclient()
 {
@@ -227,13 +227,12 @@ Fclient::fill_sockaddr_in()
   // XXX: htons() - uint16_t
   // FIXME: check - does it work for the all u16 types?
   m_sockaddr_in.sin_family  = AF_INET;
-  // FIXME support cmd option port
-  m_sockaddr_in.sin_port    = htons(cfg::port);
+  m_sockaddr_in.sin_port    = htons(m_port);
   m_addrlen = sizeof(m_sockaddr_in);
 
-  // FIXME: support cmd option addr
   // convert IPv4 and IPv6 addresses from text to binary form
-  m_rc = inet_pton(AF_INET, cfg::addr.data(), &m_sockaddr_in.sin_addr);
+  m_rc = inet_pton(AF_INET, m_addr.data(), &m_sockaddr_in.sin_addr);
+
 #if 1 // XXX: I like this more! What do you like more?
   switch (m_rc) {
   case -1: log_g.errnum(errno, "[FAIL] inet_pton()"); break;
