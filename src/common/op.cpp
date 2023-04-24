@@ -26,7 +26,7 @@ namespace mqlqd {
  * @return output value as std::string type
  */
 [[nodiscard]] cmd_opt_t
-dvw(std::string_view const& value) noexcept
+dvw(std::string_view const& value)
 {
   return static_cast<cmd_opt_t>(value);
 }

@@ -19,7 +19,7 @@ inline cxxopts::ParseResult opts_g;
 
 
 [[nodiscard]] cmd_opt_t
-dvw(std::string_view const& value) noexcept;
+dvw(std::string_view const& value);
 
 [[nodiscard]] cmd_opt_t
 opt_wrap(std::string_view const& in_opt);
