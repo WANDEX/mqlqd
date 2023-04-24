@@ -5,10 +5,11 @@
 #include "file.hpp"
 
 #include <fmt/format.h>
+#include <iostream>
 
 extern "C" {
 
-#include <arpa/inet.h>          // inet_pton()
+#include <arpa/inet.h>          // inet_pton(), inet_ntoa()
 
 #include <netdb.h>              // XXX needed?
 
@@ -82,7 +83,7 @@ Fserver::recv_files_info()
   // m_vfinfo.reserve(m_num_files_total);
   m_vfiles.reserve(m_num_files_total);
 
-  for (std::size_t i = 0; i < m_num_files_total; i++) {
+  for (size_t i = 0; i < m_num_files_total; i++) {
     m_rc = recv_file_info(i);
     if (m_rc != 0) return m_rc;
   }
@@ -90,7 +91,7 @@ Fserver::recv_files_info()
 }
 
 [[nodiscard]] int
-Fserver::recv_file_info(const std::size_t i)
+Fserver::recv_file_info(const size_t i)
 {
   log_g.msg(LL::DBUG, "Fserver::recv_file_info() entered into function.");
 
@@ -120,12 +121,48 @@ Fserver::recv_file_info(const std::size_t i)
   return 0;
 }
 
+[[nodiscard]] int
+Fserver::recv_file(const size_t i)
+{
+  // reference variable to the needed file. (partially complete obj, which lacks file content).
+  // here we recv the last missing element - contents of the file as the block of memory.
+  file::File &file = m_vfiles.at(i);
+
+  m_rc = file.heap_alloc();
+  if (m_rc != 0) return m_rc;
+
+  ssize_t nbytes{ -1 }; // nbytes sent || -1 - error val. ref: send(2).
+  ssize_t tbytes{ static_cast<ssize_t>(file.m_block_size) }; // total bytes
+  size_t  zbytes{ file.m_block_size }; // total bytes
+
+  while ((nbytes = recv(m_fd_con, file.m_block, zbytes, 0)) > 0) {
+    switch (nbytes) {
+    case -1: log_g.errnum(errno, "[FAIL] recv() error occurred"); return -1;
+    case  0: log_g.msg(LL::WARN, "[DOUBTS] recv() -> 0 => orderly shutdown or what?"); break;
+    default: log_g.msg(LL::DBUG, fmt::format("recv_file() bytes: {}", nbytes));
+    }
+    if (nbytes < 1) break; // -1 error || 0 orderly shutdown
+    if (tbytes <= nbytes) break; // XXX: not sure
+    // TODO: maybe i also should -= += here etc.
+    break; // XXX
+  }
+  // TODO: there should be checks i guess...
+
+  // write file to the storage dir.
+  m_rc = file.write();
+  if (m_rc != 0) {
+    return m_rc;
+  }
+  return 0;
+}
 
 [[nodiscard]] int
 Fserver::recv_files()
 {
-  // TODO
-
+  for (size_t i = 0; i < m_num_files_total; i++) {
+    m_rc = recv_file(i);
+    if (m_rc != 0) return m_rc;
+  }
   return 0;
 }
 
@@ -180,8 +217,9 @@ Fserver::accept_connection()
                           reinterpret_cast<socklen_t *>(&m_addrlen));
   switch (m_fd_con) {
   case -1: log_g.errnum(errno, "[FAIL] accept()"); break;
-  default: log_g.msg(LL::INFO, "New connected socket created."); break;
+  default: log_g.msg(LL::INFO, "New connected socket created.");
   }
+  log_g.msg(LL::NTFY, fmt::format("Connection from: {}", inet_ntoa(m_sockaddr_in.sin_addr)));
   return m_fd_con;
 }
 
