@@ -153,20 +153,20 @@ private:
   // initialized via explicit ctor
   const port_t m_port {};
 
+  // The backlog defines the maximum length to which
+  // the queue of pending connections may grow. ref: listen(2)
+  const int m_backlog{ 1 };
+
   // for the simple return code. (val chosen arbitrarily)
   int m_rc{ -42 };
 
   // file descriptor returned by the socket().
   // -1 is the socket() return value on error. ref: socket(2)
-  int m_fd{ 0 };
+  int m_fd{ -1 };
 
   // new fd (connected socket) returned by the accept().
   // -1 is the accept() return value on error. ref: accept(2)
-  int m_fd_con{ 0 };
-
-  // The backlog defines the maximum length to which
-  // the queue of pending connections may grow. ref: listen(2)
-  const int m_backlog{ 5 }; // (default val chosen arbitrarily)
+  int m_fd_con{ -1 };
 
   size_t m_num_files_total{ 0 };
 
@@ -177,7 +177,7 @@ private:
 
   struct sockaddr_in m_sockaddr_in {};
 
-  std::vector<file::File>        m_vfiles;
+  std::vector<file::File> m_vfiles;
 
 };
 

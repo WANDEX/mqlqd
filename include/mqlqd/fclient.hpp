@@ -140,8 +140,7 @@ private:
 
   // file descriptor returned by the socket().
   // -1 is the socket() return value on error. ref: socket(2)
-  // => XXX: lets try 0 as default.
-  int m_fd{ 0 };
+  int m_fd{ -1 };
 
   socklen_t m_addrlen {}; // XXX: part of addrinfo
 

@@ -28,20 +28,24 @@ namespace mqlqd {
 Fclient::Fclient(addr_t const& addr, port_t const& port) noexcept
   : m_addr{ addr }, m_port{ port }
 {
+  log_g.msg(LL::DBUG, "INSIDE ctor Fclient()");
 }
 
 Fclient::~Fclient() noexcept
 {
+  log_g.msg(LL::DBUG, "INSIDE dtor ~Fclient()");
   // TODO: close_fd() | close(2) wrapper
+  // close file descriptor. ref: close(2).
   if (m_fd > 0) {
-    // close file descriptor. ref: close(2).
     m_rc = close(m_fd);
     switch (m_rc) {
     case -1: log_g.errnum(errno, "[FAIL] m_fd close()"); break;
     case  0: log_g.msg(LL::DBUG, "[ OK ] m_fd close()"); break;
     default: log_g.msg(LL::CRIT, fmt::format("Unexpected return code: m_fd close() -> {}", m_rc));
     }
+    m_fd = -1;
   }
+  log_g.msg(LL::DBUG, "END OF dtor ~Fclient()");
 }
 
 [[nodiscard]] int

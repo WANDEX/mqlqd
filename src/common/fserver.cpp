@@ -30,10 +30,12 @@ namespace mqlqd {
 Fserver::Fserver(port_t const& port, fs::path const& storage_dir) noexcept
   : m_port{ port }, m_storage_dir{ storage_dir }
 {
+  log_g.msg(LL::DBUG, "INSIDE ctor Fserver()");
 }
 
 Fserver::~Fserver() noexcept
 {
+  log_g.msg(LL::DBUG, "INSIDE dtor ~Fserver()");
   // TODO: close_fd() | close(2) wrapper
   // close file descriptors. ref: close(2).
   if (m_fd_con > 0) {
@@ -43,6 +45,7 @@ Fserver::~Fserver() noexcept
     case  0: log_g.msg(LL::DBUG, "[ OK ] m_fd_con close()"); break;
     default: log_g.msg(LL::CRIT, fmt::format("Unexpected return code: m_fd_con close() -> {}", m_rc));
     }
+    m_fd_con = -1;
   }
   if (m_fd > 0) {
     m_rc = close(m_fd);
@@ -51,7 +54,14 @@ Fserver::~Fserver() noexcept
     case  0: log_g.msg(LL::DBUG, "[ OK ] m_fd close()"); break;
     default: log_g.msg(LL::CRIT, fmt::format("Unexpected return code: m_fd close() -> {}", m_rc));
     }
+    m_fd = -1;
   }
+  /*
+   * NOTE: extra new line to split log messages
+   * between the old & new class instance by the empty line.
+   * For the daemon mode -> file server (in the infinite loop).
+   */
+  log_g.msg(LL::DBUG, "END OF dtor ~Fserver()\n");
 }
 
 [[nodiscard]] int
