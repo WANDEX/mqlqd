@@ -32,7 +32,6 @@ Fclient::Fclient(addr_t const& addr, port_t const& port) noexcept
 
 Fclient::~Fclient()
 {
-  // TODO: close file descriptors
   // TODO: close_fd() | close(2) wrapper
   if (m_fd > 0) {
     // close file descriptor. ref: close(2).
@@ -48,7 +47,6 @@ Fclient::~Fclient()
 [[nodiscard]] int
 Fclient::send_num_files_total(const size_t num_files_total)
 {
-  // const size_t num_files_total{ vfinfo.size() };
   ssize_t nbytes = send(m_fd, &num_files_total, sizeof(num_files_total), 0);
   if (nbytes != sizeof(num_files_total)) {
     switch (nbytes) {
@@ -57,10 +55,8 @@ Fclient::send_num_files_total(const size_t num_files_total)
                                              nbytes, sizeof(num_files_total)));
     }
     return -2;
-  } else {
-    log_g.msg(LL::DBUG, fmt::format("sent num_files_total: {} out of total bytes: {}/{}",
-                                    num_files_total, nbytes, sizeof(num_files_total)));
   }
+  log_g.msg(LL::DBUG, fmt::format("[ OK ] send_num_files_total() : {}", num_files_total));
   return 0;
 }
 
@@ -81,39 +77,14 @@ Fclient::send_files_info(std::vector<file::mqlqd_finfo> const& vfinfo)
 [[nodiscard]] int
 Fclient::send_file_info(file::mqlqd_finfo const& finfo)
 {
-  log_g.msg(LL::DBUG, fmt::format("Fclient::send_file_info() entered into function.\t{}", finfo));
-  ssize_t nbytes{ -1 }; // nbytes sent || -1 - error val. ref: send(2).
-  ssize_t tbytes{ sizeof(finfo) }; // total bytes
-  size_t  zbytes{ sizeof(finfo) }; // total bytes
-
-  while ((nbytes = send(m_fd, &finfo, zbytes, 0)) > 0) {
-    switch (nbytes) {
-    case -1: log_g.errnum(errno, "[FAIL] send() error occurred"); return -1;
-    case  0: log_g.msg(LL::WARN, "[DOUBTS] send() -> 0 => all bytes sent? or only orderly shutdown?"); break;
-    default: log_g.msg(LL::DBUG, fmt::format("send_files_info() bytes: {}", nbytes));
-    }
-    if (nbytes < 1) break; // -1 error || 0 orderly shutdown
-    if (tbytes <= nbytes) break; // XXX: not sure
-    // TODO: maybe i also should -= += here etc.
+  log_g.msg(LL::DBUG, fmt::format("INSIDE send_file_info() : {}", finfo));
+  m_rc = send_loop<file::mqlqd_finfo>(m_fd, &finfo, sizeof(finfo));
+  if (m_rc != 0) {
+    log_g.msg(LL::ERRO, fmt::format("[FAIL] send_file_info() in send_loop() -> {} : {}", m_rc, finfo));
+    return m_rc;
   }
-  if (tbytes == nbytes) {
-    log_g.msg(LL::INFO, fmt::format("Fclient::send_file_info() (tbytes == nbytes) OK \t{}", finfo));
-    return 0;
-  }
-  if (nbytes < 1) {
-    log_g.msg(LL::WARN, fmt::format("Fclient::send_file_info()"
-          "NOT SURE ABOUT THIS! nbytes:{} tbytes:{}", nbytes, tbytes));
-  }
-  if (tbytes <= nbytes) {
-    log_g.msg(LL::WARN, fmt::format("Fclient::send_file_info() (tbytes <= nbytes)\n\t"
-          "NOT SURE ABOUT THIS! nbytes:{} tbytes:{}", nbytes, tbytes));
-    return 0; // XXX
-  } else {
-    log_g.msg(LL::CRIT, fmt::format("Fclient::send_file_info()\n\t"
-          "FIXME: UNEXPECTED BRANCH! nbytes:{} tbytes:{}", nbytes, tbytes));
-    return -2;
-  }
-  return 0; // XXX
+  log_g.msg(LL::INFO, fmt::format("[ OK ] send_file_info() : {}", finfo));
+  return 0;
 }
 
 [[nodiscard]] int
@@ -123,7 +94,7 @@ Fclient::send_files(std::vector<file::File> const& vfiles)
     m_rc = send_file(file);
     if (m_rc != 0) return m_rc;
   }
-  log_g.msg(LL::NTFY, fmt::format("[ OK ] all files are sent and received: {}/{}",
+  log_g.msg(LL::NTFY, fmt::format("[ OK ] all files are sent: {}/{}",
                                   vfiles.size(), vfiles.size()));
   return 0;
 }
@@ -131,21 +102,21 @@ Fclient::send_files(std::vector<file::File> const& vfiles)
 [[nodiscard]] int
 Fclient::send_file(file::File const& file)
 {
-  log_g.msg(LL::INFO, fmt::format("Fclient::send_file()\t\t{}", file));
-  m_rc = send_loop(m_fd, file.m_block, file.m_block_size);
+  log_g.msg(LL::INFO, fmt::format("INSIDE send_file() : {}", file));
+  m_rc = send_loop<char>(m_fd, file.m_block, file.m_block_size);
   if (m_rc != 0) {
-    log_g.msg(LL::ERRO, fmt::format("[FAIL] to send file: {} : in send_loop() -> {}",
-                                    file.m_fpath.c_str(), m_rc));
+    log_g.msg(LL::ERRO, fmt::format("[FAIL] send_file() in send_loop() -> {} : {}", m_rc, file));
     return m_rc;
   }
-  log_g.msg(LL::STAT, fmt::format("[ OK ] sent file: {}", file.m_fpath.c_str()));
+  log_g.msg(LL::STAT, fmt::format("[ OK ] send_file() : {}", file));
   return 0;
 }
 
+template <typename T>
 [[nodiscard]] int
 Fclient::send_loop(int fd, void const* buf, size_t len)
 {
-  char const* bufptr{ reinterpret_cast<char const*>(buf) };
+  T const* bufptr{ reinterpret_cast<T const*>(buf) };
   size_t  toread{ len };
   ssize_t nbytes{  -1 }; // nbytes sent || -1 - error val. ref: send(2).
   // loop till all bytes are sent or till the error.
@@ -236,25 +207,12 @@ Fclient::fill_sockaddr_in()
 
   // convert IPv4 and IPv6 addresses from text to binary form
   m_rc = inet_pton(AF_INET, m_addr.data(), &m_sockaddr_in.sin_addr);
-
-#if 1 // XXX: I like this more! What do you like more?
   switch (m_rc) {
   case -1: log_g.errnum(errno, "[FAIL] inet_pton()"); break;
   case  0: log_g.msg(LL::ERRO, "Not valid network address in the specified address family!"); break;
   case  1: log_g.msg(LL::INFO, "Network address was successfully converted"); break;
   default: log_g.msg(LL::CRIT, fmt::format("Unexpected return code: inet_pton() -> {}", m_rc));
   }
-#else
-  if (m_rc == -1) {
-    log_g.errnum(errno, "[FAIL] inet_pton()");
-  } else if (m_rc == 0) {
-    log_g.msg(LL::ERRO, "Not valid network address in the specified address family!");
-  } else if (m_rc == 1) {
-    log_g.msg(LL::INFO, "Network address was successfully converted");
-  } else {
-    log_g.msg(LL::CRIT, fmt::format("Unexpected return code: inet_pton() -> {}", m_rc));
-  }
-#endif
   return m_rc;
 }
 

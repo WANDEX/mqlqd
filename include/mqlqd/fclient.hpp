@@ -128,6 +128,7 @@ protected:
    * @return -1 on error   - and errno is set to indicate the error.
    * @return -2 on error   - send() -> 0 - nothing to send etc.
    */
+  template <typename T>
   [[nodiscard]] int
   send_loop(int fd, void const* buf, size_t len);
 
