@@ -88,18 +88,26 @@ cmd_opts(int argc, const char *argv[])
     const port_t port{ opts_g.count("port") ? opts_g["port"].as<port_t>() : cfg::port };
 
 
-    Fserver fserver{ port, storage_dir };
-    // initialize file server.
-    rc = fserver.init();
-    if (rc != 0) return rc;
+    /**
+     * Work infinitely as the daemon till one of the stop signals received.
+     * Also - till the error: return code, errno msg, everything is logged, nothing suppressed.)
+     * TODO: make this daemon (file server) loop more optimal.
+     */
+    for(;;)
+    {
+      Fserver fserver{ port, storage_dir };
+      // initialize file server.
+      rc = fserver.init();
+      if (rc != 0) return rc;
 
-    // attempt to receive info of the upcoming transmission of the files.
-    rc = fserver.recv_files_info();
-    if (rc != 0) return rc;
+      // attempt to receive info of the upcoming transmission of the files.
+      rc = fserver.recv_files_info();
+      if (rc != 0) return rc;
 
-    // server is ready to accept provided files => start accepting files.
-    rc = fserver.recv_files();
-    if (rc != 0) return rc;
+      // server is ready to accept provided files => start accepting files.
+      rc = fserver.recv_files();
+      if (rc != 0) return rc;
+    }
 
 
   } catch(cxxopts::exceptions::exception const& err) {
