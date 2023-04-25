@@ -82,18 +82,6 @@ protected:
   [[nodiscard]] int
   create_connection();
 
-  /**
-   * @brief man send(2).
-   *
-   * XXX @return  N on success - the number of bytes sent.
-   * @return  0 on success - when all bytes are sent (finish) (simplified).
-   * @return -1 on error   - and errno is set to indicate the error.
-   * @return -2 on error   - unexpected branch (logic error in the function!?).
-   */
-  [[nodiscard]] int
-  send_loop(int fd, char *buf, size_t len);
-  // send_loop(int fd, const char *buf, size_t len);
-
 protected:
   /****************************************************************************
    * following are the helper methods.
@@ -132,6 +120,16 @@ protected:
    */
   [[nodiscard]] int
   send_file(file::File const& file);
+
+  /**
+   * @brief man send(2).
+   *
+   * @return  0 on success - when all bytes are sent (finish).
+   * @return -1 on error   - and errno is set to indicate the error.
+   * @return -2 on error   - send() -> 0 - nothing to send etc.
+   */
+  [[nodiscard]] int
+  send_loop(int fd, void const* buf, size_t len);
 
 
 private:

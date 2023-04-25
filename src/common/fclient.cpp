@@ -142,57 +142,24 @@ Fclient::send_file(file::File const& file)
   return 0;
 }
 
-// XXX or better return ssize_t nbytes... dunno yet...
 [[nodiscard]] int
-Fclient::send_loop(int fd, char *buf, size_t len)
-// Fclient::send_loop(int fd, const char *buf, size_t len)
+Fclient::send_loop(int fd, void const* buf, size_t len)
 {
-  ssize_t nbytes{ -1 }; // nbytes sent || -1 - error val. ref: send(2).
-  ssize_t tbytes{ static_cast<ssize_t>(len) }; // total bytes
-  size_t  zbytes{ len }; // total bytes
-
+  char const* bufptr{ reinterpret_cast<char const*>(buf) };
+  size_t  toread{ len };
+  ssize_t nbytes{  -1 }; // nbytes sent || -1 - error val. ref: send(2).
   // loop till all bytes are sent or till the error.
-  while ((nbytes = send(fd, buf, zbytes, 0)) >= 0) { // OK!
+  while ((nbytes = send(fd, bufptr, toread, 0)) > 0) {
     switch (nbytes) {
     case -1: log_g.errnum(errno, "[FAIL] send() error occurred"); return -1;
-    case  0: log_g.msg(LL::WARN, "[FAIL] send() -> 0 - ???"); return -2;
+    case  0: log_g.msg(LL::CRIT, "[FAIL] send() -> 0 - nothing to send!"); return -2;
     default: log_g.msg(LL::DBUG, fmt::format("send_loop() bytes: {}", nbytes));
     }
-    // XXX: not sure about this! (made up myself!)
-    if (nbytes < 1) break; // -1 error || 0 orderly shutdown
-    if (tbytes <= nbytes) break; // XXX: not sure
-    // XXX: not sure about this! (made up myself!)
-    buf += nbytes;
-    zbytes -= static_cast<size_t>(nbytes);
+    bufptr += nbytes; // next position to read into
+    toread -= static_cast<size_t>(nbytes); // read less next time
   }
-  // TODO: there should be checks i guess...
-
-  // XXX: REWRITE => just copyed from my other function
-  if (tbytes == nbytes) {
-    log_g.msg(LL::INFO, fmt::format("Fclient::send_loop() (tbytes == nbytes) OK"));
-    return 0;
-  }
-  if (nbytes < 1) {
-    log_g.msg(LL::WARN, fmt::format("Fclient::send_loop()\n\t"
-          "NOT SURE ABOUT THIS! nbytes:{} tbytes:{}", nbytes, tbytes));
-  }
-  if (tbytes <= nbytes) {
-    log_g.msg(LL::WARN, fmt::format("Fclient::send_loop() (tbytes <= nbytes)\n\t"
-          "NOT SURE ABOUT THIS! nbytes:{} tbytes:{}", nbytes, tbytes));
-    return 0; // XXX
-  } else {
-    log_g.msg(LL::CRIT, fmt::format("Fclient::send_loop()\n\t"
-          "FIXME: UNEXPECTED BRANCH! nbytes:{} tbytes:{}", nbytes, tbytes));
-    return -2;
-  }
-  // XXX: <= REWRITE just copyed from my other function
-
-  log_g.msg(LL::INFO, fmt::format("[ OK?] in send_loop() ")); // XXX
-
-  // log_g.msg(LL::CRIT, fmt::format("Unexpected branch in : send_loop() -> {}", -3));
-  // return -3; // XXX: what to return in this unreal case?
-
-  return 0; // XXX
+  log_g.msg(LL::DBUG, fmt::format("[ OK ] in send_loop()"));
+  return 0;
 }
 
 [[nodiscard]] int
