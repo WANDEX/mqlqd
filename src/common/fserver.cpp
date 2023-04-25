@@ -32,9 +32,8 @@ Fserver::Fserver(port_t const& port, fs::path const& storage_dir) noexcept
 {
 }
 
-Fserver::~Fserver()
+Fserver::~Fserver() noexcept
 {
-  // TODO: close file descriptors
   // TODO: close_fd() | close(2) wrapper
   // close file descriptors. ref: close(2).
   if (m_fd_con > 0) {
@@ -66,21 +65,18 @@ Fserver::recv_num_files_total()
                                              nbytes, sizeof(m_num_files_total)));
     }
     return -2;
-  } else {
-    log_g.msg(LL::DBUG, fmt::format("recv m_num_files_total: {} out of total bytes: {}/{}",
-                                    m_num_files_total, nbytes, sizeof(m_num_files_total)));
   }
+  log_g.msg(LL::DBUG, fmt::format("[ OK ] recv_num_files_total() : {}", m_num_files_total));
   return 0;
 }
 
 [[nodiscard]] int
 Fserver::recv_files_info()
 {
-  log_g.msg(LL::DBUG, "Fserver::recv_files_info() entered into function.");
+  // recv m_num_files_total first => so that the server knows how many files to expect.
   m_rc = recv_num_files_total();
   if (m_rc != 0) return m_rc;
   // reserve in order to avoid potential reallocations later. (if many files)
-  // m_vfinfo.reserve(m_num_files_total);
   m_vfiles.reserve(m_num_files_total);
 
   for (size_t i = 0; i < m_num_files_total; i++) {
@@ -93,60 +89,19 @@ Fserver::recv_files_info()
 [[nodiscard]] int
 Fserver::recv_file_info(const size_t i)
 {
-  log_g.msg(LL::DBUG, "Fserver::recv_file_info() entered into function.");
-
-  // FIXME: reinspect docs & comments => (blindly copied from send)
+  log_g.msg(LL::DBUG, fmt::format("INSIDE recv_file_info() : {}", i));
   file::mqlqd_finfo finfo {};
-  ssize_t nbytes{ -1 }; // nbytes sent || -1 - error val. ref: recv(2).
-  ssize_t tbytes{ sizeof(finfo) }; // total bytes
-  size_t  zbytes{ sizeof(finfo) }; // total bytes
-
-  while ((nbytes = recv(m_fd_con, &finfo, zbytes, 0)) > 0) {
-    switch (nbytes) {
-    case -1: log_g.errnum(errno, "[FAIL] recv() error occurred"); return -1;
-    case  0: log_g.msg(LL::WARN, "[DOUBTS] recv() -> 0 => orderly shutdown or what?"); break;
-    default: log_g.msg(LL::DBUG, fmt::format("recv_file_info() bytes: {}", nbytes));
-    }
-    if (nbytes < 1) break; // -1 error || 0 orderly shutdown
-    if (tbytes <= nbytes) break; // XXX: not sure
-    // TODO: maybe i also should -= += here etc.
+  m_rc = recv_loop<file::mqlqd_finfo>(m_fd_con, &finfo, sizeof(finfo));
+  if (m_rc != 0) {
+    log_g.msg(LL::ERRO, fmt::format("[FAIL] recv_file_info() in recv_loop() -> {} : {}", m_rc, finfo));
+    return m_rc;
   }
+  log_g.msg(LL::INFO, fmt::format("[ OK ] recv_file_info() : {}", finfo));
 
-  // log_g.msg(LL::DBUG, fmt::format("i: {}, finfo: {}", i, finfo));
-  // m_vfinfo.emplace_back(finfo);
-
+  // construct file object form the file info structure
   // TODO: concatenate storage dir with file name
   m_vfiles.emplace_back(file::File{ fmt::format("{}/{}", m_storage_dir.c_str(), i), finfo });
-  log_g.msg(LL::INFO, fmt::format("i: {}, fpath: {}", i, m_vfiles.at(i)));
-
-  return 0;
-}
-
-[[nodiscard]] int
-Fserver::recv_file(const size_t i)
-{
-  // reference variable to the needed file. (partially complete obj, which lacks file content).
-  // here we recv the last missing element - contents of the file as the block of memory.
-  file::File &file = m_vfiles.at(i);
-
-  // TODO: it will be cool to make - "the small buffer optimization"
-  //       => fixed size buffer on the stack for the small files.
-  m_rc = file.heap_alloc();
-  if (m_rc != 0) return m_rc;
-
-  m_rc = recv_loop(m_fd_con, file.m_block, file.m_block_size);
-  if (m_rc != 0) {
-    log_g.msg(LL::ERRO, fmt::format("[FAIL] to recv file: {} : in recv_loop() -> {}",
-                                    file.m_fpath.c_str(), m_rc));
-    return m_rc;
-  }
-  log_g.msg(LL::STAT, fmt::format("[ OK ] recv file: {}", file.m_fpath.c_str()));
-
-  // write file to the storage dir.
-  m_rc = file.write();
-  if (m_rc != 0) {
-    return m_rc;
-  }
+  log_g.msg(LL::INFO, fmt::format("\ti - {} : {}", i, m_vfiles.at(i)));
   return 0;
 }
 
@@ -163,16 +118,45 @@ Fserver::recv_files()
 }
 
 [[nodiscard]] int
+Fserver::recv_file(const size_t i)
+{
+  // reference variable to the needed file. (partially complete obj, which lacks file content).
+  // here we recv the last missing element - contents of the file as the block of memory.
+  file::File &file = m_vfiles.at(i);
+  log_g.msg(LL::INFO, fmt::format("INSIDE recv_file() : {}", file));
+
+  // TODO: it will be cool to make - "the small buffer optimization"
+  //       => fixed size buffer on the stack for the small files.
+  m_rc = file.heap_alloc();
+  if (m_rc != 0) return m_rc;
+
+  m_rc = recv_loop<char>(m_fd_con, file.m_block, file.m_block_size);
+  if (m_rc != 0) {
+    log_g.msg(LL::ERRO, fmt::format("[FAIL] recv_file() in recv_loop() -> {} : {}", m_rc, file));
+    return m_rc;
+  }
+  log_g.msg(LL::STAT, fmt::format("[ OK ] recv_file() : {}", file));
+
+  // write file to the storage dir.
+  m_rc = file.write();
+  if (m_rc != 0) {
+    return m_rc;
+  }
+  return 0;
+}
+
+template <typename T>
+[[nodiscard]] int
 Fserver::recv_loop(int fd, void *buf, size_t len)
 {
-  char   *bufptr{ reinterpret_cast<char *>(buf) };
+  T      *bufptr{ reinterpret_cast<T *>(buf) };
   size_t  toread{ len };
   ssize_t nbytes{  -1 }; // nbytes recv || -1 - error val. ref: recv(2).
   // loop till all bytes are recv or till the error.
   while ((nbytes = recv(fd, bufptr, toread, 0)) > 0) {
     switch (nbytes) {
     case -1: log_g.errnum(errno, "[FAIL] recv() error occurred"); return -1;
-    case  0: log_g.msg(LL::WARN, "[FAIL] recv() -> 0 - orderly shutdown"); return -2;
+    case  0: log_g.msg(LL::WARN, "[FAIL] recv() -> 0 - orderly shutdown!"); return -2;
     default: log_g.msg(LL::DBUG, fmt::format("recv_loop() bytes: {}", nbytes));
     }
     bufptr += nbytes; // next position to read into
@@ -207,7 +191,7 @@ Fserver::bind_socket()
     return -1;
   }
   log_g.msg(LL::DBUG, "[ OK ] bind()");
-  return m_rc; // return the return code (written like this for the consistency)
+  return m_rc; // return the return code -> 0 - success.
 }
 
 [[nodiscard]] int
@@ -276,9 +260,6 @@ Fserver::init()
   return 0;
 }
 
-/*
- * following are the helper methods.
- */
 
 [[nodiscard]] int
 Fserver::fill_sockaddr_in()
@@ -288,7 +269,6 @@ Fserver::fill_sockaddr_in()
 
   // XXX: htons() - uint16_t
   // FIXME: check - does it work for the all u16 types?
-  // TODO: support cmd option port
   m_sockaddr_in.sin_family      = AF_INET;
   m_sockaddr_in.sin_port        = htons(m_port);
   m_sockaddr_in.sin_addr.s_addr = INADDR_ANY;

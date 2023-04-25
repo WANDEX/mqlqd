@@ -28,7 +28,7 @@ public:
   Fserver(const Fserver &) = delete;
   Fserver &operator=(Fserver &&) = delete;
   Fserver &operator=(const Fserver &) = delete;
-  ~Fserver();
+  ~Fserver() noexcept;
 
   explicit Fserver(port_t const& port, fs::path const& storage_dir) noexcept;
 
@@ -141,9 +141,10 @@ protected:
    * @brief man recv(2).
    *
    * @return  0 on success - when all bytes are received (finish).
-   * @return -1 on error   - and errno is set to indicate the error.
+   * @return -1 on error   - and errno msg is logged to indicate the error.
    * @return -2 on recv() -> 0 - orderly shutdown etc. ref: recv(2).
    */
+  template <typename T>
   [[nodiscard]] int
   recv_loop(int fd, void *buf, size_t len);
 
@@ -170,15 +171,14 @@ private:
   size_t m_num_files_total{ 0 };
 
   // path to the storage dir. (storage for incoming files)
-  // const fs::path m_storage_dir; // initialized via explicit ctor
-  const fs::path &m_storage_dir; // initialized via explicit ctor
+  const fs::path m_storage_dir; // initialized via explicit ctor
+
+  socklen_t m_addrlen {}; // XXX: part of addrinfo
 
   struct sockaddr_in m_sockaddr_in {};
 
-  socklen_t   m_addrlen     {}; // XXX: part of addrinfo
-
-  // std::vector<file::mqlqd_finfo> m_vfinfo;
   std::vector<file::File>        m_vfiles;
+
 };
 
 } // namespace mqlqd
