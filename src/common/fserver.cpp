@@ -95,8 +95,9 @@ Fserver::recv_file_info(const size_t i)
 {
   log_g.msg(LL::DBUG, "Fserver::recv_file_info() entered into function.");
 
+  // FIXME: reinspect docs & comments => (blindly copied from send)
   file::mqlqd_finfo finfo {};
-  ssize_t nbytes{ -1 }; // nbytes sent || -1 - error val. ref: send(2).
+  ssize_t nbytes{ -1 }; // nbytes sent || -1 - error val. ref: recv(2).
   ssize_t tbytes{ sizeof(finfo) }; // total bytes
   size_t  zbytes{ sizeof(finfo) }; // total bytes
 
@@ -128,25 +129,18 @@ Fserver::recv_file(const size_t i)
   // here we recv the last missing element - contents of the file as the block of memory.
   file::File &file = m_vfiles.at(i);
 
+  // TODO: it will be cool to make - "the small buffer optimization"
+  //       => fixed size buffer on the stack for the small files.
   m_rc = file.heap_alloc();
   if (m_rc != 0) return m_rc;
 
-  ssize_t nbytes{ -1 }; // nbytes sent || -1 - error val. ref: send(2).
-  ssize_t tbytes{ static_cast<ssize_t>(file.m_block_size) }; // total bytes
-  size_t  zbytes{ file.m_block_size }; // total bytes
-
-  while ((nbytes = recv(m_fd_con, file.m_block, zbytes, 0)) > 0) {
-    switch (nbytes) {
-    case -1: log_g.errnum(errno, "[FAIL] recv() error occurred"); return -1;
-    case  0: log_g.msg(LL::WARN, "[DOUBTS] recv() -> 0 => orderly shutdown or what?"); break;
-    default: log_g.msg(LL::DBUG, fmt::format("recv_file() bytes: {}", nbytes));
-    }
-    if (nbytes < 1) break; // -1 error || 0 orderly shutdown
-    if (tbytes <= nbytes) break; // XXX: not sure
-    // TODO: maybe i also should -= += here etc.
-    break; // XXX
+  m_rc = recv_loop(m_fd_con, file.m_block, file.m_block_size);
+  if (m_rc != 0) {
+    log_g.msg(LL::ERRO, fmt::format("[FAIL] to recv file: {} : in recv_loop() -> {}",
+                                    file.m_fpath.c_str(), m_rc));
+    return m_rc;
   }
-  // TODO: there should be checks i guess...
+  log_g.msg(LL::STAT, fmt::format("[ OK ] recv file: {}", file.m_fpath.c_str()));
 
   // write file to the storage dir.
   m_rc = file.write();
@@ -163,7 +157,57 @@ Fserver::recv_files()
     m_rc = recv_file(i);
     if (m_rc != 0) return m_rc;
   }
+  log_g.msg(LL::NTFY, fmt::format("[ OK ] all files are received: {}/{}",
+                                  m_num_files_total, m_num_files_total));
   return 0;
+}
+
+[[nodiscard]] int
+Fserver::recv_loop(int fd, char *buf, size_t len)
+// Fserver::recv_loop(int fd, const char *buf, size_t len)
+{
+  // FIXME: reinspect docs & comments => (blindly copied from send_loop)
+  ssize_t nbytes{ -1 }; // nbytes recv || -1 - error val. ref: recv(2).
+  ssize_t tbytes{ static_cast<ssize_t>(len) }; // total bytes
+  size_t  zbytes{ len }; // total bytes
+
+  while ((nbytes = recv(fd, buf, zbytes, 0)) >= 0) {
+    switch (nbytes) {
+    case -1: log_g.errnum(errno, "[FAIL] recv() error occurred"); return -1;
+    case  0: log_g.msg(LL::WARN, "[FAIL] recv() -> 0  - ???"); return -2;
+    default: log_g.msg(LL::DBUG, fmt::format("recv_file() bytes: {}", nbytes));
+    }
+    if (nbytes < 1) break; // -1 error || 0 orderly shutdown
+    if (tbytes <= nbytes) break; // XXX: not sure
+    // XXX: not sure about this! (made up myself!)
+    buf += nbytes;
+    zbytes -= static_cast<size_t>(nbytes);
+  }
+  // TODO: there should be checks i guess...
+
+  // XXX: REWRITE => just copyed from my other function
+  if (tbytes == nbytes) {
+    log_g.msg(LL::INFO, fmt::format("Fserver::recv_loop() (tbytes == nbytes) OK"));
+    return 0;
+  }
+  if (nbytes < 1) {
+    log_g.msg(LL::WARN, fmt::format("Fserver::recv_loop()\n\t"
+          "NOT SURE ABOUT THIS! nbytes:{} tbytes:{}", nbytes, tbytes));
+  }
+  if (tbytes <= nbytes) {
+    log_g.msg(LL::WARN, fmt::format("Fserver::recv_loop() (tbytes <= nbytes)\n\t"
+          "NOT SURE ABOUT THIS! nbytes:{} tbytes:{}", nbytes, tbytes));
+    return 0; // XXX
+  } else {
+    log_g.msg(LL::CRIT, fmt::format("Fserver::recv_loop()\n\t"
+          "FIXME: UNEXPECTED BRANCH! nbytes:{} tbytes:{}", nbytes, tbytes));
+    return -2;
+  }
+  // XXX: <= REWRITE just copyed from my other function
+
+  log_g.msg(LL::INFO, fmt::format("[ OK?] in recv_loop() ")); // XXX
+
+  return 0; // XXX
 }
 
 [[nodiscard]] int

@@ -91,7 +91,8 @@ protected:
    * @return -2 on error   - unexpected branch (logic error in the function!?).
    */
   [[nodiscard]] int
-  send_loop(int fd, const char *buf, size_t len);
+  send_loop(int fd, char *buf, size_t len);
+  // send_loop(int fd, const char *buf, size_t len);
 
 protected:
   /****************************************************************************

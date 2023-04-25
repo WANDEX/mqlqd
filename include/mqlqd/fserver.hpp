@@ -108,7 +108,8 @@ protected:
    */
   // FIXME: ^ update the docs!
   [[nodiscard]] int
-  recv_loop();
+  recv_loop(int fd, char *buf, size_t len);
+  // recv_loop(int fd, const char *buf, size_t len);
 
 protected:
   /****************************************************************************

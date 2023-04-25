@@ -144,7 +144,8 @@ Fclient::send_file(file::File const& file)
 
 // XXX or better return ssize_t nbytes... dunno yet...
 [[nodiscard]] int
-Fclient::send_loop(int fd, const char *buf, size_t len)
+Fclient::send_loop(int fd, char *buf, size_t len)
+// Fclient::send_loop(int fd, const char *buf, size_t len)
 {
   ssize_t nbytes{ -1 }; // nbytes sent || -1 - error val. ref: send(2).
   ssize_t tbytes{ static_cast<ssize_t>(len) }; // total bytes
@@ -172,7 +173,7 @@ Fclient::send_loop(int fd, const char *buf, size_t len)
     return 0;
   }
   if (nbytes < 1) {
-    log_g.msg(LL::WARN, fmt::format("Fclient::send_loop()"
+    log_g.msg(LL::WARN, fmt::format("Fclient::send_loop()\n\t"
           "NOT SURE ABOUT THIS! nbytes:{} tbytes:{}", nbytes, tbytes));
   }
   if (tbytes <= nbytes) {
