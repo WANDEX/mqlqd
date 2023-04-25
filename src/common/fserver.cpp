@@ -83,6 +83,7 @@ Fserver::recv_files_info()
     m_rc = recv_file_info(i);
     if (m_rc != 0) return m_rc;
   }
+  log_g.msg(LL::INFO, "[ OK ] Received info of the upcoming transfer of the files.");
   return 0;
 }
 

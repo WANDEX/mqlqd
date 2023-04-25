@@ -195,9 +195,10 @@ int File::heap_alloc() noexcept
   try {
     m_block = { new char[m_block_size]{} };
     if (!m_block) {
-      log_g.msg(LL::CRIT, "File::heap_alloc() memory block == nullptr!");
+      log_g.msg(LL::CRIT, "[FAIL] File::heap_alloc() memory block == nullptr!");
       return 30;
     }
+    log_g.msg(LL::DBUG, "[ OK ] File::heap_alloc()");
   } catch(std::bad_alloc const& err) {
       log_g.msg(LL::ERRO, fmt::format("std::bad_alloc - insufficient memory? :\n{}\n", err.what()));
       File::~File();
@@ -274,14 +275,17 @@ int File::fcontent()
 [[nodiscard]]
 int File::read_to_block()
 {
-  int rc{ -10 }; // return code
-  rc = { heap_alloc() };
+  int rc = heap_alloc();
   if (rc != 0) return rc;
   try {
-    // XXX: this is not very convenient & certainly not terse.
-    log_g.msg(LL::DBUG, "file path: {}\n", fmt::make_format_args(m_fpath.c_str()));
-    rc = { fcontent() };
-    if (rc != 0) return rc;
+    rc = fcontent();
+    if (rc != 0) {
+      log_g.msg(LL::ERRO, fmt::format("[FAIL] File::read_to_block() -> {}", rc));
+      return rc;
+    }
+    // XXX: this is not very convenient & certainly not terse. -> make_format_args inside logger.
+    log_g.msg(LL::DBUG, "[ OK ] File::read_to_block() file path: {}\n",
+                        fmt::make_format_args(m_fpath.c_str()));
   }
   catch(std::exception const& err) {
     log_g.msg(LL::CRIT, fmt::format("File::read_to_block() unhandled std::exception suppressed:\n"

@@ -65,11 +65,12 @@ cmd_opts(int argc, const char *argv[])
     }
 
     if (opts_g.count("urge")) {
-      // force specific log urgency level.
-      // (has priority over the value in config).
-      LL urgency{ opts_g["urge"].as<int>() };
+      // force specific log urgency level. (has priority over the value in config).
+      const LL urgency{ opts_g["urge"].as<int>() };
       log_g.set_urgency(urgency);
     }
+
+    int rc{ 42 }; // reusable variable for the return codes
 
     // path to the storage dir. (storage for incoming files)
     const fs::path storage_dir{ opts_g["dir"].as<cmd_opt_t>() };
@@ -79,36 +80,26 @@ cmd_opts(int argc, const char *argv[])
       log_g.msg(LL::NTFY, "Directory exist, and will be used as the storage dir.");
     } else {
       // make dir for the storage with permissions for owner only.
-      int rc = file::mkdir(storage_dir, fs::perms::owner_all);
+      rc = file::mkdir(storage_dir, fs::perms::owner_all);
       if (rc != 0) return rc;
     }
 
     // use port number as identity on the server. (cmd option overrides value from config)
     const port_t port{ opts_g.count("port") ? opts_g["port"].as<port_t>() : cfg::port };
 
+
     Fserver fserver{ port, storage_dir };
     // initialize file server.
-    int fs_rc = fserver.init();
-    if (fs_rc != 0) {
-      log_g.msg(LL::ERRO, fmt::format("fserver.init() -> {}", fs_rc));
-      return fs_rc;
-    }
+    rc = fserver.init();
+    if (rc != 0) return rc;
 
     // attempt to receive info of the upcoming transmission of the files.
-    fs_rc = fserver.recv_files_info();
-    if (fs_rc != 0) {
-      log_g.msg(LL::ERRO, fmt::format("fserver.recv_files_info() -> {}", fs_rc));
-      return fs_rc;
-    }
-    log_g.msg(LL::STAT, "Received info of the upcoming transfer of the files.");
+    rc = fserver.recv_files_info();
+    if (rc != 0) return rc;
 
     // server is ready to accept provided files => start accepting files.
-    fs_rc = fserver.recv_files();
-    if (fs_rc != 0) {
-      log_g.msg(LL::ERRO, fmt::format("fserver.recv_files() -> {}", fs_rc));
-      return fs_rc;
-    }
-    log_g.msg(LL::NTFY, "All files were successfully received.");
+    rc = fserver.recv_files();
+    if (rc != 0) return rc;
 
 
   } catch(cxxopts::exceptions::exception const& err) {

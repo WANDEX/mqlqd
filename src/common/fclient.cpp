@@ -71,6 +71,7 @@ Fclient::send_files_info(std::vector<file::mqlqd_finfo> const& vfinfo)
     m_rc = send_file_info(finfo);
     if (m_rc != 0) return m_rc;
   }
+  log_g.msg(LL::INFO, "[ OK ] Sent info of the upcoming transfer of the files.");
   return 0;
 }
 

@@ -53,9 +53,11 @@ cmd_opts(int argc, const char *argv[])
       ("c,cat",  "Print file content (cat like utility mode).")
       ("f,file", "File path of the file to transmit.",
        cxxopts::value<std::vector<cmd_opt_t>>())
+
       ("h,help", "Show usage help.")
       ("u,urge", "Log urgency level. (All messages </> Only critical)",
        cxxopts::value<int>(), "1-7")
+
       ("files_trail", "File path(s) as trailing argument(s).",
        cxxopts::value<std::vector<cmd_opt_t>>());
     // to support file paths supplied as trailing arguments:
@@ -74,18 +76,19 @@ cmd_opts(int argc, const char *argv[])
     }
 
     if (!opts_g.count("file") && !opts_g.count("files_trail")) {
-      std::cerr << options.help() << '\n';
-      std::cerr << "Look up the usage help." << '\n'
+      std::cerr << options.help() << '\n'
+                << "Look up the usage help." << '\n'
                 << "No files were provided, exit." << '\n';
       exit(10);
     }
 
     if (opts_g.count("urge")) {
-      // force specific log urgency level.
-      // (has priority over the value in config).
-      LL urgency{ opts_g["urge"].as<int>() };
+      // force specific log urgency level. (has priority over the value in config).
+      const LL urgency{ opts_g["urge"].as<int>() };
       log_g.set_urgency(urgency);
     }
+
+    int rc{ 42 }; // reusable variable for the return codes
 
     // total number of file paths passed via all options: via option & positional arguments.
     const std::size_t n_files_passed{ opts_g.count("file") + opts_g.count("files_trail") };
@@ -116,24 +119,18 @@ cmd_opts(int argc, const char *argv[])
        * We are doing this here to not have potential bottleneck later -> on the transmission step.
        * (especially in terms of reading speed from the users block devices e.g. Slow HDD etc.).
        */
-      auto brc{ file.read_to_block() };
-      if (brc != 0) {
-        log_g.msg(LL::ERRO, fmt::format("Fail file.read_to_block() -> {}", brc));
-        return brc;
+      rc = file.read_to_block();
+      if (rc != 0) return rc;
+      if (opts_g.count("cat")) {
+        file.print_fcontent();
       } else {
-        if (opts_g.count("cat")) {
-          file.print_fcontent();
-        } else {
-          vfinfo.emplace_back(file.to_finfo());
-        }
+        vfinfo.emplace_back(file.to_finfo());
       }
     }
 
     // if we are in the cat mode -> simply finish =>
     // as user do not need to initialize file client & do transmission.
-    if (opts_g.count("cat")) {
-      return 0;
-    }
+    if (opts_g.count("cat")) return 0;
 
     // server address with the running mqlqd daemon. (file server)
     const addr_t addr{ opts_g.count("addr") ? opts_g["addr"].as<cmd_opt_t>() : cfg::addr };
@@ -141,29 +138,19 @@ cmd_opts(int argc, const char *argv[])
     // port number of the daemon on the server. (cmd option overrides value from config)
     const port_t port{ opts_g.count("port") ? opts_g["port"].as<port_t>() : cfg::port };
 
+
     Fclient fclient{ addr, port };
     // initialize file client.
-    int fc_rc = fclient.init();
-    if (fc_rc != 0) {
-      log_g.msg(LL::ERRO, fmt::format("fclient.init() -> {}", fc_rc));
-      return fc_rc;
-    }
+    rc = fclient.init();
+    if (rc != 0) return rc;
 
     // attempt to send info of the upcoming transmission of the files.
-    fc_rc = fclient.send_files_info(vfinfo);
-    if (fc_rc != 0) {
-      log_g.msg(LL::ERRO, fmt::format("fclient.send_files_info() -> {}", fc_rc));
-      return fc_rc;
-    }
-    log_g.msg(LL::INFO, "Sent info of the upcoming transfer of the files.");
+    rc = fclient.send_files_info(vfinfo);
+    if (rc != 0) return rc;
 
     // server is ready to accept provided files => start sending files.
-    fc_rc = fclient.send_files(vfiles);
-    if (fc_rc != 0) {
-      log_g.msg(LL::ERRO, fmt::format("fclient.send_files() -> {}", fc_rc));
-      return fc_rc;
-    }
-    log_g.msg(LL::NTFY, "All files were successfully sent and received.");
+    rc = fclient.send_files(vfiles);
+    if (rc != 0) return rc;
 
 
   } catch(cxxopts::exceptions::exception const& err) {
