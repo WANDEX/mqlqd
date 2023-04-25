@@ -163,51 +163,23 @@ Fserver::recv_files()
 }
 
 [[nodiscard]] int
-Fserver::recv_loop(int fd, char *buf, size_t len)
-// Fserver::recv_loop(int fd, const char *buf, size_t len)
+Fserver::recv_loop(int fd, void *buf, size_t len)
 {
-  // FIXME: reinspect docs & comments => (blindly copied from send_loop)
-  ssize_t nbytes{ -1 }; // nbytes recv || -1 - error val. ref: recv(2).
-  ssize_t tbytes{ static_cast<ssize_t>(len) }; // total bytes
-  size_t  zbytes{ len }; // total bytes
-
-  while ((nbytes = recv(fd, buf, zbytes, 0)) >= 0) {
+  char   *bufptr{ reinterpret_cast<char *>(buf) };
+  size_t  toread{ len };
+  ssize_t nbytes{  -1 }; // nbytes recv || -1 - error val. ref: recv(2).
+  // loop till all bytes are recv or till the error.
+  while ((nbytes = recv(fd, bufptr, toread, 0)) > 0) {
     switch (nbytes) {
     case -1: log_g.errnum(errno, "[FAIL] recv() error occurred"); return -1;
-    case  0: log_g.msg(LL::WARN, "[FAIL] recv() -> 0  - ???"); return -2;
-    default: log_g.msg(LL::DBUG, fmt::format("recv_file() bytes: {}", nbytes));
+    case  0: log_g.msg(LL::WARN, "[FAIL] recv() -> 0 - orderly shutdown"); return -2;
+    default: log_g.msg(LL::DBUG, fmt::format("recv_loop() bytes: {}", nbytes));
     }
-    if (nbytes < 1) break; // -1 error || 0 orderly shutdown
-    if (tbytes <= nbytes) break; // XXX: not sure
-    // XXX: not sure about this! (made up myself!)
-    buf += nbytes;
-    zbytes -= static_cast<size_t>(nbytes);
+    bufptr += nbytes; // next position to read into
+    toread -= static_cast<size_t>(nbytes); // read less next time
   }
-  // TODO: there should be checks i guess...
-
-  // XXX: REWRITE => just copyed from my other function
-  if (tbytes == nbytes) {
-    log_g.msg(LL::INFO, fmt::format("Fserver::recv_loop() (tbytes == nbytes) OK"));
-    return 0;
-  }
-  if (nbytes < 1) {
-    log_g.msg(LL::WARN, fmt::format("Fserver::recv_loop()\n\t"
-          "NOT SURE ABOUT THIS! nbytes:{} tbytes:{}", nbytes, tbytes));
-  }
-  if (tbytes <= nbytes) {
-    log_g.msg(LL::WARN, fmt::format("Fserver::recv_loop() (tbytes <= nbytes)\n\t"
-          "NOT SURE ABOUT THIS! nbytes:{} tbytes:{}", nbytes, tbytes));
-    return 0; // XXX
-  } else {
-    log_g.msg(LL::CRIT, fmt::format("Fserver::recv_loop()\n\t"
-          "FIXME: UNEXPECTED BRANCH! nbytes:{} tbytes:{}", nbytes, tbytes));
-    return -2;
-  }
-  // XXX: <= REWRITE just copyed from my other function
-
-  log_g.msg(LL::INFO, fmt::format("[ OK?] in recv_loop() ")); // XXX
-
-  return 0; // XXX
+  log_g.msg(LL::DBUG, fmt::format("[ OK ] in recv_loop()"));
+  return 0;
 }
 
 [[nodiscard]] int

@@ -99,18 +99,6 @@ protected:
   [[nodiscard]] int
   accept_connection();
 
-  /**
-   * @brief man recv(2).
-   *
-   * @return  N on success - the number of bytes received.
-   * @return  0 on success - when all bytes are received (finish) (simplified).
-   * @return -1 on error   - and errno is set to indicate the error.
-   */
-  // FIXME: ^ update the docs!
-  [[nodiscard]] int
-  recv_loop(int fd, char *buf, size_t len);
-  // recv_loop(int fd, const char *buf, size_t len);
-
 protected:
   /****************************************************************************
    * following are the helper methods.
@@ -148,6 +136,16 @@ protected:
    */
   [[nodiscard]] int
   recv_file(const size_t i);
+
+  /**
+   * @brief man recv(2).
+   *
+   * @return  0 on success - when all bytes are received (finish).
+   * @return -1 on error   - and errno is set to indicate the error.
+   * @return -2 on recv() -> 0 - orderly shutdown etc. ref: recv(2).
+   */
+  [[nodiscard]] int
+  recv_loop(int fd, void *buf, size_t len);
 
 
 private:
