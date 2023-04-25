@@ -13,9 +13,6 @@ extern "C" {
 // seems like it has most of the needed type definitions.
 // #include <netdb.h>
 
-// #include <sys/socket.h>
-// #include <sys/types.h>
-
 #include <netinet/in.h>         // Internet domain sockets | sockaddr(3type)
 
 } // extern "C"
@@ -31,7 +28,7 @@ public:
   Fclient(const Fclient &) = delete;
   Fclient &operator=(Fclient &&) = delete;
   Fclient &operator=(const Fclient &) = delete;
-  ~Fclient();
+  ~Fclient() noexcept;
 
   explicit Fclient(addr_t const& addr, port_t const& port) noexcept;
 
@@ -125,8 +122,8 @@ protected:
    * @brief man send(2).
    *
    * @return  0 on success - when all bytes are sent (finish).
-   * @return -1 on error   - and errno is set to indicate the error.
-   * @return -2 on error   - send() -> 0 - nothing to send etc.
+   * @return -1 on error   - and errno msg is logged to indicate the error.
+   * @return -2 on send() -> 0 - nothing to send etc.
    */
   template <typename T>
   [[nodiscard]] int
@@ -146,13 +143,9 @@ private:
   // => XXX: lets try 0 as default.
   int m_fd{ 0 };
 
-  // struct sockaddr;
+  socklen_t m_addrlen {}; // XXX: part of addrinfo
 
-  // sockaddr_in m_sockaddr_in {};
   struct sockaddr_in m_sockaddr_in {};
-  // struct sockaddr_in m_sockaddr_in;
-
-  socklen_t   m_addrlen     {}; // XXX: part of addrinfo
 
   // TODO: probably better to rewrite later using addrinfo structure.
   //       If it make sense!
@@ -161,3 +154,4 @@ private:
 };
 
 } // namespace mqlqd
+

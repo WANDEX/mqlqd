@@ -30,7 +30,7 @@ Fclient::Fclient(addr_t const& addr, port_t const& port) noexcept
 {
 }
 
-Fclient::~Fclient()
+Fclient::~Fclient() noexcept
 {
   // TODO: close_fd() | close(2) wrapper
   if (m_fd > 0) {
@@ -126,8 +126,8 @@ Fclient::send_loop(int fd, void const* buf, size_t len)
     case  0: log_g.msg(LL::CRIT, "[FAIL] send() -> 0 - nothing to send!"); return -2;
     default: log_g.msg(LL::DBUG, fmt::format("send_loop() bytes: {}", nbytes));
     }
-    bufptr += nbytes; // next position to read into
-    toread -= static_cast<size_t>(nbytes); // read less next time
+    bufptr += nbytes; // next position to send into
+    toread -= static_cast<size_t>(nbytes); // send less next time
   }
   log_g.msg(LL::DBUG, fmt::format("[ OK ] in send_loop()"));
   return 0;
@@ -136,11 +136,9 @@ Fclient::send_loop(int fd, void const* buf, size_t len)
 [[nodiscard]] int
 Fclient::create_socket()
 {
-  // errno is set to indicate the error.
   // TODO: AF_UNSPEC everywhere instead of AF_INET?
   m_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (m_fd == -1) {
-    // XXX works? maybe i do not need to pass errno as the argument? -> integrate inside function?
     log_g.errnum(errno, "[FAIL] socket()");
     return -1;
   }
@@ -188,9 +186,6 @@ Fclient::init()
   return 0;
 }
 
-/*
- * following are the helper methods.
- */
 
 [[nodiscard]] int
 Fclient::fill_sockaddr_in()
