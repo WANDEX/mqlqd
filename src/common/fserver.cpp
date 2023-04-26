@@ -108,10 +108,8 @@ Fserver::recv_file_info(const size_t i)
     return m_rc;
   }
   log_g.msg(LL::INFO, fmt::format("[ OK ] recv_file_info() : {}", finfo));
-
-  // construct file object form the file info structure
-  // TODO: concatenate storage dir with file name
-  m_vfiles.emplace_back(file::File{ fmt::format("{}/{}", m_storage_dir.c_str(), i), finfo });
+  // construct file object from the file info structure.
+  m_vfiles.emplace_back(file::File{ finfo, m_storage_dir_sub });
   log_g.msg(LL::INFO, fmt::format("\ti - {} : {}", i, m_vfiles.at(i)));
   return 0;
 }
@@ -267,10 +265,15 @@ Fserver::init()
     return m_rc;
   }
 
+  m_rc = mkdir_sub_storage();
+  if (m_rc != 0) {
+    log_g.msg(LL::ERRO, "[FAIL] in init() : mkdir_sub_storage()");
+    return m_rc;
+  }
+
   log_g.msg(LL::STAT, "[ OK ] init() - server initialized.");
   return 0;
 }
-
 
 [[nodiscard]] int
 Fserver::fill_sockaddr_in()
@@ -288,6 +291,23 @@ Fserver::fill_sockaddr_in()
   // 1 as success for consistency with
   // fclient fill_sockaddr_in() success return value.
   return 1;
+}
+
+[[nodiscard]] int
+Fserver::mkdir_sub_storage()
+{
+  fs::path new_sub_storage_dir{ m_storage_dir_sub };
+  new_sub_storage_dir += '/';
+  new_sub_storage_dir += inet_ntoa(m_sockaddr_in.sin_addr); // in addr subdir
+  // TODO: MAC/UID additionally.
+
+  int rc = file::mkdir(new_sub_storage_dir, fs::perms::owner_all);
+  if (rc != 0) {
+    // m_storage_dir_sub = m_storage_dir; // XXX: or needed?
+    return rc;
+  }
+  m_storage_dir_sub = new_sub_storage_dir;
+  return 0;
 }
 
 } // namespace mqlqd

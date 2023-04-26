@@ -105,6 +105,15 @@ protected:
    */
 
   /**
+   * @brief make unique sub-dirs inside the root storage dir.
+   * (to differentiate the source of the files and store them separately).
+   *
+   * @return  0 on success - when all sub-dirs successfully created.
+   */
+  [[nodiscard]] int
+  mkdir_sub_storage();
+
+  /**
    * @brief fill the sockaddr_in structure.
    */
   [[nodiscard]] int
@@ -170,8 +179,12 @@ private:
 
   size_t m_num_files_total{ 0 };
 
-  // path to the storage dir. (storage for incoming files)
+  // path to the storage dir. (root of the storage)
   const fs::path m_storage_dir; // initialized via explicit ctor
+
+  // sub-storage inside the storage (for incoming files)
+  // see: mkdir_sub_storage() - overrides this variable.
+  fs::path       m_storage_dir_sub{ m_storage_dir };
 
   socklen_t m_addrlen {}; // XXX: part of addrinfo
 
