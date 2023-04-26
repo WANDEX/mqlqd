@@ -2,6 +2,8 @@
 
 namespace mqlqd {
 
+void sig_handler();
+
 [[nodiscard]] int
 cmd_opts(int argc, const char *argv[]);
 
@@ -10,11 +12,10 @@ cmd_opts(int argc, const char *argv[]);
 
 int main(int argc, const char *argv[])
 {
-  using namespace mqlqd;
-  int return_code{ -1 }; // also known as the error code
-  return_code = cmd_opts(argc, argv);
-  if (return_code != 0) return return_code;
-  // potential place for the extra steps (for the future build up)
+  int rc{ -1 }; // return code also known as the error code
+  mqlqd::sig_handler();
+  rc = mqlqd::cmd_opts(argc, argv);
+  if (rc != 0) return rc;
 
   return 0;
 }
