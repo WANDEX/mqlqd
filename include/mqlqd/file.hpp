@@ -10,41 +10,22 @@
 namespace mqlqd {
 namespace file {
 
+// value chosen arbitrarily ->
+// (to fit the largest number of file names into the array)
+static constexpr size_t fname_max_len{ 79 };
+
+// @brief struct file info.
+struct mqlqd_finfo {
+  size_t block_size{ 0 };
+  char   fname[fname_max_len]{ "mqlqd_default_file_name" };
+};
+
 [[nodiscard]] int
 is_r(fs::path const& fpath) noexcept;
 
 [[nodiscard]] int
 mkdir(fs::path const& dpath, fs::perms const& perms = fs::perms::group_all, bool force=false) noexcept;
 
-// TODO: DOUBTS: should i use enum instead of simple int rc - return codes?
-
-// value chosen arbitrarily ->
-// (to fit the largest number of file names into the array)
-static constexpr size_t fname_max_len{ 79 };
-
-struct mqlqd_msg {
-  // size_t      sz { sizeof("mqlqd_default_message_text\0") };
-  // const char *msg{        "mqlqd_default_message_text\0"  };
-  size_t      sz { sizeof("mqlqd_default_message_text") };
-  std::string msg{        "mqlqd_default_message_text"  };
-};
-
-// @brief struct file info.
-struct mqlqd_finfo {
-  size_t block_size{ 0 };
-  // struct mqlqd_msg fname;
-  // std::string fname{ "default_file_name" };
-  // sv_t   fname{ "default_file_name" };
-  // char   fname[fname_max_len]{ "mqlqd_default_file_name" };
-  // char const  *fname;
-  // char   *block{ nullptr }; // memory block -> contiguous chunk of memory.
-};
-
-// @brief struct file info's.
-struct mqlqd_finfos {
-  size_t n_files{ 0 };
-  struct mqlqd_finfo *info_next{ nullptr };
-};
 
 class File final
 {
@@ -67,10 +48,7 @@ public:
   explicit File(fs::path const& fpath, const std::size_t sz) noexcept;
 
   // @brief construct class instance from the file info structure.
-  // explicit File(fs::path &dpath, mqlqd_finfo const& finfo) noexcept;
-
-  // @brief construct class instance from the file info structure.
-  explicit File(fs::path const& fpath, mqlqd_finfo const& finfo) noexcept;
+  explicit File(mqlqd_finfo const& finfo, fs::path dpath) noexcept;
 
   // @bief convert essentials of the instance into file info structure.
   [[nodiscard]] mqlqd_finfo
@@ -79,16 +57,10 @@ public:
   /**
    * @brief for writing file to the disk.
    *
-   * mostly for files constructed from the info file structure.
+   * mostly for files constructed from the file info structure.
    */
   [[nodiscard]] int
   write();
-
-  // void write(fs::path const& dest_dir, sv_t const& fname);
-
-  // void write(fs::path const& new_file_dest_path);
-
-  // void write(sv_t const& new_file_dest_path);
 
 
   void heap_cleanup() noexcept;
@@ -123,7 +95,7 @@ public:
 
 // overload for the std::ostream (to print file info structure in the readable text form)
 inline std::ostream& operator<<(std::ostream& os, mqlqd::file::mqlqd_finfo const &finfo) {
-  return os // << "     finfo.fname: " << finfo.fname.msg << '\n'
+  return os << "     finfo.fname: " << finfo.fname << '\n'
             << "finfo.block_size: " << '[' << finfo.block_size << ']' << '\n';
 }
 
@@ -132,8 +104,7 @@ template <> struct fmt::formatter<mqlqd::file::mqlqd_finfo> {
   constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
   template <typename FormatContext>
   auto format(mqlqd::file::mqlqd_finfo const& finfo, FormatContext &ctx) const {
-    // return format_to(ctx.out(), "[{}]\tfname: {}", finfo.block_size, finfo.fname.msg);
-    return format_to(ctx.out(), "[{}]", finfo.block_size);
+    return format_to(ctx.out(), "[{}]\tfname: {}", finfo.block_size, finfo.fname);
   }
 };
 

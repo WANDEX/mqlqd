@@ -118,26 +118,14 @@ File::File(fs::path const& fpath, const std::size_t sz) noexcept
                                   m_block_size, m_fpath.c_str() ));
 }
 
-/*
-File::File(fs::path &dpath, mqlqd_finfo const& finfo) noexcept
-  // : m_fpath{ dpath.concat(std::begin(finfo.fname), std::end(finfo.fname)) } // XXX or this is more robust?
-  // : m_fpath{ dpath.concat(finfo.fname.begin(), finfo.fname.end()) }
-  // : m_fpath{ dpath.concat(finfo.fname.msg.begin(), finfo.fname.msg.end()) }
-
-  // : m_fpath{ dpath.concat(std::begin(finfo.fname.msg), std::end(finfo.fname.msg)) }
-  // , m_block_size{ finfo.block_size }
-
+File::File(mqlqd_finfo const& finfo, fs::path dpath) noexcept
   : m_block_size{ finfo.block_size }
-
 {
-  log_g.msg(LL::DBUG, "ctor - File instance from finfo.");
-  log_g.msg(LL::CRIT, fmt::format("XXX: {} <- dpath, unused param", dpath.c_str()));
-}
-*/
-
-File::File(fs::path const& fpath, mqlqd_finfo const& finfo) noexcept
-  : m_fpath{ fpath }, m_block_size{ finfo.block_size }
-{
+  // concatenate file name from file info to the passed directory path.
+  // NOTE: like this -> additional directory separators are never introduced.
+  dpath += '/';
+  dpath += finfo.fname;
+  m_fpath = dpath;
   log_g.msg(LL::DBUG, fmt::format("ctor - File instance from finfo.\n\t"
                                   "m_block_size:\t[{}]\tm_fpath: {}",
                                   m_block_size, m_fpath.c_str() ));
@@ -146,10 +134,16 @@ File::File(fs::path const& fpath, mqlqd_finfo const& finfo) noexcept
 [[nodiscard]] mqlqd_finfo
 File::to_finfo() const noexcept
 {
-  return { m_block_size };
-  // return { m_block_size, m_fpath.filename() };
-  // return { m_block_size, { sizeof(m_fpath.filename()), m_fpath.filename() } };
-  // return { m_block_size, { sizeof(m_fpath.filename()), m_fpath.filename().c_str() } };
+  mqlqd_finfo finfo {};
+  finfo.block_size = m_block_size;
+  // fill the array - file name (element by element)
+  auto fname{ m_fpath.filename().string() };
+  for (size_t i = 0; i < fname.length(); i++) {
+    finfo.fname[i] = fname[i];
+  }
+  // null terminator after the file name (important)
+  finfo.fname[fname.length()] = '\0';
+  return finfo;
 }
 
 [[nodiscard]] int
