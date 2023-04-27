@@ -71,7 +71,7 @@ Fserver::recv_num_files_total()
   if (nbytes != sizeof(m_num_files_total)) {
     switch (nbytes) {
     case -1: log_g.errnum(errno, "[FAIL] to recv() m_num_files_total, error occurred:"); return -1;
-    default: log_g.msg(LL::ERRO, fmt::format("recv m_num_files_total out of all bytes: {}/{}",
+    default: log_g.msg(LL::ERRO, fmt::format("[FAIL] recv m_num_files_total out of all bytes: {}/{}",
                                              nbytes, sizeof(m_num_files_total)));
     }
     return -2;
@@ -110,7 +110,7 @@ Fserver::recv_file_info(const size_t i)
   log_g.msg(LL::INFO, fmt::format("[ OK ] recv_file_info() : {}", finfo));
   // construct file object from the file info structure.
   m_vfiles.emplace_back(file::File{ finfo, m_storage_dir_sub });
-  log_g.msg(LL::INFO, fmt::format("\ti - {} : {}", i, m_vfiles.at(i)));
+  // log_g.msg(LL::DBUG, fmt::format("\ti - {} : {}", i, m_vfiles.at(i))); // XXX: too verbose
   return 0;
 }
 
@@ -166,12 +166,12 @@ Fserver::recv_loop(int fd, void *buf, size_t len)
     switch (nbytes) {
     case -1: log_g.errnum(errno, "[FAIL] recv() error occurred"); return -1;
     case  0: log_g.msg(LL::WARN, "[FAIL] recv() -> 0 - orderly shutdown!"); return -2;
-    default: log_g.msg(LL::DBUG, fmt::format("recv_loop() bytes: {}", nbytes));
+    default: log_g.msg(LL::DBUG, fmt::format("nbytes recv_loop() :  {}", nbytes));
     }
     bufptr += nbytes; // next position to read into
     toread -= static_cast<size_t>(nbytes); // read less next time
   }
-  log_g.msg(LL::DBUG, fmt::format("[ OK ] in recv_loop()"));
+  log_g.msg(LL::DBUG, fmt::format("[ OK ] recv_loop() finished."));
   return 0;
 }
 
@@ -182,7 +182,6 @@ Fserver::create_socket()
   // TODO: AF_UNSPEC everywhere instead of AF_INET?
   m_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (m_fd == -1) {
-    // XXX works? maybe i do not need to pass errno as the argument? -> integrate inside function?
     log_g.errnum(errno, "[FAIL] socket()");
     return -1;
   }
@@ -211,10 +210,12 @@ Fserver::set_socket_in_listen_state()
   m_rc = listen(m_fd, m_backlog);
   switch (m_rc) {
   case -1: log_g.errnum(errno, "[FAIL] listen()"); break;
-  case  0: log_g.msg(LL::INFO, "Marked socket to accept incoming connection requests."); break;
+  case  0: log_g.msg(LL::INFO, "[ OK ] Marked socket to accept incoming connection requests."); break;
   default: log_g.msg(LL::CRIT, fmt::format("Unexpected return code: listen() -> {}", m_rc));
   }
-  log_g.msg(LL::NTFY, fmt::format("Backlog: {} (Max queue len of pending connections).", m_backlog));
+  if (m_fd_con == 0) {
+    log_g.msg(LL::NTFY, fmt::format("Backlog: {} (Max queue len of pending connections).", m_backlog));
+  }
   return m_rc;
 }
 
@@ -226,9 +227,12 @@ Fserver::accept_connection()
                           reinterpret_cast<socklen_t *>(&m_addrlen));
   switch (m_fd_con) {
   case -1: log_g.errnum(errno, "[FAIL] accept()"); break;
-  default: log_g.msg(LL::INFO, "New connected socket created.");
+  case  0: log_g.msg(LL::WARN, "[DOUBT] accept() -> 0 ???"); break;
+  default: log_g.msg(LL::DBUG, "[ OK ] accept() - new connected socket created.");
   }
-  log_g.msg(LL::NTFY, fmt::format("Connection from: {}", inet_ntoa(m_sockaddr_in.sin_addr)));
+  if (m_fd_con > 0) {
+    log_g.msg(LL::NTFY, fmt::format("Accepted connection from: {}", inet_ntoa(m_sockaddr_in.sin_addr)));
+  }
   return m_fd_con;
 }
 
@@ -242,7 +246,7 @@ Fserver::init()
   }
 
   m_rc = fill_sockaddr_in();
-  if (m_rc != 1) {
+  if (m_rc != 0) {
     log_g.msg(LL::ERRO, "[FAIL] in init() : fill_sockaddr_in()");
     return m_rc;
   }
@@ -288,9 +292,7 @@ Fserver::fill_sockaddr_in()
   m_sockaddr_in.sin_addr.s_addr = INADDR_ANY;
   m_addrlen = sizeof(m_sockaddr_in);
 
-  // 1 as success for consistency with
-  // fclient fill_sockaddr_in() success return value.
-  return 1;
+  return 0;
 }
 
 [[nodiscard]] int

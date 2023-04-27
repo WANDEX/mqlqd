@@ -55,7 +55,7 @@ Fclient::send_num_files_total(const size_t num_files_total)
   if (nbytes != sizeof(num_files_total)) {
     switch (nbytes) {
     case -1: log_g.errnum(errno, "[FAIL] to send() num_files_total, error occurred"); return -1;
-    default: log_g.msg(LL::ERRO, fmt::format("sent num_files_total out of all bytes: {}/{}",
+    default: log_g.msg(LL::ERRO, fmt::format("[FAIL] sent num_files_total out of all bytes: {}/{}",
                                              nbytes, sizeof(num_files_total)));
     }
     return -2;
@@ -129,12 +129,12 @@ Fclient::send_loop(int fd, void const* buf, size_t len)
     switch (nbytes) {
     case -1: log_g.errnum(errno, "[FAIL] send() error occurred"); return -1;
     case  0: log_g.msg(LL::CRIT, "[FAIL] send() -> 0 - nothing to send!"); return -2;
-    default: log_g.msg(LL::DBUG, fmt::format("send_loop() bytes: {}", nbytes));
+    default: log_g.msg(LL::DBUG, fmt::format("nbytes send_loop() :  {}", nbytes));
     }
     bufptr += nbytes; // next position to send into
     toread -= static_cast<size_t>(nbytes); // send less next time
   }
-  log_g.msg(LL::DBUG, fmt::format("[ OK ] in send_loop()"));
+  log_g.msg(LL::DBUG, fmt::format("[ OK ] send_loop() finished."));
   return 0;
 }
 
@@ -158,10 +158,12 @@ Fclient::create_connection()
   m_rc = connect(m_fd, reinterpret_cast<const struct sockaddr *>(&m_sockaddr_in), m_addrlen);
   switch (m_rc) {
   case -1: log_g.errnum(errno, "[FAIL] connect()"); break;
-  case  0: log_g.msg(LL::INFO, "connection/binding success"); break;
+  case  0: log_g.msg(LL::DBUG, "[ OK ] connect()"); break;
   default: log_g.msg(LL::CRIT, fmt::format("Unexpected return code: connect() -> {}", m_rc));
   }
-  log_g.msg(LL::NTFY, fmt::format("Connection established: {}", inet_ntoa(m_sockaddr_in.sin_addr)));
+  if (m_rc == 0) {
+    log_g.msg(LL::NTFY, fmt::format("Connection established with: {}", inet_ntoa(m_sockaddr_in.sin_addr)));
+  }
   return m_rc;
 }
 
@@ -209,8 +211,8 @@ Fclient::fill_sockaddr_in()
   m_rc = inet_pton(AF_INET, m_addr.data(), &m_sockaddr_in.sin_addr);
   switch (m_rc) {
   case -1: log_g.errnum(errno, "[FAIL] inet_pton()"); break;
-  case  0: log_g.msg(LL::ERRO, "Not valid network address in the specified address family!"); break;
-  case  1: log_g.msg(LL::INFO, "Network address was successfully converted"); break;
+  case  0: log_g.msg(LL::WARN, "[FAIL] not valid network address in the specified address family!"); break;
+  case  1: log_g.msg(LL::INFO, "[ OK ] network address was successfully converted"); break;
   default: log_g.msg(LL::CRIT, fmt::format("Unexpected return code: inet_pton() -> {}", m_rc));
   }
   return m_rc;
