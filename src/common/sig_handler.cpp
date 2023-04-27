@@ -13,7 +13,7 @@ namespace mqlqd {
 
 void sig_print(int sig)
 {
-  fmt::print(stderr, "\n({}) : [{}] {}\n\n", sig, mqlqd::SIG(sig), "signal caught.");
+  fmt::print(stderr, "\nSIG {:2}: [{}] {}\n\n", sig, mqlqd::SIG(sig), "signal caught. FINISH HIM!");
 }
 
 void sig_handler(int sig)
