@@ -104,7 +104,7 @@ template <> struct fmt::formatter<mqlqd::file::mqlqd_finfo> {
   constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
   template <typename FormatContext>
   auto format(mqlqd::file::mqlqd_finfo const& finfo, FormatContext &ctx) const {
-    return format_to(ctx.out(), "[{}]\tfname: {}", finfo.block_size, finfo.fname);
+    return format_to(ctx.out(), "[{}] {}", finfo.block_size, finfo.fname);
   }
 };
 
@@ -113,7 +113,7 @@ template <> struct fmt::formatter<mqlqd::file::File> {
   constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
   template <typename FormatContext>
   auto format(mqlqd::file::File const& file, FormatContext &ctx) const {
-    return format_to(ctx.out(), "[{}]\tfpath: {}", file.m_block_size, file.m_fpath.c_str());
+    return format_to(ctx.out(), "[{}] {}", file.m_block_size, file.m_fpath.c_str());
   }
 };
 

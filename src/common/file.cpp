@@ -42,7 +42,7 @@ is_r(fs::path const& fpath) noexcept
     log_g.msg(LL::ERRO, fmt::format("IS NOT the regular file: {}", fpath.c_str()));
     return 1;
   }
-  log_g.msg(LL::DBUG, fmt::format("Is the regular file: {}", fpath.c_str()));
+  log_g.msg(LL::INFO, fmt::format("Is the regular file: {}", fpath.c_str()));
   return 0;
 }
 
@@ -113,9 +113,8 @@ mkdir(fs::path const& dpath, fs::perms const& perms, bool force) noexcept
 File::File(fs::path const& fpath, const std::size_t sz) noexcept
   : m_fpath{ fpath }, m_block_size{ sz }
 {
-  log_g.msg(LL::DBUG, fmt::format("ctor - File instance from file & size.\n\t"
-                                  "m_block_size:\t[{}]\tm_fpath: {}",
-                                  m_block_size, m_fpath.c_str() ));
+  log_g.msg(LL::DBUG, fmt::format("ctor - File instance from file & size.\n"
+                                  "\t[{}] {}", m_block_size, m_fpath.c_str() ));
 }
 
 File::File(mqlqd_finfo const& finfo, fs::path dpath) noexcept
@@ -126,9 +125,8 @@ File::File(mqlqd_finfo const& finfo, fs::path dpath) noexcept
   dpath += '/';
   dpath += finfo.fname;
   m_fpath = dpath;
-  log_g.msg(LL::DBUG, fmt::format("ctor - File instance from finfo.\n\t"
-                                  "m_block_size:\t[{}]\tm_fpath: {}",
-                                  m_block_size, m_fpath.c_str() ));
+  log_g.msg(LL::DBUG, fmt::format("ctor - File instance from finfo.\n"
+                                  "\t[{}] {}", m_block_size, m_fpath.c_str() ));
 }
 
 [[nodiscard]] mqlqd_finfo
@@ -251,7 +249,7 @@ int File::fcontent()
     ifs.seekg(0, ifs.beg);
     ifs.read(m_block, size);
 
-    log_g.msg(LL::DBUG, "The entire contents of the file are in memory.");
+    log_g.msg(LL::INFO, "The entire contents of the file are in memory.");
 
   } catch(std::exception const& err) {
     log_g.msg(LL::CRIT, fmt::format("File::fcontent() unhandled std::exception suppressed:\n{}\n", err.what()));
@@ -278,8 +276,7 @@ int File::read_to_block()
       return rc;
     }
     // XXX: this is not very convenient & certainly not terse. -> make_format_args inside logger.
-    log_g.msg(LL::DBUG, "[ OK ] File::read_to_block() file path: {}\n",
-                        fmt::make_format_args(m_fpath.c_str()));
+    log_g.msg(LL::DBUG, "[ OK ] File::read_to_block() : {}\n", fmt::make_format_args(m_fpath.c_str()));
   }
   catch(std::exception const& err) {
     log_g.msg(LL::CRIT, fmt::format("File::read_to_block() unhandled std::exception suppressed:\n"
