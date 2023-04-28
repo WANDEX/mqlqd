@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.3)
 
+## the timestamps of extracted files. NEW = time of extraction
+if(POLICY CMP0135)
+  cmake_policy(SET CMP0135 OLD)
+endif()
+
 ## ^ POLICIES
 project(
   mqlqd
