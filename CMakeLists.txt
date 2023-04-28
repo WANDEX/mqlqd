@@ -5,6 +5,16 @@ if(POLICY CMP0135)
   cmake_policy(SET CMP0135 OLD)
 endif()
 
+## A private source from a directory other than that of target.
+if(POLICY CMP0076)
+  cmake_policy(SET CMP0076 NEW)
+endif()
+
+## add link library which is not built in this directory
+if(POLICY CMP0079)
+  cmake_policy(SET CMP0079 NEW)
+endif()
+
 ## ^ POLICIES
 project(
   mqlqd
@@ -113,7 +123,8 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
     include(CMakePackageConfigHelpers)
     include(GNUInstallDirs)
 
-    install(TARGETS _mqlqd_base mqlqd_core mqlqd_dev mqlqd
+    install(TARGETS mqlqd_client mqlqd_daemon
+      _mqlqd_base mqlqd_core mqlqd_dev mqlqd
       EXPORT ${PROJECT_NAME}Targets
       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -143,7 +154,7 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
       DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
     )
 
-    install(DIRECTORY include
+    install(DIRECTORY include/mqlqd
       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
       FILES_MATCHING
       PATTERN     "*.hpp"

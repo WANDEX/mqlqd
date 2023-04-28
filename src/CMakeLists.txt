@@ -14,16 +14,10 @@ set(common_src
 
 add_library(mqlqd_bin_i INTERFACE)
 
-target_include_directories(mqlqd_bin_i INTERFACE cxxopts)
-target_link_libraries(mqlqd_bin_i INTERFACE cxxopts)
-
-target_link_libraries(mqlqd_bin_i INTERFACE fmt::fmt)
-# target_link_libraries(mqlqd_bin_i INTERFACE fmt::fmt-header-only)
+target_link_libraries(mqlqd_bin_i INTERFACE wandex::mqlqd::dev)
 
 ## link with the libc -lc (to work with the Linux socket API interface)
 target_link_libraries(mqlqd_bin_i INTERFACE c)
-
-target_link_libraries(mqlqd_bin_i INTERFACE wandex::mqlqd::dev)
 
 
 add_subdirectory(client)
