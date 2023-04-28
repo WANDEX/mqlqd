@@ -27,7 +27,7 @@ endif()
 
 if(MQLQD_REAL_ROOT_OF_SRC_TREE)
   # XXX: temporary: OFF -> UNIMPLEMENTED
-  option(MQLQD_BUILD_TESTS      "whether or not tests should be built"        OFF)
+  option(MQLQD_BUILD_TESTS      "whether or not tests should be built"        ON) # XXX: ON to not rewrite ci
   option(MQLQD_BUILD_PACKAGE    "whether or not the package should be built"  ON)
   option(MQLQD_COVERAGE_ENABLE  "whether or not to enable the tests coverage" OFF)
   option(MQLQD_COVERAGE_CLEAN   "clean coverage data before taking new"       ON)
