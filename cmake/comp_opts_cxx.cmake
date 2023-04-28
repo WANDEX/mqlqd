@@ -157,6 +157,11 @@ else()
 
 endif()
 
+## Target for dependencies
+add_library(mqlqd_deps)
+target_link_libraries(mqlqd_deps PRIVATE wandex::mqlqd::core)
+target_link_libraries(mqlqd_deps PRIVATE fmt)
+
 ## Umbrella target with all components. (for the future buildup)
 add_library(mqlqd INTERFACE)
 add_alias(mqlqd mqlqd)
