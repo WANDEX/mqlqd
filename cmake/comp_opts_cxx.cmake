@@ -157,12 +157,18 @@ else()
 
 endif()
 
-## Target for dependencies
+## Interface target
+add_library(mqlqd_bin_i INTERFACE)
+target_link_libraries(mqlqd_bin_i INTERFACE wandex::mqlqd::dev)
+## link with the libc -lc (to work with the socket API)
+target_link_libraries(mqlqd_bin_i INTERFACE c)
+
+## Dependencies target
 add_library(mqlqd_deps)
 target_link_libraries(mqlqd_deps PRIVATE wandex::mqlqd::core)
 target_link_libraries(mqlqd_deps PRIVATE fmt)
 
-## Umbrella target with all components. (for the future buildup)
+## Umbrella target with all components.
 add_library(mqlqd INTERFACE)
 add_alias(mqlqd mqlqd)
 target_link_libraries(mqlqd INTERFACE wandex::mqlqd::core)
