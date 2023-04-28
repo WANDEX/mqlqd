@@ -21,15 +21,17 @@ else()
   ## target compilation options/flags
   include(cmake/comp_opts_cxx.cmake)
   include(cmake/cxxopts.cmake)
+  include(cmake/fmt.cmake)
+  add_subdirectory(src)
 endif()
 
 if(MQLQD_REAL_ROOT_OF_SRC_TREE)
-  # XXX: OFF -> UNIMPLEMENTED (may be not rewritten)
+  # XXX: temporary: OFF -> UNIMPLEMENTED
   option(MQLQD_BUILD_TESTS      "whether or not tests should be built"        OFF)
-  option(MQLQD_BUILD_PACKAGE    "whether or not the package should be built"  OFF)
+  option(MQLQD_BUILD_PACKAGE    "whether or not the package should be built"  ON)
   option(MQLQD_COVERAGE_ENABLE  "whether or not to enable the tests coverage" OFF)
   option(MQLQD_COVERAGE_CLEAN   "clean coverage data before taking new"       ON)
-  option(MQLQD_INSTALL_ENABLE   "whether or not to enable the install rule"   OFF)
+  option(MQLQD_INSTALL_ENABLE   "whether or not to enable the install rule"   ON)
   option(MQLQD_MEMCHECK_ENABLE  "detect leaks via valgrind memcheck tool"     OFF)
   option(MQLQD_SNTZ_ADDR        "whether or not to enable address sanitizer"  OFF)
 
