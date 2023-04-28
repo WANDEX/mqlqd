@@ -1,0 +1,30 @@
+name: macos
+
+defaults:
+  run:
+    shell: sh
+
+# workflow will run after & only if CI:(linux) is successfully passed.
+# workflow_dispatch - to be able to run manually even when parent workflow is disabled.
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: [linux]
+    types    : [completed]
+
+jobs:
+  build-and-tests:
+    # HACK: to run the job if previous workflow completed with status == success.
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    # ^ => skip job otherwise.
+
+    # call reusable workflow
+    uses: ./.github/workflows/rsbl_build_ci.yml
+    with:
+      RUNNER    : macos-latest
+      TOOLCHAIN_DISPLAY_NAME: AppleClang
+      BUILD_TYPE: Debug
+      BUILD_DIR : build/mac-Debug-clanga
+
