@@ -160,6 +160,7 @@ endif()
 ## Interface target
 add_library(mqlqd_bin_i INTERFACE)
 target_link_libraries(mqlqd_bin_i INTERFACE wandex::mqlqd::dev)
+target_link_libraries(mqlqd_bin_i INTERFACE mqlqd_deps)
 ## link with the libc -lc (to work with the socket API)
 target_link_libraries(mqlqd_bin_i INTERFACE c)
 
