@@ -33,10 +33,12 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   set(MQLQD_REAL_ROOT_OF_SRC_TREE ON)
 else()
   set(MQLQD_REAL_ROOT_OF_SRC_TREE OFF)
-  ## target compilation options/flags
-  include(cmake/comp_opts_cxx.cmake)
+  add_library(mqlqd_deps)
+  ## find/fetch dependecies:
   include(cmake/cxxopts.cmake)
   include(cmake/fmt.cmake)
+  ## target compilation options/flags
+  include(cmake/comp_opts_cxx.cmake)
   add_subdirectory(src)
 endif()
 
@@ -54,11 +56,14 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
   ## https://cmake.org/cmake/help/latest/prop_tgt/COMPILE_WARNING_AS_ERROR.html
   option(CMAKE_COMPILE_WARNING_AS_ERROR "treat compilation warnings as errors"  ON)
 
+  add_library(mqlqd_deps)
+  ## find/fetch dependecies:
+  include(cmake/cxxopts.cmake)
+  include(cmake/fmt.cmake)
+
   ## target compilation options/flags
   include(cmake/comp_opts_cxx.cmake)
 
-  include(cmake/cxxopts.cmake)
-  include(cmake/fmt.cmake)
   add_subdirectory(src)
 
   if(MQLQD_BUILD_PACKAGE)
