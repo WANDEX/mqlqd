@@ -46,7 +46,7 @@ cmd_opts(int argc, const char *argv[])
        cxxopts::value<cmd_opt_t>()->default_value("./mqlqd_storage"))
 
       ("p,port", "Use port number as identity of the daemon on the server. "
-                 "(default: " + std::to_string(cfg::port) + ')',
+                 "(default: " + fmt::to_string<port_t>(cfg::port) + ')',
        cxxopts::value<port_t>())
 
       ("h,help", "Show usage help.")
