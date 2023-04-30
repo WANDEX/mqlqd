@@ -10,29 +10,44 @@ function(add_alias name target)
   set_target_properties(${target} PROPERTIES EXPORT_NAME ${name})
 endfunction()
 
+file(REAL_PATH "${CMAKE_CURRENT_SOURCE_DIR}" real_root_of_src_tree)
+cmake_path(APPEND mqlqd_include_rootd "${real_root_of_src_tree}"  "include")
+cmake_path(APPEND mqlqd_include_mqlqd "${mqlqd_include_rootd}"      "mqlqd")
 
-get_filename_component(mqlqd_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/include REALPATH)
+file(GLOB_RECURSE mqlqd_headers LIST_DIRECTORIES false "${mqlqd_include_mqlqd}" *.hpp)
 
-get_filename_component(mqlqd_include_dir_mqlqd  ${mqlqd_include_dir}/mqlqd   REALPATH)
-
-file(GLOB_RECURSE mqlqd_headers_mqlqd  LIST_DIRECTORIES false ${mqlqd_include_dir_mqlqd}  *.hpp PARENT_SCOPE)
-
-## recursively include all sub-directories of the given dir
-file(GLOB_RECURSE mqlqd_include_dirs LIST_DIRECTORIES true ${mqlqd_include_dir}/$)
-list(FILTER       mqlqd_include_dirs EXCLUDE REGEX "/\\.") # exclude paths with .dirs
-## ^ to allow using short includes (for internal library development only)
-
-## uncomment to see which dirs are included
-# foreach(dir ${mqlqd_include_dirs})
-#   message(${dir})
-# endforeach()
+# TODO: with this works, but make it properly!
+include_directories("${mqlqd_include_mqlqd}")
 
 ## Base target for common options.
-add_library(_mqlqd_base INTERFACE ${mqlqd_headers_mqlqd})
+add_library(_mqlqd_base INTERFACE ${mqlqd_headers})
 target_include_directories(_mqlqd_base INTERFACE
-  $<BUILD_INTERFACE:${mqlqd_include_dir}>
+  $<BUILD_INTERFACE:${mqlqd_include_rootd}>
 )
 target_compile_features(_mqlqd_base INTERFACE cxx_std_20)
+
+
+## target for dependencies (link inheritance)
+add_library(mqlqd_deps "")
+add_alias(mqlqd::deps mqlqd_deps)
+target_include_directories(mqlqd_deps PUBLIC
+  $<BUILD_INTERFACE:${mqlqd_include_rootd}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+target_sources(mqlqd_deps PUBLIC ${mqlqd_headers})
+set_target_properties(mqlqd_deps PROPERTIES LINKER_LANGUAGE CXX)
+# target_compile_features(mqlqd_deps PUBLIC cxx_std_20)
+
+## target for src (link inheritance)
+add_library(mqlqd_src  "")
+add_alias(mqlqd::src mqlqd_src)
+target_include_directories(mqlqd_src PUBLIC
+  $<BUILD_INTERFACE:${mqlqd_include_rootd}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+target_sources(mqlqd_src PUBLIC ${mqlqd_headers})
+set_target_properties(mqlqd_src PROPERTIES LINKER_LANGUAGE CXX)
+# target_compile_features(mqlqd_src PUBLIC cxx_std_20)
 
 
 ## Core library.
@@ -40,7 +55,7 @@ add_library(mqlqd_core INTERFACE)
 add_alias(mqlqd::core mqlqd_core)
 target_link_libraries(mqlqd_core INTERFACE _mqlqd_base)
 target_include_directories(mqlqd_core SYSTEM INTERFACE
-  $<BUILD_INTERFACE:${mqlqd_include_dir}>
+  $<BUILD_INTERFACE:${mqlqd_include_rootd}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
@@ -50,7 +65,7 @@ add_library(mqlqd_dev INTERFACE)
 add_alias(mqlqd::dev mqlqd_dev)
 target_link_libraries(mqlqd_dev INTERFACE _mqlqd_base)
 target_include_directories(mqlqd_dev INTERFACE
-  $<BUILD_INTERFACE:${mqlqd_include_dirs}>
+  $<BUILD_INTERFACE:${mqlqd_include_rootd}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
@@ -157,16 +172,15 @@ else()
 
 endif()
 
-## Interface target
+## target dev interface
 add_library(mqlqd_bin_i INTERFACE)
 target_link_libraries(mqlqd_bin_i INTERFACE wandex::mqlqd::dev)
-# target_link_libraries(mqlqd_bin_i INTERFACE mqlqd_deps)
 ## link with the libc -lc (to work with the socket API)
 target_link_libraries(mqlqd_bin_i INTERFACE c)
 
-## Dependencies target
-# add_library(mqlqd_deps)
-# target_link_libraries(mqlqd_deps PRIVATE wandex::mqlqd::core)
+## Dependencies & sources target
+target_link_libraries(mqlqd_src PUBLIC mqlqd_deps)
+
 
 ## Umbrella target with all components.
 add_library(mqlqd INTERFACE)
