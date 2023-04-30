@@ -26,18 +26,21 @@ else()
 endif()
 
 target_include_directories(mqlqd_deps PUBLIC ${fmt_src}/include)
+# target_include_directories(mqlqd_deps INTERFACE ${fmt_src}/include)
 
+target_link_libraries(mqlqd_deps -lfmt)
 # target_link_libraries(mqlqd_deps libfmtd.a)
-# target_link_libraries(mqlqd_deps -L${fmt_bin})
-
-# target_link_libraries(mqlqd_deps -lfmt)
-
+target_link_libraries(mqlqd_deps -L${fmt_bin})
 # target_link_libraries(mqlqd_deps -I${fmt_src}/include)
 
 
-find_library(FMT_LIB fmt)
+## XXX: THIS does not work!
+## CMake Error: The following variables are used in this project, but they are set to NOTFOUND.
+## Please set them or make sure they are set and tested correctly in the CMake files:
+## FMT_LIB
+# find_library(FMT_LIB fmt)
 # This call requires CMake 3.13 or later
-target_link_libraries(mqlqd_deps PUBLIC ${FMT_LIB})
+# target_link_libraries(mqlqd_deps PUBLIC ${FMT_LIB})
 
 
 # target_link_libraries(mqlqd_deps PRIVATE fmt::fmt)
