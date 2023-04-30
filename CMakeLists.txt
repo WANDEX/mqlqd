@@ -124,7 +124,8 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
     include(CMakePackageConfigHelpers)
     include(GNUInstallDirs)
 
-    install(TARGETS mqlqd_client mqlqd_daemon
+    # install(TARGETS mqlqd_client mqlqd_daemon
+    install(TARGETS mqlqd_daemon
       _mqlqd_base mqlqd_core mqlqd_dev mqlqd
       EXPORT ${PROJECT_NAME}Targets
       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
