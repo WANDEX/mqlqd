@@ -20,14 +20,12 @@ if(TRUE) # XXX: ^ will not work cxxopts has weird configuration...
     SOURCE_DIR        ${cxxopts_src}
     BINARY_DIR        ${cxxopts_bin}
   )
+  # option(CXXOPTS_ENABLE_INSTALL "" ON)
   FetchContent_MakeAvailable(cxxopts)
 else()
   message(">> found cxxopts of required version!")
 endif()
 
-# target_include_directories(mqlqd_deps PUBLIC ${cxxopts_src}/include)
-# target_precompile_headers(mqlqd_deps PRIVATE ${cxxopts_src}/include/cxxopts.hpp)
-
-target_include_directories(mqlqd_bin_i INTERFACE ${cxxopts_src}/include)
-target_precompile_headers (mqlqd_bin_i INTERFACE ${cxxopts_src}/include/cxxopts.hpp)
+target_include_directories(mqlqd_deps PUBLIC ${cxxopts_src}/include)
+target_precompile_headers(mqlqd_deps PRIVATE ${cxxopts_src}/include/cxxopts.hpp)
 
