@@ -54,6 +54,12 @@ case "$opt" in
     mkdir -p "$bdir"
     ;;
 esac
+## for toggling building of the tests
+if [ -n "$opt" ]; then
+  tt=ON
+else
+  tt=OFF
+fi
 
 time_spent_on_step() {
   # HACK: because standard utility/command 'time' does not work.
@@ -74,14 +80,13 @@ vsep() {
 }
 
 vsep "CONFIGURE" "${BLU}"
-cmake -S . -B "$bdir" -G Ninja -D CMAKE_BUILD_TYPE=${bt} -Wdev -Werror=dev ${fresh}
+cmake -S . -B "$bdir" -G Ninja -D CMAKE_BUILD_TYPE=${bt} -D MQLQD_BUILD_TESTS=${tt} -Wdev -Werror=dev ${fresh}
 
 vsep "BUILD" "${CYN}"
 cmake --build "$bdir" --config ${bt} ${clean_first}
 
 gtest_binary="./$bdir/tests/units/tests_units"
-# if [ ! -x "$gtest_binary" ]; then
-if false; then # XXX: disabled temporary, as there is no unit tests yet
+if [ "$tt" = ON ] && [ ! -x "$gtest_binary" ]; then
   printf "%s\n^ %s\n" "$gtest_binary" \
     "File not found or not executable, exit."
   exit 5
