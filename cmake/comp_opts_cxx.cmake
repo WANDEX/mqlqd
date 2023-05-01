@@ -16,10 +16,13 @@ cmake_path(APPEND mqlqd_include_mqlqd "${mqlqd_include_rootd}"      "mqlqd")
 
 file(GLOB_RECURSE mqlqd_headers LIST_DIRECTORIES false "${mqlqd_include_mqlqd}" *.hpp)
 
+# TODO: with this works, but make it properly!
+include_directories("${mqlqd_include_mqlqd}")
+
 ## Base target for common options.
-add_library(_mqlqd_base INTERFACE)
+add_library(_mqlqd_base INTERFACE ${mqlqd_headers})
 target_include_directories(_mqlqd_base INTERFACE
-  $<BUILD_INTERFACE:${mqlqd_include_mqlqd}>
+  $<BUILD_INTERFACE:${mqlqd_include_rootd}>
 )
 target_compile_features(_mqlqd_base INTERFACE cxx_std_20)
 
@@ -28,7 +31,7 @@ target_compile_features(_mqlqd_base INTERFACE cxx_std_20)
 add_library(mqlqd_deps "")
 add_alias(mqlqd::deps mqlqd_deps)
 target_include_directories(mqlqd_deps PUBLIC
-  $<BUILD_INTERFACE:${mqlqd_include_mqlqd}>
+  $<BUILD_INTERFACE:${mqlqd_include_rootd}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_sources(mqlqd_deps PUBLIC ${mqlqd_headers})
@@ -39,10 +42,10 @@ target_compile_features(mqlqd_deps PUBLIC cxx_std_20)
 add_library(mqlqd_src  "")
 add_alias(mqlqd::src mqlqd_src)
 target_include_directories(mqlqd_src PUBLIC
-  $<BUILD_INTERFACE:${mqlqd_include_mqlqd}>
+  $<BUILD_INTERFACE:${mqlqd_include_rootd}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-# target_sources(mqlqd_src PUBLIC ${mqlqd_headers})
+target_sources(mqlqd_src PUBLIC ${mqlqd_headers})
 set_target_properties(mqlqd_src PROPERTIES LINKER_LANGUAGE CXX)
 target_compile_features(mqlqd_src PUBLIC cxx_std_20)
 
@@ -52,7 +55,7 @@ add_library(mqlqd_core INTERFACE)
 add_alias(mqlqd::core mqlqd_core)
 target_link_libraries(mqlqd_core INTERFACE _mqlqd_base)
 target_include_directories(mqlqd_core SYSTEM INTERFACE
-  $<BUILD_INTERFACE:${mqlqd_include_mqlqd}>
+  $<BUILD_INTERFACE:${mqlqd_include_rootd}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
@@ -62,7 +65,7 @@ add_library(mqlqd_dev INTERFACE)
 add_alias(mqlqd::dev mqlqd_dev)
 target_link_libraries(mqlqd_dev INTERFACE _mqlqd_base)
 target_include_directories(mqlqd_dev INTERFACE
-  $<BUILD_INTERFACE:${mqlqd_include_mqlqd}>
+  $<BUILD_INTERFACE:${mqlqd_include_rootd}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
@@ -169,18 +172,22 @@ else()
 
 endif()
 
-
-## link core library with the libc -lc (to work with the socket API)
+## link with the libc -lc (to work with the socket API)
 target_link_libraries(mqlqd_core INTERFACE c)
 
-## link sources with project dependencies from the core library target.
+## link sources with dependencies from the core library target.
 target_link_libraries(mqlqd_src INTERFACE wandex::mqlqd::core)
 
-## link sources with project dependencies
+## link sources with dependencies
 target_link_libraries(mqlqd_src PUBLIC wandex::mqlqd::deps)
+# target_link_libraries(mqlqd_src PRIVATE wandex::mqlqd::deps)
 
-## link sources with project dev interface (for the compilation flags/options)
-# target_link_libraries(mqlqd_src PRIVATE wandex::mqlqd::dev)
+## XXX: maybe it should be made repetative, not here.
+##      [for each ... (executable/translation unit?)]
+## link sources target with the dev interface
+# target_link_libraries(mqlqd_src INTERFACE wandex::mqlqd::dev)
+# target_link_libraries(mqlqd_src PUBLIC wandex::mqlqd::dev)
+target_link_libraries(mqlqd_src PRIVATE wandex::mqlqd::dev)
 
 
 ## Umbrella target with all components.
