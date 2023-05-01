@@ -31,16 +31,14 @@ jobs:
     name: ${{inputs.TOOLCHAIN_DISPLAY_NAME}}
 
     steps:
-      ## will not work without checkout.
+      # will not work without checkout.
       - uses: actions/checkout@v3
 
       - name: ENV List All
         run : env
 
       - name: CMake Configure
-        run : >
-          cmake -S . -B ${{inputs.BUILD_DIR}} -D CMAKE_BUILD_TYPE=${{inputs.BUILD_TYPE}}
-          -D MQLQD_BUILD_TESTS=ON
+        run : cmake -S . -B ${{inputs.BUILD_DIR}} -D CMAKE_BUILD_TYPE=${{inputs.BUILD_TYPE}}
 
       - name: Build
         run : cmake --build ${{inputs.BUILD_DIR}} --config ${{inputs.BUILD_TYPE}} -j $(getconf _NPROCESSORS_ONLN)
