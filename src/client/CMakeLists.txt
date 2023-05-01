@@ -4,8 +4,7 @@ add_executable(mqlqd_client "")
 
 target_sources(mqlqd_client
   PRIVATE
-    fclient.cpp
-    client_cmd.cpp
+    cmd.cpp
     client.cpp
 )
 

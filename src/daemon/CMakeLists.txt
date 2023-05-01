@@ -4,8 +4,7 @@ add_executable(mqlqd_daemon "")
 
 target_sources(mqlqd_daemon
   PRIVATE
-    fserver.cpp
-    daemon_cmd.cpp
+    cmd.cpp
     daemon.cpp
 )
 

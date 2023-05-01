@@ -178,16 +178,16 @@ target_link_libraries(mqlqd_core INTERFACE c)
 ## link sources with dependencies from the core library target.
 target_link_libraries(mqlqd_src INTERFACE wandex::mqlqd::core)
 
-## link sources with dependencies
-target_link_libraries(mqlqd_src PUBLIC wandex::mqlqd::deps)
-# target_link_libraries(mqlqd_src PRIVATE wandex::mqlqd::deps)
-
 ## XXX: maybe it should be made repetative, not here.
 ##      [for each ... (executable/translation unit?)]
 ## link sources target with the dev interface
-# target_link_libraries(mqlqd_src INTERFACE wandex::mqlqd::dev)
+target_link_libraries(mqlqd_src INTERFACE wandex::mqlqd::dev)
 # target_link_libraries(mqlqd_src PUBLIC wandex::mqlqd::dev)
-target_link_libraries(mqlqd_src PRIVATE wandex::mqlqd::dev)
+# target_link_libraries(mqlqd_src PRIVATE wandex::mqlqd::dev)
+
+## link sources with dependencies
+target_link_libraries(mqlqd_src PUBLIC wandex::mqlqd::deps)
+# target_link_libraries(mqlqd_src PRIVATE wandex::mqlqd::deps)
 
 
 ## Umbrella target with all components.

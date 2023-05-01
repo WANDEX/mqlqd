@@ -31,11 +31,9 @@ target_include_directories(mqlqd_deps PUBLIC ${fmt_src}/include)
 ## NOTE: this will work only for linking with the system installed libfmt
 # target_link_libraries(mqlqd_deps -lfmt)
 
-## link with the static library libfmtd.a
-## which is found in the fetched locally lib dir.
-# target_link_libraries(mqlqd_deps libfmtd.a)
-target_link_libraries(mqlqd_deps -lfmtd) # i.e. libfmtd.a
+target_link_libraries(mqlqd_deps libfmtd.a)
 target_link_libraries(mqlqd_deps -L${fmt_bin})
+# target_link_libraries(mqlqd_deps -I${fmt_src}/include)
 
 
 ## XXX: THIS does not work!
