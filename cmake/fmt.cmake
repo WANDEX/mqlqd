@@ -19,19 +19,37 @@ if(TRUE)
     SOURCE_DIR        ${fmt_src}
     BINARY_DIR        ${fmt_bin}
   )
-  # option(FMT_INSTALL "" ON)
-  option(FMT_OS "" OFF)
+  option(FMT_INSTALL "" ON)
   FetchContent_MakeAvailable(fmt)
 else()
   message(">> found fmt of required version!")
 endif()
 
-target_include_directories(mqlqd_deps PUBLIC "${fmt_src}/include")
+target_include_directories(mqlqd_deps PUBLIC ${fmt_src}/include)
+# target_include_directories(mqlqd_deps INTERFACE ${fmt_src}/include)
 
 ## NOTE: this will work only for linking with the system installed libfmt
 # target_link_libraries(mqlqd_deps -lfmt)
 
 ## link with the static library libfmtd.a
 ## which is found in the fetched locally lib dir.
-target_link_libraries(mqlqd_deps PRIVATE -L"${fmt_bin}" -lfmtd)
+# target_link_libraries(mqlqd_deps libfmtd.a)
+target_link_libraries(mqlqd_deps -lfmtd) # i.e. libfmtd.a
+target_link_libraries(mqlqd_deps -L${fmt_bin})
+
+
+## XXX: THIS does not work!
+## CMake Error: The following variables are used in this project, but they are set to NOTFOUND.
+## Please set them or make sure they are set and tested correctly in the CMake files:
+## FMT_LIB
+# find_library(FMT_LIB fmt)
+# This call requires CMake 3.13 or later
+# target_link_libraries(mqlqd_deps PUBLIC ${FMT_LIB})
+
+
+# target_link_libraries(mqlqd_deps PRIVATE fmt::fmt)
+# target_link_libraries(mqlqd_deps PUBLIC fmt::fmt)
+
+# target_link_libraries(mqlqd_depsi INTERFACE fmt::fmt-header-only)
+# target_link_libraries(mqlqd_deps PUBLIC fmt::fmt-header-only)
 
