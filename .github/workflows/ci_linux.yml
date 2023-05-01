@@ -6,18 +6,12 @@ defaults:
 
 on:
   workflow_dispatch:
-  push:
-      paths-ignore:
-        - '.*'
-        - 'scripts/**'
-        - 'README.md'
-  pull_request:
+  [push, pull_request]
       paths-ignore:
         - '.*'
         - 'scripts/**'
         - 'README.md'
 
-# Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
 env:
   BUILD_TYPE: Debug
 
@@ -48,7 +42,7 @@ jobs:
     name: ${{matrix.toolchain}}
 
     steps:
-      # will not work without checkout.
+      ## will not work without checkout.
       - uses: actions/checkout@v3
 
       - name: ENV List All
@@ -56,14 +50,14 @@ jobs:
 
       - name: CMake Configure
         run : >
-          cmake -S . -B ${{matrix.bdir}} -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+          cmake -S . -B ${{matrix.bdir}} -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -D MQLQD_BUILD_TESTS=ON
           -D CMAKE_C_COMPILER=${{matrix.cc}} -D CMAKE_CXX_COMPILER=${{matrix.cxx}}
 
       - name: Build
         run : cmake --build ${{matrix.bdir}} --config ${{env.BUILD_TYPE}} -j $(getconf _NPROCESSORS_ONLN)
 
       - name: Tests
-        run : ctest --test-dir ${{matrix.bdir}} -C ${{env.BUILD_TYPE}}
+        run : ctest --test-dir ${{matrix.bdir}} -C ${{env.BUILD_TYPE}} --output-on-failure
 
       - name: Runner info lines
         run : |
