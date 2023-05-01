@@ -9,8 +9,3 @@ if(TARGET mqlqd_bin_i)
   target_link_libraries(mqlqd_daemon PUBLIC mqlqd_bin_i)
 endif()
 
-if(TARGET mqlqd_deps)
-  target_sources(mqlqd_deps PRIVATE daemon.cpp)
-  target_link_libraries(mqlqd_daemon PRIVATE mqlqd_deps)
-endif()
-
