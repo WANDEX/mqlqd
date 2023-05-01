@@ -4,10 +4,6 @@
 #include "aliases.hpp"
 #include "file.hpp"
 
-#include <fmt/format.h>
-
-#include <filesystem>
-#include <vector>
 
 extern "C" {
 

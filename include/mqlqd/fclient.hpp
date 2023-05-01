@@ -6,7 +6,6 @@
 #include "aliases.hpp"
 #include "file.hpp"
 
-#include <filesystem>
 #include <vector>
 
 extern "C" {

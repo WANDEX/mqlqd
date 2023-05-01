@@ -5,6 +5,7 @@
 #include "file.hpp"
 
 #include <fmt/format.h>
+#include <iostream>
 
 extern "C" {
 
