@@ -36,7 +36,7 @@ target_include_directories(mqlqd_deps PUBLIC
 )
 target_sources(mqlqd_deps PUBLIC ${mqlqd_headers})
 set_target_properties(mqlqd_deps PROPERTIES LINKER_LANGUAGE CXX)
-target_compile_features(mqlqd_deps PUBLIC cxx_std_20)
+# target_compile_features(mqlqd_deps PUBLIC cxx_std_20)
 
 ## target for src (link inheritance)
 add_library(mqlqd_src  "")
@@ -47,7 +47,7 @@ target_include_directories(mqlqd_src PUBLIC
 )
 target_sources(mqlqd_src PUBLIC ${mqlqd_headers})
 set_target_properties(mqlqd_src PROPERTIES LINKER_LANGUAGE CXX)
-target_compile_features(mqlqd_src PUBLIC cxx_std_20)
+# target_compile_features(mqlqd_src PUBLIC cxx_std_20)
 
 
 ## Core library.
@@ -172,22 +172,14 @@ else()
 
 endif()
 
+## target dev interface
+add_library(mqlqd_bin_i INTERFACE)
+target_link_libraries(mqlqd_bin_i INTERFACE wandex::mqlqd::dev)
 ## link with the libc -lc (to work with the socket API)
-target_link_libraries(mqlqd_core INTERFACE c)
+target_link_libraries(mqlqd_bin_i INTERFACE c)
 
-## link sources with dependencies from the core library target.
-target_link_libraries(mqlqd_src INTERFACE wandex::mqlqd::core)
-
-## XXX: maybe it should be made repetative, not here.
-##      [for each ... (executable/translation unit?)]
-## link sources target with the dev interface
-target_link_libraries(mqlqd_src INTERFACE wandex::mqlqd::dev)
-# target_link_libraries(mqlqd_src PUBLIC wandex::mqlqd::dev)
-# target_link_libraries(mqlqd_src PRIVATE wandex::mqlqd::dev)
-
-## link sources with dependencies
-target_link_libraries(mqlqd_src PUBLIC wandex::mqlqd::deps)
-# target_link_libraries(mqlqd_src PRIVATE wandex::mqlqd::deps)
+## Dependencies & sources target
+target_link_libraries(mqlqd_src PUBLIC mqlqd_deps)
 
 
 ## Umbrella target with all components.
