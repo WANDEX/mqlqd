@@ -4,18 +4,7 @@ defaults:
   run:
     shell: sh
 
-on:
-  workflow_dispatch:
-  pull_request:
-    paths-ignore:
-      - '.*'
-      - 'scripts/**'
-      - 'README.md'
-  push:
-    paths-ignore:
-      - '.*'
-      - 'scripts/**'
-      - 'README.md'
+on: [push, pull_request, workflow_dispatch]
 
 env:
   BUILD_TYPE: Debug
