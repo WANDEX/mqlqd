@@ -20,7 +20,7 @@ project(
   mqlqd
   VERSION       0.0.0.1
   LANGUAGES     CXX
-  DESCRIPTION   "File transfer over TCP/IP on sockets (POSIX) [client -> server]"
+  DESCRIPTION   "test assignment to the company."
   HOMEPAGE_URL  "https://github.com/WANDEX/mqlqd"
 )
 
@@ -124,7 +124,9 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
     include(CMakePackageConfigHelpers)
     include(GNUInstallDirs)
 
-    install(TARGETS mqlqd_client mqlqd_daemon
+    # install(TARGETS mqlqd_client mqlqd_daemon
+    # install(TARGETS mqlqd_daemon # works!
+    install(TARGETS mqlqd_client # XXX: why not works?
       _mqlqd_base mqlqd_core mqlqd_dev mqlqd
       EXPORT ${PROJECT_NAME}Targets
       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
