@@ -6,6 +6,4 @@ target_sources(mqlqd_src
     file.cpp
     log.cpp
     op.cpp
-    fclient.cpp
-    fserver.cpp
 )
