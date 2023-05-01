@@ -47,7 +47,7 @@ cmd_opts(int argc, const char *argv[])
        cxxopts::value<cmd_opt_t>())
 
       ("p,port", "Port number of the daemon on the server. "
-                 "(default: " + fmt::to_string<port_t>(cfg::port) + ')',
+                 "(default: " + std::to_string(cfg::port) + ')',
        cxxopts::value<port_t>())
 
       ("c,cat",  "Print file content (cat like utility mode).")
