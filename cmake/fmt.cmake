@@ -1,4 +1,5 @@
-## prefer fmtlib version installed in the system || fetch if not found
+## fmt fetch
+## XXX: prefer fmtlib version installed in the system || fetch if not found
 
 cmake_path(APPEND dep_dir ${PROJECT_BINARY_DIR} "_deps")
 
@@ -27,9 +28,6 @@ else()
 endif()
 
 target_include_directories(mqlqd_deps PUBLIC "${fmt_src}/include")
-
-## NOTE: this will work only for linking with the system installed libfmt
-# target_link_libraries(mqlqd_deps -lfmt)
 
 ## link with the static library libfmtd.a
 ## which is found in the fetched locally lib dir.
