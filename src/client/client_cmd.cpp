@@ -9,7 +9,10 @@
 
 #include <cxxopts.hpp>
 
+#include <filesystem>
 #include <iostream>
+#include <string>
+#include <vector>
 
 
 namespace mqlqd {
