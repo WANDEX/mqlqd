@@ -166,8 +166,7 @@ target_link_libraries(mqlqd_bin_i INTERFACE c)
 ## Dependencies target
 add_library(mqlqd_deps)
 target_link_libraries(mqlqd_deps PRIVATE wandex::mqlqd::core)
-# target_link_libraries(mqlqd_deps PRIVATE fmt)
-target_link_libraries(mqlqd_deps PRIVATE fmt::fmt)
+target_link_libraries(mqlqd_deps PRIVATE fmt)
 
 ## Umbrella target with all components.
 add_library(mqlqd INTERFACE)
