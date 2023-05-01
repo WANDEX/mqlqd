@@ -1,5 +1,20 @@
 cmake_minimum_required(VERSION 3.19)
 
+## the timestamps of extracted files. NEW = time of extraction
+if(POLICY CMP0135)
+  cmake_policy(SET CMP0135 OLD)
+endif()
+
+## A private source from a directory other than that of target.
+if(POLICY CMP0076)
+  cmake_policy(SET CMP0076 NEW)
+endif()
+
+## add link library which is not built in this directory
+if(POLICY CMP0079)
+  cmake_policy(SET CMP0079 NEW)
+endif()
+
 ## ^ POLICIES
 project(
   mqlqd
@@ -27,13 +42,14 @@ else()
 endif()
 
 if(MQLQD_REAL_ROOT_OF_SRC_TREE)
-  option(MQLQD_BUILD_TESTS      "whether or not tests should be built"        OFF) # TODO: UNIMPLEMENTED
+  # XXX: temporary: OFF -> UNIMPLEMENTED
+  option(MQLQD_BUILD_TESTS      "whether or not tests should be built"        OFF)
   option(MQLQD_BUILD_PACKAGE    "whether or not the package should be built"  ON)
   option(MQLQD_COVERAGE_ENABLE  "whether or not to enable the tests coverage" OFF)
   option(MQLQD_COVERAGE_CLEAN   "clean coverage data before taking new"       ON)
   option(MQLQD_INSTALL_ENABLE   "whether or not to enable the install rule"   ON)
   option(MQLQD_MEMCHECK_ENABLE  "detect leaks via valgrind memcheck tool"     OFF)
-  option(MQLQD_SNTZ_ADDR        "whether or not to enable address sanitizer"  OFF) # TODO: UNIMPLEMENTED
+  option(MQLQD_SNTZ_ADDR        "whether or not to enable address sanitizer"  OFF)
 
   ## For the list of supported compilers visit:
   ## https://cmake.org/cmake/help/latest/prop_tgt/COMPILE_WARNING_AS_ERROR.html
