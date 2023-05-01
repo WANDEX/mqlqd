@@ -4,11 +4,11 @@ defaults:
   run:
     shell: sh
 
-on: [push, pull_request]
-    paths-ignore:
-      - '.*'
-      - 'scripts/**'
-      - 'README.md'
+on: [push, pull_request]:
+  paths-ignore:
+    - '.*'
+    - 'scripts/**'
+    - 'README.md'
   workflow_dispatch:
 
 env:
