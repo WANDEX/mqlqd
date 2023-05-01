@@ -12,6 +12,14 @@ set(common_src
   ${common_src_dir}/fserver.cpp
 )
 
+add_library(mqlqd_bin_i INTERFACE)
+
+target_link_libraries(mqlqd_bin_i INTERFACE wandex::mqlqd::dev)
+
+## link with the libc -lc (to work with the Linux socket API interface)
+target_link_libraries(mqlqd_bin_i INTERFACE c)
+
+
 add_subdirectory(client)
 add_subdirectory(daemon)
 
