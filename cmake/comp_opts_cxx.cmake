@@ -180,7 +180,7 @@ target_link_libraries(mqlqd_src INTERFACE wandex::mqlqd::core)
 target_link_libraries(mqlqd_src PUBLIC wandex::mqlqd::deps)
 
 ## link sources with project dev interface (for the compilation flags/options)
-# target_link_libraries(mqlqd_src PRIVATE wandex::mqlqd::dev)
+target_link_libraries(mqlqd_src PRIVATE wandex::mqlqd::dev)
 
 
 ## Umbrella target with all components.
