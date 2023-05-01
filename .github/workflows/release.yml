@@ -10,9 +10,6 @@ on:
   release:
     types: [published]
 
-env:
-  BUILD_TYPE: Release
-
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -24,13 +21,11 @@ jobs:
 
       - name: CMake Configure
         working-directory: build/
-        run : >
-          cmake $GITHUB_WORKSPACE -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-          -D MQLQD_BUILD_TESTS=OFF -D MQLQD_COVERAGE_ENABLE=OFF
+        run : cmake $GITHUB_WORKSPACE -D MQLQD_BUILD_TESTS=OFF -D MQLQD_COVERAGE_ENABLE=OFF
 
       - name: Package source code
         working-directory: build/
-        run : cmake --build . --target mqlqd_package -j $(getconf _NPROCESSORS_ONLN)
+        run : cmake --build . --target mqlqd_package
 
       - name: Add packaged source code to release
         uses: svenstaro/upload-release-action@v2
