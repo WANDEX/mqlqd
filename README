@@ -1,0 +1,106 @@
+
+ ▀███▄▄     ▄▄███▀ ▄▄█▀▀██▄  ▀████▀     ▄▄█▀▀██▄  ▀███▀▀▀██▄
+   ████▄   ▄████ ▄██▀    ▀██▄  ██     ▄██▀    ▀██▄  ██    ▀██▄
+   ██ ██   ██ ██ ██▀      ▀██  ██     ██▀      ▀██  ██     ▀██
+   ██ ▀██ ██▀ ██ ██        ██  ██     ██        ██  ██      ██
+   ██  ▀█▄█▀  ██ ██▄      ▄██  ██     ██▄      ▄██  ██     ▄██
+   ██   ███   ██ ▀██▄    ▄██▀  ██    ▄███▄    ▄██▀  ██    ▄██▀
+ ▄████▄  ▀  ▄████▄ ▀▀████▀▀  ▄█████████ ▀▀████▀▀  ▄████████▀
+                       ███                  ███
+                        ▀████▀               ▀████▀
+
+File transfer over TCP/IP on sockets (POSIX) [client -> server]
+===============================================================
+  ___   _      ___   _      ___   _      ___   _      ___   _
+ [(_)] |=|    [(_)] |=|    [(_)] |=|    [(_)] |=|    [(_)] |=|
+  '-`  |_|     '-`  |_|     '-`  |_|     '-`  |_|     '-`  |_|
+ /mmm/  /     /mmm/  /     /mmm/  /     /mmm/  /     /mmm/  /
+       |____________|____________|____________|____________|
+                     mqlqd clients          |
+               send files to the server     |
+                                            \         _______
+                          .-------.          \_______| _____ |
+                          | -----.-----.      server ||_____||
+                          | -----| -----\    running ||_____||
+                          | -----| ----- |     mqlqd ||_____||
+                          | -----| ----- |    daemon ||_____||
+                          '------| ----- |           ||_____||
+                                 '-------'           ||_____||
+                 listens for incoming connections    ||_____||
+               receives and saves files in a storage |       |
+                  directory unique to the client     |=======|
+
+
+CLIENT USAGE
+============
+Transfer file(s) over TCP/IP to the server running the mqlqd_daemon.
+Usage:
+  mqlqd_client [OPTIONS] [file paths as trailing arguments ...]
+
+  -a, --addr arg  Server IP address with the mqlqd_daemon. (default: 127.0.0.1)
+  -p, --port arg  Port number of the daemon on the server. (default: 42069)
+  -c, --cat       Print file content (cat like utility mode).
+  -f, --file arg  File path of the file to transmit.
+  -h, --help      Show usage help.
+  -u, --urge 1-7  Log urgency level. (All messages </> Only critical)
+
+
+DAEMON USAGE
+============
+Accept file(s) over TCP/IP from the clients running the mqlqd_client.
+Usage:
+  mqlqd_daemon [OPTION...]
+
+  -d, --dir  arg  Path to the storage dir, else default storage under cwd.
+                  (default: ./mqlqd_storage)
+  -p, --port arg  Use port number as identity of the daemon on the server.
+                  (default: 42069)
+  -h, --help      Show usage help.
+  -u, --urge 1-7  Log urgency level. (All messages </> Only critical)
+
+
+BUILD
+=====
+To make clean build
+$ ./scripts/build.sh clean
+
+To make cleaner build (for edge cases)
+$ ./scripts/build.sh cleaner
+
+Ninja (build system) is optional: change Generator -G Ninja in the above build script.
+
+
+REQUIREMENTS
+============
+Platform requirement: Linux, BSD or origin from the UNIX family (POSIX compliant os).
+* libc    To work with the socket API (socket API support is mandatory for the platform)
+
+3rd party dependencies (fetched automatically with CMake fetch content)
+* fmtlib  (https://github.com/fmtlib/fmt)
+* cxxopts (https://github.com/jarro2783/cxxopts)
+
+Tests require:
+* gtest   (https://github.com/google/googletest)
+
+
+RELATED ARTICLES
+================
+Linux man-pages are crucial for understanding of the sockets API.
+
+The Linux socket API explained (brilliant simple and concise introduction)
+https://www.youtube.com/watch?v=XXfdzwEsxFk
+
+A brief intro to TCP/IP and a basic client-server setup in C++ that uses TCP/IP
+https://lenngro.github.io/how-to/2021/01/05/Simple-TCPIP-Server-Cpp/
+
+Berkeley BSD and POSIX sockets API (history)
+https://en.wikipedia.org/wiki/Berkeley_sockets
+
+OSI model (Open Systems Interconnection model) (history)
+https://en.wikipedia.org/wiki/OSI_model
+
+
+LICENSE
+=======
+0BSD
+
