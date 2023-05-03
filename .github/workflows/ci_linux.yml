@@ -10,12 +10,12 @@ on:
     paths-ignore:
       - '.*'
       - 'scripts/**'
-      - 'README.md'
+      - 'README'
   push:
     paths-ignore:
       - '.*'
       - 'scripts/**'
-      - 'README.md'
+      - 'README'
 
 env:
   BUILD_TYPE: Debug
