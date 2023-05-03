@@ -9,26 +9,26 @@
                        ███                  ███
                         ▀████▀               ▀████▀
 
-File transfer over TCP/IP on sockets (POSIX) [client -> server]
-===============================================================
-  ___   _      ___   _      ___   _      ___   _      ___   _
- [(_)] |=|    [(_)] |=|    [(_)] |=|    [(_)] |=|    [(_)] |=|
-  '-`  |_|     '-`  |_|     '-`  |_|     '-`  |_|     '-`  |_|
- /mmm/  /     /mmm/  /     /mmm/  /     /mmm/  /     /mmm/  /
-       |____________|____________|____________|____________|
-                     mqlqd clients          |
-               send files to the server     |
-                                            \         _______
-                          .-------.          \_______| _____ |
-                          | -----.-----.      server ||_____||
-                          | -----| -----\    running ||_____||
-                          | -----| ----- |     mqlqd ||_____||
-                          | -----| ----- |    daemon ||_____||
-                          '------| ----- |           ||_____||
-                                 '-------'           ||_____||
-                 listens for incoming connections    ||_____||
-               receives and saves files in a storage |       |
-                  directory unique to the client     |=======|
+  File transfer over TCP/IP on sockets (POSIX)
+=================================================
+  ___   _      ___   _      ___   _      ___   _
+ [(_)] |=|    [(_)] |=|    [(_)] |=|    [(_)] |=|
+  '-`  |_|     '-`  |_|     '-`  |_|     '-`  |_|
+ /mmm/  /     /mmm/  /     /mmm/  /     /mmm/  /
+       |____________|____________|____________|
+        mqlqd clients          |
+  send files to the server     |
+                               \         _______
+             .-------.          \_______| _____ |
+             | -----.-----.      server ||_____||
+             | -----| -----\    running ||_____||
+             | -----| ----- |     mqlqd ||_____||
+             | -----| ----- |    daemon ||_____||
+             '------| ----- |           ||_____||
+                    '-------'           ||_____||
+    listens for incoming connections    ||_____||
+  receives and saves files in a storage |       |
+     directory unique to the client     |=======|
 
 
 CLIENT USAGE
@@ -37,8 +37,10 @@ Transfer file(s) over TCP/IP to the server running the mqlqd_daemon.
 Usage:
   mqlqd_client [OPTIONS] [file paths as trailing arguments ...]
 
-  -a, --addr arg  Server IP address with the mqlqd_daemon. (default: 127.0.0.1)
-  -p, --port arg  Port number of the daemon on the server. (default: 42069)
+  -a, --addr arg  Server IP address with the mqlqd_daemon.
+                  (default: 127.0.0.1)
+  -p, --port arg  Port number of the daemon on the server.
+                  (default: 42069)
   -c, --cat       Print file content (cat like utility mode).
   -f, --file arg  File path of the file to transmit.
   -h, --help      Show usage help.
