@@ -168,7 +168,10 @@ File::write()
   }
 
   try {
-    ofs << m_block;
+    // NOTE: for loop is necessary for writing full contents of the binary file!
+    for (size_t i = 0; i < m_block_size; i++) {
+      ofs << m_block[i];
+    }
     log_g.msg(LL::STAT, fmt::format("Contents of the memory block were written to the file:\n\t{}",
                                     m_fpath.c_str()));
   } catch(std::exception const& err) {
