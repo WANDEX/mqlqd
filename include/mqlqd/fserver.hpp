@@ -153,7 +153,7 @@ protected:
    * @return -1 on error   - and errno msg is logged to indicate the error.
    * @return -2 on recv() -> 0 - orderly shutdown etc. ref: recv(2).
    */
-  template <typename T>
+  template <typename T = file::File::char_type>
   [[nodiscard]] int
   recv_loop(int fd, void *buf, size_t len);
 

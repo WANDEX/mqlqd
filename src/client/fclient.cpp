@@ -112,7 +112,7 @@ Fclient::send_files(std::vector<file::File> const& vfiles)
 Fclient::send_file(file::File const& file)
 {
   log_g.msg(LL::INFO, fmt::format("INSIDE send_file() : {}", file));
-  m_rc = send_loop<char>(m_fd, file.m_block, file.m_block_size);
+  m_rc = send_loop(m_fd, file.m_block, file.m_block_size);
   if (m_rc != 0) {
     log_g.msg(LL::ERRO, fmt::format("[FAIL] send_file() in send_loop() -> {} : {}", m_rc, file));
     return m_rc;

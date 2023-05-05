@@ -30,6 +30,12 @@ mkdir(fs::path const& dpath, fs::perms const& perms = fs::perms::group_all, bool
 class File final
 {
 public:
+  // to read/write/store all files as binary data with the unified underlying type
+  // across the project code base and across devices.
+  // XXX: u8 unsigned char type makes printing binary file contents unbearable!
+  // using char_type = u8;
+  using char_type = char;
+
   inline static constexpr auto openmode_r{
     std::ios::in  | std::ios::binary | std::ios::ate
   };
@@ -87,7 +93,7 @@ public:
 public:
   fs::path    m_fpath{ };
   std::size_t m_block_size{ 0 };
-  char       *m_block{ nullptr }; // memory block -> contiguous chunk of memory.
+  char_type  *m_block{ nullptr }; // memory block -> contiguous chunk of memory.
 };
 
 } // namespace file

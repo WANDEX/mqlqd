@@ -152,7 +152,7 @@ File::write()
     return 33;
   }
   // open file for writing
-  std::ofstream ofs(m_fpath, openmode_w);
+  std::basic_fstream<char_type> ofs(m_fpath, openmode_w);
   // TODO: reinspect checks
   if (!ofs) {
     log_g.msg(LL::ERRO, "can not open output file!");
@@ -185,7 +185,7 @@ int File::heap_alloc() noexcept
   // but maybe there is the benefit in proper using of the raw pointers?
   // It is easy to rewrite if requested!
   try {
-    m_block = { new char[m_block_size]{} };
+    m_block = { new char_type[m_block_size]{} };
     if (!m_block) {
       log_g.msg(LL::CRIT, "[FAIL] File::heap_alloc() memory block == nullptr!");
       return 30;
@@ -227,7 +227,7 @@ int File::fcontent()
   int rc{ is_r(m_fpath) }; // return code
   if (rc != 0) return rc;
   // open file for reading
-  std::ifstream ifs(m_fpath, openmode_r);
+  std::basic_fstream<char_type> ifs(m_fpath, openmode_r);
   // invariants & validation/safety checks
   if (!ifs) {
     log_g.msg(LL::ERRO, "can not open input file!");
@@ -298,7 +298,10 @@ void File::print_fcontent() const noexcept
 #if FILE_CONTENTS_BOUNDARY
   std::cerr << ">>> [BEG] " << m_fpath << " - file content >>>" << '\n';
 #endif // FILE_CONTENTS_BOUNDARY
-  std::cout << m_block;
+  // NOTE: for loop is necessary for printing full contents of the binary file!
+  for (size_t i = 0; i < m_block_size; i++) {
+    fmt::print("{:c}", m_block[i]);
+  }
 #if FILE_CONTENTS_BOUNDARY
   std::cerr << "<<< [END] " << m_fpath << " - file content <<<" << '\n';
 #endif // FILE_CONTENTS_BOUNDARY
