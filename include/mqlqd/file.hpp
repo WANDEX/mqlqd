@@ -30,6 +30,16 @@ mkdir(fs::path const& dpath, fs::perms const& perms = fs::perms::group_all, bool
 class File final
 {
 public:
+  /**
+   * to read/write/store all files as binary data with the unified underlying type
+   * across the project code base and across devices.
+   * NOTE: tried other types, specifically: u8 - unsigned char type => break the logic:
+   *      printing/writing binary file contents. (send/recv maybe also, but not sure!)
+   *      Currently i do not see any benefit in wasting time on making this possible using u8.
+   *      Probably some extra handling required, which only overcomplicate code. (so why bother?)
+   */
+  using char_type = char;
+
   inline static constexpr auto openmode_r{
     std::ios::in  | std::ios::binary | std::ios::ate
   };
@@ -87,7 +97,7 @@ public:
 public:
   fs::path    m_fpath{ };
   std::size_t m_block_size{ 0 };
-  char       *m_block{ nullptr }; // memory block -> contiguous chunk of memory.
+  char_type  *m_block{ nullptr }; // memory block -> contiguous chunk of memory.
 };
 
 } // namespace file

@@ -138,7 +138,7 @@ Fserver::recv_file(const size_t i)
   m_rc = file.heap_alloc();
   if (m_rc != 0) return m_rc;
 
-  m_rc = recv_loop<char>(m_fd_con, file.m_block, file.m_block_size);
+  m_rc = recv_loop(m_fd_con, file.m_block, file.m_block_size);
   if (m_rc != 0) {
     log_g.msg(LL::ERRO, fmt::format("[FAIL] recv_file() in recv_loop() -> {} : {}", m_rc, file));
     return m_rc;
