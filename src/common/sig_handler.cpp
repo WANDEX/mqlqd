@@ -12,9 +12,9 @@
 
 namespace mqlqd {
 
-void sig_print(int sig, std::string_view const& extra_msg="")
+void sig_print(int sig, std::string_view const& extra_msg)
 {
-  fmt::print(stderr, "\nSIG {:2}: [{}] {} {}\n\n", sig, mqlqd::SIG(sig), "signal caught.", extra_msg);
+  fmt::print(stderr, "\nSIG {:2}: [{}] {} {}\n\n", sig, SIG{sig}, "signal caught.", extra_msg);
 }
 
 /**
@@ -25,14 +25,12 @@ void sig_print(int sig, std::string_view const& extra_msg="")
  */
 void sig_handler(int sig)
 {
-  switch (mqlqd::SIG(sig)) {
+  switch (SIG{sig}) {
   // default behavior for the all not explicitly handled signals =>
   // print caught signal and finish program gracefully.
   default: sig_print(sig, "FINISH HIM!");
   }
 }
-
-struct sigaction siga {};
 
 /**
  * @brief set the sig_handler function as the handler for all possible signals.
@@ -41,11 +39,12 @@ struct sigaction siga {};
  */
 void sig_handler_set(void (*sig_handler)(int sig))
 {
+  struct sigaction siga {};
   siga.sa_handler = sig_handler;
-  for (int sig = 1; sig <= SIGRTMAX; ++sig) {
+  for (int sig = 1; sig <= SIGRTMAX; sig++) {
     // skip / do not install handlers on the specific signals:
-    switch (mqlqd::SIG(sig)) {
-    case SIG::TRAP  : continue; // XXX OK?: Trace/breakpoint trap
+    switch (SIG{sig}) {
+    case SIG::TRAP  : continue; // Trace/breakpoint trap
     case SIG::KILL  : continue; // Kill signal  (should not be caught)
     case SIG::CONT  : continue; // Continue if stopped
     // Stop signals:
@@ -61,8 +60,10 @@ void sig_handler_set(void (*sig_handler)(int sig))
     } // ^ And also we do not want to list all members of the enum.
 
     // finish our program gracefully (correctly) on all other signals.
-    // potentially this might return -1 and set errno, but we do not care.
-    sigaction(sig, &siga, nullptr);
+    if (sigaction(sig, &siga, nullptr) == -1) {
+      sig_print(sig, "-> NO ACTUALLY FAILED to set handler for this system signal! EXIT.");
+      exit(EXIT_FAILURE);
+    }
   }
 }
 
