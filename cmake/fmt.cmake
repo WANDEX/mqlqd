@@ -29,7 +29,7 @@ if(TRUE)
   FetchContent_MakeAvailable(fmt)
 endif()
 
-# target_include_directories(mqlqd_deps PUBLIC "${fmt_src}/include")
+target_include_directories(mqlqd_deps PUBLIC "${fmt_src}/include")
 
 ## link with the static library libfmtd.a
 ## which is found in the fetched locally lib dir.
