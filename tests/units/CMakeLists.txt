@@ -6,7 +6,8 @@ add_executable(tests_units ${units_sources})
 
 target_link_libraries(tests_units PRIVATE GTest::gtest_main)
 
-target_link_libraries(tests_units INTERFACE wandex::mqlqd::dev)
+# target_link_libraries(tests_units INTERFACE wandex::mqlqd::dev)
+target_link_libraries(tests_units PRIVATE wandex::mqlqd::dev)
 # target_link_libraries(tests_units PRIVATE mqlqd_src)
 
 if(TARGET code_coverage)
