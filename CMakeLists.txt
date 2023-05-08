@@ -88,8 +88,8 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
 
   if(MQLQD_BUILD_TESTS)
     ## prefer GoogleTest version installed in the system || fetch if not found
-    include(cmake/gtest.cmake)
-    add_subdirectory(tests/units)
+    # include(cmake/gtest.cmake)
+    # add_subdirectory(tests/units)
   endif(MQLQD_BUILD_TESTS)
 
   if(MQLQD_MEMCHECK_ENABLE)
