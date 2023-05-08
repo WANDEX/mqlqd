@@ -9,9 +9,11 @@ cmake_path(APPEND fmt_src ${fmt_dir} "src")
 cmake_path(APPEND fmt_bin ${fmt_dir} "bin")
 
 # find_package(fmt 9.1.0)
-# if(NOT fmt_FOUND)
+# if(FMT_FOUND)
+#   message(">> found libfmt.")
+# else()
 if(TRUE)
-  message(">> fetching fmt of required version!")
+  message(">> fetch libfmt.")
   include(FetchContent)
   FetchContent_Declare(fmt
     GIT_REPOSITORY    https://github.com/fmtlib/fmt.git
@@ -19,17 +21,17 @@ if(TRUE)
     SUBBUILD_DIR      ${fmt_sub}
     SOURCE_DIR        ${fmt_src}
     BINARY_DIR        ${fmt_bin}
+    FIND_PACKAGE_ARGS NAMES fmt
   )
-  # option(FMT_INSTALL "" ON)
-  option(FMT_OS "" OFF)
+  option(FMT_INSTALL  "" ON)
+  option(FMT_OS       "" OFF)
   FetchContent_MakeAvailable(fmt)
-else()
-  message(">> found fmt of required version!")
 endif()
 
-target_include_directories(mqlqd_deps PUBLIC "${fmt_src}/include")
+# target_include_directories(mqlqd_deps PUBLIC "${fmt_src}/include")
 
 ## link with the static library libfmtd.a
 ## which is found in the fetched locally lib dir.
-target_link_libraries(mqlqd_deps PRIVATE -L"${fmt_bin}" -lfmtd)
+# target_link_libraries(mqlqd_deps PRIVATE -L"${fmt_bin}" -lfmtd)
 
+target_link_libraries(mqlqd_deps PRIVATE fmt::fmt)
