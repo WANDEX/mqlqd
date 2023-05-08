@@ -21,7 +21,8 @@ if(TRUE)
     SUBBUILD_DIR      ${fmt_sub}
     SOURCE_DIR        ${fmt_src}
     BINARY_DIR        ${fmt_bin}
-    FIND_PACKAGE_ARGS NAMES fmt
+    # FIND_PACKAGE_ARGS NAMES fmt
+    OVERRIDE_FIND_PACKAGE
   )
   option(FMT_INSTALL  "" ON)
   option(FMT_OS       "" OFF)
@@ -33,5 +34,6 @@ endif()
 ## link with the static library libfmtd.a
 ## which is found in the fetched locally lib dir.
 # target_link_libraries(mqlqd_deps PRIVATE -L"${fmt_bin}" -lfmtd)
+
 
 target_link_libraries(mqlqd_deps PRIVATE fmt::fmt)
