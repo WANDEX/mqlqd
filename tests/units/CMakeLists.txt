@@ -11,7 +11,8 @@ endif()
 
 # target_link_libraries(tests_units PRIVATE GTest::gtest_main)
 
-target_sources(tests_deps PUBLIC ${units_sources})
+# target_sources(tests_deps PUBLIC ${units_sources})
+target_sources(tests_deps PRIVATE ${units_sources})
 target_link_libraries(tests_units PRIVATE tests_deps)
 
 # target_link_libraries(tests_units ${GTEST_LDFLAGS})

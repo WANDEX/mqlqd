@@ -47,7 +47,7 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
   add_subdirectory(src)
 
   if(MQLQD_BUILD_PACKAGE)
-    set(package_files include/ src/ cmake/ CMakeLists.txt LICENSE)
+    set(package_files include/ src/ cmake/ CMakeLists.txt LICENSE README)
     set(fpath_zip ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-src.zip)
     add_custom_command(
       OUTPUT  ${fpath_zip}
