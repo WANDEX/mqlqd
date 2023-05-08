@@ -11,11 +11,11 @@ cmake_path(APPEND gtest_bin ${gtest_dir} "bin")
 # add_library(tests_deps INTERFACE)
 # add_library(tests_deps SHARED)
 
-include(FindPkgConfig)
+# include(FindPkgConfig)
 # pkg_search_module(GTEST gtest_main>=1.13.0)
 # pkg_search_module(GTEST gtest_main=1.12.1) # XXX
-find_package(GTest 1.13.0)
-# find_package(GTest 1.12.1 EXACT)
+# find_package(GTest 1.13.0)
+find_package(GTest 1.12.1 EXACT)
 if(GTEST_FOUND)
   message(">> found gtest.")
   # find_package(GTest 1.13.0) # XXX
@@ -24,8 +24,7 @@ else()
   include(FetchContent)
   FetchContent_Declare(googletest
     GIT_REPOSITORY    https://github.com/google/googletest.git
-    GIT_TAG           v1.13.0
-    # GIT_TAG           release-1.12.1
+    GIT_TAG           release-1.12.1
     SUBBUILD_DIR      ${gtest_sub}
     SOURCE_DIR        ${gtest_src}
     BINARY_DIR        ${gtest_bin}
@@ -45,7 +44,6 @@ else()
 
 
   # target_include_directories(tests_deps PUBLIC "${gtest_src}/googlemock/include")
-  # target_include_directories(tests_deps PUBLIC "${gtest_src}/googletest/include")
   # target_include_directories(tests_deps PUBLIC "${gtest_src}/googletest/include")
 
   ## link with the static library libfmtd.a
@@ -74,4 +72,5 @@ enable_testing()
 # target_compile_options(tests_deps PUBLIC ${GTEST_CFLAGS})
 
 # target_link_libraries(tests_deps PUBLIC GTest::gtest_main)
+# target_link_libraries(tests_deps PRIVATE GTest::gtest_main)
 
