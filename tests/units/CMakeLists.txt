@@ -3,7 +3,8 @@
 file(GLOB_RECURSE units_sources LIST_DIRECTORIES false *.cc *.cpp)
 
 add_executable(tests_units ${units_sources})
-target_link_libraries(tests_units INTERFACE wandex::mqlqd::dev)
+# target_link_libraries(tests_units INTERFACE wandex::mqlqd::dev)
+target_link_libraries(tests_units PRIVATE mqlqd_src)
 
 if(TARGET code_coverage)
   target_link_libraries(tests_units PRIVATE code_coverage)
