@@ -7,16 +7,16 @@ cmake_path(APPEND gtest_sub ${gtest_dir} "sub")
 cmake_path(APPEND gtest_src ${gtest_dir} "src")
 cmake_path(APPEND gtest_bin ${gtest_dir} "bin")
 
-add_library(tests_deps "")
+# add_library(tests_deps "")
+# add_library(tests_deps INTERFACE)
 # add_library(tests_deps SHARED)
 
 include(FindPkgConfig)
 # pkg_search_module(GTEST gtest_main>=1.13.0)
 # pkg_search_module(GTEST gtest_main=1.12.1) # XXX
-# find_package(GTest 1.13.0)
 find_package(GTest 1.13.0)
+# find_package(GTest 1.12.1 EXACT)
 if(GTEST_FOUND)
-# if(GTest_FOUND)
   message(">> found gtest.")
   # find_package(GTest 1.13.0) # XXX
 else()
@@ -58,10 +58,10 @@ else()
   # include(GoogleTest)
 endif()
 
+include(GoogleTest)
 ## For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-include(GoogleTest)
 enable_testing()
 
 # add_library(tests_deps INTERFACE)
@@ -73,5 +73,5 @@ enable_testing()
 # target_link_libraries(tests_deps PUBLIC ${GTEST_LDFLAGS})
 # target_compile_options(tests_deps PUBLIC ${GTEST_CFLAGS})
 
-target_link_libraries(tests_deps PUBLIC GTest::gtest_main)
+# target_link_libraries(tests_deps PUBLIC GTest::gtest_main)
 
