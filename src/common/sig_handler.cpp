@@ -20,7 +20,7 @@ void sig_print(int sig, std::string_view const& extra_msg)
 /**
  * ref: sigaction(2), sigaction(3p)
  * SIGKILL or SIGSTOP "cannot be caught or ignored",
- * ancestors probably meant: sould not be caught and ignored!?.
+ * ancestors probably meant: should not be caught and ignored!?.
  * so that even the most disgusting program can be killed etc. (i guess).
  */
 void sig_handler(int sig)

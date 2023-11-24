@@ -12,9 +12,9 @@
 
 
 // show boundaries of the files in the cat mode
-#ifndef FILE_CONTENTS_BOUNDARY
-#define FILE_CONTENTS_BOUNDARY 0
-#endif // !FILE_CONTENTS_BOUNDARY
+#ifndef MQLQD_FILE_CONTENTS_BOUNDARY
+#define MQLQD_FILE_CONTENTS_BOUNDARY 0
+#endif // !MQLQD_FILE_CONTENTS_BOUNDARY
 
 namespace mqlqd {
 namespace file {
@@ -298,16 +298,16 @@ void File::print_fcontent() const noexcept
   if (!m_block) {
     return;
   }
-#if FILE_CONTENTS_BOUNDARY
+#if MQLQD_FILE_CONTENTS_BOUNDARY
   std::cerr << ">>> [BEG] " << m_fpath << " - file content >>>" << '\n';
-#endif // FILE_CONTENTS_BOUNDARY
+#endif // MQLQD_FILE_CONTENTS_BOUNDARY
   // NOTE: for loop is necessary for printing full contents of the binary file!
   for (size_t i = 0; i < m_block_size; i++) {
     fmt::print("{:c}", m_block[i]);
   }
-#if FILE_CONTENTS_BOUNDARY
+#if MQLQD_FILE_CONTENTS_BOUNDARY
   std::cerr << "<<< [END] " << m_fpath << " - file content <<<" << '\n';
-#endif // FILE_CONTENTS_BOUNDARY
+#endif // MQLQD_FILE_CONTENTS_BOUNDARY
 }
 
 } // namespace file

@@ -19,9 +19,9 @@ namespace mqlqd {
 
 // catch all possible exceptions (like Pokemons)
 // to not suppress core dumps etc -> should be disabled => 0
-#ifndef CATCH_THEM_ALL
-#define CATCH_THEM_ALL 1
-#endif // !CATCH_THEM_ALL
+#ifndef MQLQD_CATCH_THEM_ALL
+#define MQLQD_CATCH_THEM_ALL 1
+#endif // !MQLQD_CATCH_THEM_ALL
 
 /**
  * @brief parse command line options.
@@ -162,11 +162,11 @@ cmd_opts(int argc, const char *argv[])
   } catch(std::exception const& err) {
     log_g.msg(LL::CRIT, fmt::format("Unhandled std::exception was caught:\n{}\n", err.what()));
     return 2;
-#if CATCH_THEM_ALL
+#if MQLQD_CATCH_THEM_ALL
   } catch(...) {
     log_g.msg(LL::CRIT, "Unhandled anonymous exception occurred but was caught!\nTHIS IS VERY BAD!\n");
     return 3;
-#endif // CATCH_THEM_ALL
+#endif // MQLQD_CATCH_THEM_ALL
   }
   return 0;
 }

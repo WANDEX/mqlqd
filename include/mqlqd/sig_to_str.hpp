@@ -10,7 +10,7 @@ namespace mqlqd {
  * names and respective values were copied from the htop program interface.
  * duplicate values commented out.
  * NOTE: removed 'SIG' in the beginning of each signal name
- * in order to aboid name collisions with the
+ * in order to avoid name collisions with the
  * predefined macro constants from csignal / signal.h .
  */
 enum class SIG
