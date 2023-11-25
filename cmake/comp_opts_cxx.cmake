@@ -164,6 +164,12 @@ else()
   target_add_check_cxx_compiler_flag(mqlqd_dev -Wstrict-null-sentinel )
   target_add_check_cxx_compiler_flag(mqlqd_dev -Wzero-as-null-pointer-constant ) # has
 
+  if(${GNU_COMP})
+    ## gives many false positives with GCC 13
+    ## https://github.com/fmtlib/fmt/issues/3415
+    target_add_check_cxx_compiler_flag(mqlqd_dev -Wno-dangling-reference )
+  endif()
+
   ### section for the other flags (may be or may be missing in Clang)
   ### for brevity - flags for the other compilers should be here
 
