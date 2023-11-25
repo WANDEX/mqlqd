@@ -1,6 +1,4 @@
 // Logger implementation
-// TODO: trace with message content - file, line, (function name if possible)
-//       for the messages greater than LL:WARN -> (LL::ERRO, LL:CRIT)
 
 #include "log.hpp"
 
@@ -8,15 +6,14 @@
 
 #include <fmt/core.h>
 #include <fmt/format.h>
-// #include <fmt/std.h>            // for formatting std::filesystem::path
-// https://fmt.dev/latest/api.html#standard-library-types-formatting ^
-// #include <fmt/ostream.h>
-
 
 #include <cerrno>               // for errno messages std::strerror
-#include <iostream>
-// #include <filesystem>
-// #include <utility>              // std::forward
+
+
+// toggle showing of the line number : file path
+#ifndef WNDX_LOG_TRACE_TO_THE_FILE
+#define WNDX_LOG_TRACE_TO_THE_FILE 1
+#endif // !WNDX_LOG_TRACE_TO_THE_FILE
 
 
 namespace mqlqd {
@@ -30,43 +27,49 @@ Logger::~Logger() noexcept
 {
 }
 
-void Logger::set_urgency(LL const ll) noexcept
+void Logger::trace_to_the_file(
+    char const* const file, int const line, LL const ll)
 {
-  m_urgency_level = ll;
-  log_g.msg(LL::NTFY, fmt::format("forced urgency level = {}.", ll));
-  // TODO: replace with this when possible.
-  // log_g.msg(LL::NTFY, "forced urgency level = {}.\n", ll);
-}
-
-void Logger::errnum(int errnum, sv_t const& message) noexcept
-{
-  fmt::print(stderr, "[{}]: {}\n\terrno: {}\n", LL::CRIT, message, std::strerror(errnum));
-  // TODO: also write message into the log file.
-}
-
-void Logger::msg(LL const ll, sv_t const& msg) noexcept
-{
-  if (m_urgency_level > ll) {
+  if (ll < LL::WARN) {
     return;
   }
-  // print log message into the stderr stream,
-  // log level (enum) name in the text form.
-  fmt::print(stderr, "[{}]: {}\n", ll, msg);
+  fmt::print(stderr, "{:>6}: \"{}\"\n", line, file);
+}
 
+void Logger::wrapper_fmt_args_helper(
+    char const* const file, int const line, LL const ll,
+    fmt::string_view const fmt, fmt::format_args const args)
+{
+  fmt::vprint(stderr, fmt, args);
   // TODO: also write message into the log file.
   // XXX : maybe use this?
   // https://github.com/PlatformLab/NanoLog
+#if WNDX_LOG_TRACE_TO_THE_FILE
+  trace_to_the_file(file, line, ll);
+#endif
 }
 
-void Logger::msg(LL const ll, fmt::string_view format, fmt::format_args args)
+[[nodiscard]] fs::path
+Logger::get_log_fpath() noexcept
 {
-  if (m_urgency_level > ll) {
-    return;
-  }
-  fmt::vprint(stderr, fmt::format("[{}]: {}", ll, format), args); // OK
-  // TODO: find way a way to pass variable amount of args
-  // differently more convenient ... (spent too much time on this!)
-  // TODO: also write message into the log file.
+  return m_log_fpath;
+}
+
+[[nodiscard]] LL
+Logger::get_urgency() noexcept
+{
+  return m_urgency_level;
+}
+
+void Logger::set_urgency(LL const ll) noexcept
+{
+  m_urgency_level = ll;
+  WNDX_LOG(LL::NTFY, "forced urgency level = {}\n", ll);
+}
+
+void Logger::errnum(int const errnum, std::string_view const msg) noexcept
+{
+  WNDX_LOG(LL::CRIT, "{}\n\terrno: {}\n", msg, std::strerror(errnum));
 }
 
 } // namespace mqlqd
