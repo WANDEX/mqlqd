@@ -12,7 +12,7 @@
 
 namespace mqlqd {
 
-void sig_print(int sig, std::string_view const& extra_msg)
+void sig_print(int sig, std::string_view const extra_msg)
 {
   fmt::print(stderr, "\nSIG {:2}: [{}] {} {}\n\n", sig, SIG{sig}, "signal caught.", extra_msg);
 }
@@ -42,6 +42,7 @@ void sig_handler_set(void (*sig_handler)(int sig))
   struct sigaction siga {};
   siga.sa_handler = sig_handler;
   for (int sig = 1; sig <= SIGRTMAX; sig++) {
+    if (sig == 32 || sig == 33) continue; // XXX: temporary fix
     // skip / do not install handlers on the specific signals:
     switch (SIG{sig}) {
     case SIG::TRAP  : continue; // Trace/breakpoint trap
@@ -56,6 +57,8 @@ void sig_handler_set(void (*sig_handler)(int sig))
     case SIG::CHLD  : continue; // Child stopped or terminated
     case SIG::URG   : continue; // Urgent condition on socket
     case SIG::WINCH : continue; // Window resize signal (TERMINAL resize event)
+// TODO: SIG::32
+// TODO: SIG::33
     default:; // default in order to silence [-Wswitch].
     } // ^ And also we do not want to list all members of the enum.
 
