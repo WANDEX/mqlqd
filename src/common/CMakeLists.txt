@@ -5,5 +5,4 @@ target_sources(mqlqd_src
     sig_handler.cpp
     file.cpp
     log.cpp
-    op.cpp
 )
