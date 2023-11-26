@@ -32,24 +32,24 @@ namespace mqlqd {
 Fclient::Fclient(addr_t const& addr, port_t const& port) noexcept
   : m_addr{ addr }, m_port{ port }
 {
-  log_g.msg(LL::DBUG, "INSIDE ctor Fclient()");
+  WNDX_LOG(LL::DBUG, "INSIDE ctor Fclient()\n", "");
 }
 
 Fclient::~Fclient() noexcept
 {
-  log_g.msg(LL::DBUG, "INSIDE dtor ~Fclient()");
+  WNDX_LOG(LL::DBUG, "INSIDE dtor ~Fclient()\n", "");
   // TODO: close_fd() | close(2) wrapper
   // close file descriptor. ref: close(2).
   if (m_fd > 0) {
     m_rc = close(m_fd);
     switch (m_rc) {
     case -1: log_g.errnum(errno, "[FAIL] m_fd close()"); break;
-    case  0: log_g.msg(LL::DBUG, "[ OK ] m_fd close()"); break;
-    default: log_g.msg(LL::CRIT, fmt::format("Unexpected return code: m_fd close() -> {}", m_rc));
+    case  0:  WNDX_LOG(LL::DBUG, "[ OK ] m_fd close()\n", ""); break;
+    default:  WNDX_LOG(LL::CRIT, "UNEXPECTED return code: m_fd close() -> {}\n", m_rc);
     }
     m_fd = -1;
   }
-  log_g.msg(LL::DBUG, "END OF dtor ~Fclient()");
+  WNDX_LOG(LL::DBUG, "END OF dtor ~Fclient()\n", "");
 }
 
 [[nodiscard]] int
@@ -59,12 +59,12 @@ Fclient::send_num_files_total(const size_t num_files_total)
   if (nbytes != sizeof(num_files_total)) {
     switch (nbytes) {
     case -1: log_g.errnum(errno, "[FAIL] to send() num_files_total, error occurred"); return -1;
-    default: log_g.msg(LL::ERRO, fmt::format("[FAIL] sent num_files_total out of all bytes: {}/{}",
-                                             nbytes, sizeof(num_files_total)));
+    default:  WNDX_LOG(LL::ERRO, "[FAIL] sent num_files_total out of all bytes: {}/{}\n",
+                                 nbytes, sizeof(num_files_total));
     }
     return -2;
   }
-  log_g.msg(LL::DBUG, fmt::format("[ OK ] send_num_files_total() : {}", num_files_total));
+  WNDX_LOG(LL::DBUG, "[ OK ] send_num_files_total() : {}\n", num_files_total);
   return 0;
 }
 
@@ -79,20 +79,20 @@ Fclient::send_files_info(std::vector<file::mqlqd_finfo> const& vfinfo)
     m_rc = send_file_info(finfo);
     if (m_rc != 0) return m_rc;
   }
-  log_g.msg(LL::INFO, "[ OK ] Sent info of the upcoming transfer of the files.");
+  WNDX_LOG(LL::INFO, "[ OK ] sent info of the upcoming transfer of the files.\n", "");
   return 0;
 }
 
 [[nodiscard]] int
 Fclient::send_file_info(file::mqlqd_finfo const& finfo)
 {
-  log_g.msg(LL::DBUG, fmt::format("INSIDE send_file_info() : {}", finfo));
+  WNDX_LOG(LL::DBUG, "INSIDE send_file_info() : {}\n", finfo);
   m_rc = send_loop<file::mqlqd_finfo>(m_fd, &finfo, sizeof(finfo));
   if (m_rc != 0) {
-    log_g.msg(LL::ERRO, fmt::format("[FAIL] send_file_info() in send_loop() -> {} : {}", m_rc, finfo));
+    WNDX_LOG(LL::ERRO, "[FAIL] send_file_info() in send_loop() -> {} : {}\n", m_rc, finfo);
     return m_rc;
   }
-  log_g.msg(LL::INFO, fmt::format("[ OK ] send_file_info() : {}", finfo));
+  WNDX_LOG(LL::INFO, "[ OK ] send_file_info() : {}\n", finfo);
   return 0;
 }
 
@@ -103,21 +103,21 @@ Fclient::send_files(std::vector<file::File> const& vfiles)
     m_rc = send_file(file);
     if (m_rc != 0) return m_rc;
   }
-  log_g.msg(LL::NTFY, fmt::format("[ OK ] all files are sent: {}/{}",
-                                  vfiles.size(), vfiles.size()));
+  WNDX_LOG(LL::NTFY, "[ OK ] all files are sent: {}/{}\n",
+                     vfiles.size(), vfiles.size());
   return 0;
 }
 
 [[nodiscard]] int
 Fclient::send_file(file::File const& file)
 {
-  log_g.msg(LL::INFO, fmt::format("INSIDE send_file() : {}", file));
+  WNDX_LOG(LL::INFO, "INSIDE send_file() : {}\n", file);
   m_rc = send_loop(m_fd, file.m_block, file.m_block_size);
   if (m_rc != 0) {
-    log_g.msg(LL::ERRO, fmt::format("[FAIL] send_file() in send_loop() -> {} : {}", m_rc, file));
+    WNDX_LOG(LL::ERRO, "[FAIL] send_file() in send_loop() -> {} : {}\n", m_rc, file);
     return m_rc;
   }
-  log_g.msg(LL::STAT, fmt::format("[ OK ] send_file() : {}", file));
+  WNDX_LOG(LL::STAT, "[ OK ] send_file() : {}\n", file);
   return 0;
 }
 
@@ -132,13 +132,13 @@ Fclient::send_loop(int fd, void const* buf, size_t len)
   while ((nbytes = send(fd, bufptr, toread, 0)) > 0) {
     switch (nbytes) {
     case -1: log_g.errnum(errno, "[FAIL] send() error occurred"); return -1;
-    case  0: log_g.msg(LL::CRIT, "[FAIL] send() -> 0 - nothing to send!"); return -2;
-    default: log_g.msg(LL::DBUG, fmt::format("nbytes send_loop() :  {}", nbytes));
+    case  0:  WNDX_LOG(LL::CRIT, "[FAIL] send() -> 0 - nothing to send!\n", ""); return -2;
+    default:  WNDX_LOG(LL::DBUG, "nbytes send_loop() :  {}\n", nbytes);
     }
     bufptr += nbytes; // next position to send into
     toread -= static_cast<size_t>(nbytes); // send less next time
   }
-  log_g.msg(LL::DBUG, fmt::format("[ OK ] send_loop() finished."));
+  WNDX_LOG(LL::DBUG, "[ OK ] send_loop() finished\n", "");
   return 0;
 }
 
@@ -151,7 +151,7 @@ Fclient::create_socket()
     log_g.errnum(errno, "[FAIL] socket()");
     return -1;
   }
-  log_g.msg(LL::DBUG, "[ OK ] socket()");
+  WNDX_LOG(LL::DBUG, "[ OK ] socket()\n", "");
   return m_fd; // return file descriptor
 }
 
@@ -162,11 +162,11 @@ Fclient::create_connection()
   m_rc = connect(m_fd, reinterpret_cast<const struct sockaddr *>(&m_sockaddr_in), m_addrlen);
   switch (m_rc) {
   case -1: log_g.errnum(errno, "[FAIL] connect()"); break;
-  case  0: log_g.msg(LL::DBUG, "[ OK ] connect()"); break;
-  default: log_g.msg(LL::CRIT, fmt::format("Unexpected return code: connect() -> {}", m_rc));
+  case  0:  WNDX_LOG(LL::DBUG, "[ OK ] connect()\n", ""); break;
+  default:  WNDX_LOG(LL::CRIT, "UNEXPECTED return code: connect() -> {}\n", m_rc);
   }
   if (m_rc == 0) {
-    log_g.msg(LL::NTFY, fmt::format("Connection established with: {}", inet_ntoa(m_sockaddr_in.sin_addr)));
+    WNDX_LOG(LL::NTFY, "connection established with: {}\n", inet_ntoa(m_sockaddr_in.sin_addr));
   }
   return m_rc;
 }
@@ -177,23 +177,23 @@ Fclient::init()
 {
   m_rc = create_socket();
   if (m_rc == -1) {
-    log_g.msg(LL::ERRO, "[FAIL] in init() : create_socket()");
+    WNDX_LOG(LL::ERRO, "[FAIL] in init() : create_socket()\n", "");
     return -1;
   }
 
   m_rc = fill_sockaddr_in();
   if (m_rc != 1) {
-    log_g.msg(LL::ERRO, "[FAIL] in init() : fill_sockaddr_in()");
+    WNDX_LOG(LL::ERRO, "[FAIL] in init() : fill_sockaddr_in()\n", "");
     return m_rc;
   }
 
   m_rc = create_connection();
   if (m_rc == -1) {
-    log_g.msg(LL::ERRO, "[FAIL] in init() : create_connection()");
+    WNDX_LOG(LL::ERRO, "[FAIL] in init() : create_connection()\n", "");
     return m_rc;
   }
 
-  log_g.msg(LL::STAT, "[ OK ] init() - client initialized.");
+  WNDX_LOG(LL::STAT, "[ OK ] init() - client initialized.\n", "");
   return 0;
 }
 
@@ -215,9 +215,9 @@ Fclient::fill_sockaddr_in()
   m_rc = inet_pton(AF_INET, m_addr.data(), &m_sockaddr_in.sin_addr);
   switch (m_rc) {
   case -1: log_g.errnum(errno, "[FAIL] inet_pton()"); break;
-  case  0: log_g.msg(LL::WARN, "[FAIL] not valid network address in the specified address family!"); break;
-  case  1: log_g.msg(LL::INFO, "[ OK ] network address was successfully converted"); break;
-  default: log_g.msg(LL::CRIT, fmt::format("Unexpected return code: inet_pton() -> {}", m_rc));
+  case  0:  WNDX_LOG(LL::WARN, "[FAIL] not valid network address in the specified address family!\n", ""); break;
+  case  1:  WNDX_LOG(LL::INFO, "[ OK ] network address was successfully converted\n", ""); break;
+  default:  WNDX_LOG(LL::CRIT, "UNEXPECTED return code: inet_pton() -> {}\n", m_rc);
   }
   return m_rc;
 }

@@ -31,18 +31,16 @@ is_r(fs::path const& fpath) noexcept
   std::error_code ec {};
   fs::file_status s{ fs::status(fpath, ec) }; // for the noexcept
   if (ec) {
-    log_g.msg(LL::CRIT, fmt::format("{}\n^ fs::status error:\n{}\n",
-                                    fpath.c_str(), ec.message() ));
+    WNDX_LOG(LL::CRIT, "{}\n^ fs::status error:\n{}\n",
+                       fpath.c_str(), ec.message() );
     return ec.value();
   }
   // TODO: check file permissions (maybe it is a good idea to have)
   if (!fs::is_regular_file(s)) {
-    // TODO: make this work. (hard)
-    // log_g.msg(LL::INFO, "Is NOT the regular file: {}\n", fpath.c_str());
-    log_g.msg(LL::ERRO, fmt::format("IS NOT the regular file: {}", fpath.c_str()));
+    WNDX_LOG(LL::ERRO, "IS NOT the regular file: {}\n", fpath.c_str());
     return 1;
   }
-  log_g.msg(LL::INFO, fmt::format("Is the regular file: {}", fpath.c_str()));
+  WNDX_LOG(LL::INFO, "Is the regular file: {}\n", fpath.c_str());
   return 0;
 }
 
@@ -60,7 +58,7 @@ mkdir(fs::path const& dpath, fs::perms const& perms, bool force) noexcept
 {
   std::error_code ec {};
   if (fs::is_directory(dpath, ec)) {
-    log_g.msg(LL::DBUG, "Directory exist, and will be used as is.");
+    WNDX_LOG(LL::DBUG, "Directory exist, and will be used as is\n", "");
     if (force) {
       // TODO: validate that directory permissions are set as requested.
     }
@@ -69,40 +67,40 @@ mkdir(fs::path const& dpath, fs::perms const& perms, bool force) noexcept
       if (fs::create_directory(dpath, dpath.parent_path(), ec)) {
         fs::permissions(dpath, perms, ec);
         if (ec.value() == 0) {
-          log_g.msg(LL::NTFY, "Created new directory with requested access permissions.");
+          WNDX_LOG(LL::NTFY, "Created new directory with requested access permissions.\n", "");
         } else {
-          log_g.msg(LL::ERRO, "Created new directory, but failed to set requested perms.");
+          WNDX_LOG(LL::ERRO, "Created new directory, but failed to set requested perms.\n", "");
           if (fs::remove(dpath, ec)) {
-            log_g.msg(LL::NTFY, "Removed empty directory created with incorrect perms.");
+            WNDX_LOG(LL::NTFY, "Removed empty directory created with incorrect perms.\n", "");
             return 7;
           } else {
-            log_g.msg(LL::CRIT, fmt::format(
-                      "{}\n^ failed to remove this dir "
+            WNDX_LOG(LL::CRIT,
+                      "{}\n^ failed to remove this dir\n"
                       "that was created with incorrect access rights.\n"
                       "Because of the perms, do it yourself manually!\n"
                       "Additionally take a look at the origin of the error:\n{}\n",
-                      dpath.string(), ec.message() ));
+                      dpath.c_str(), ec.message() );
             return ec.value();
           }
         }
       } else {
-        log_g.msg(LL::CRIT, fmt::format(
+        WNDX_LOG(LL::CRIT,
                   "If your intent was to make this dir under current cwd:\n"
                   "{}\n^ precede your path with './' i.e. ./{}\n"
                   "Additionally take a look at the origin of the error:\n"
                   "fs::create_directory error: {}\n",
-                  dpath.string(), dpath.string(), ec.message() ));
+                  dpath.c_str(), dpath.c_str(), ec.message() );
         return ec.value();
       }
     } else {
       auto realpath{ fs::canonical(dpath, ec) };
       if (ec) {
-        log_g.msg(LL::CRIT, fmt::format("{}\n^ canonical path error:\n{}\n",
-                                        dpath.string(), ec.message() ));
+        WNDX_LOG(LL::CRIT, "{}\n^ canonical path error:\n{}\n",
+                            dpath.c_str(), ec.message() );
         return ec.value();
       }
-      log_g.msg(LL::CRIT, fmt::format("{}\n^ path cannot be used as the new directory!\n",
-                                      realpath.string() ));
+      WNDX_LOG(LL::CRIT, "{}\n^ path cannot be used as the new directory!\n",
+                          realpath.c_str() );
       return 6;
     }
   }
@@ -113,8 +111,8 @@ mkdir(fs::path const& dpath, fs::perms const& perms, bool force) noexcept
 File::File(fs::path const& fpath, const std::size_t sz) noexcept
   : m_fpath{ fpath }, m_block_size{ sz }
 {
-  log_g.msg(LL::DBUG, fmt::format("ctor - File instance from file & size.\n"
-                                  "\t[{}] {}", m_block_size, m_fpath.c_str() ));
+  WNDX_LOG(LL::DBUG, "ctor - File instance from file & size:\n"
+                     "\t[{}] {}\n", m_block_size, m_fpath.c_str() );
 }
 
 File::File(mqlqd_finfo const& finfo, fs::path dpath) noexcept
@@ -125,8 +123,8 @@ File::File(mqlqd_finfo const& finfo, fs::path dpath) noexcept
   dpath += '/';
   dpath += finfo.fname;
   m_fpath = dpath;
-  log_g.msg(LL::DBUG, fmt::format("ctor - File instance from finfo.\n"
-                                  "\t[{}] {}", m_block_size, m_fpath.c_str() ));
+  WNDX_LOG(LL::DBUG, "ctor - File instance from finfo:\n"
+                     "\t[{}] {}\n", m_block_size, m_fpath.c_str() );
 }
 
 [[nodiscard]] mqlqd_finfo
@@ -148,22 +146,22 @@ File::to_finfo() const noexcept
 File::write()
 {
   if (!m_block) {
-    log_g.msg(LL::CRIT, "empty memory block, nothing to write!");
+    WNDX_LOG(LL::CRIT, "empty memory block, nothing to write!\n", "");
     return 33;
   }
   // open file for writing
   std::basic_fstream<char_type> ofs(m_fpath, openmode_w);
   // TODO: reinspect checks
   if (!ofs) {
-    log_g.msg(LL::ERRO, "can not open output file!");
+    WNDX_LOG(LL::ERRO, "can not open output file!\n", "");
     return 30;
   }
   if (ofs.fail()) {
-    log_g.msg(LL::ERRO, "ofs.fail()");
+    WNDX_LOG(LL::ERRO, "ofs.fail()\n", "");
     return 31;
   }
   if (!ofs.good()) {
-    log_g.msg(LL::ERRO, "!ofs.good()");
+    WNDX_LOG(LL::ERRO, "!ofs.good()\n", "");
     return 32;
   }
 
@@ -172,10 +170,9 @@ File::write()
     for (size_t i = 0; i < m_block_size; i++) {
       ofs << m_block[i];
     }
-    log_g.msg(LL::STAT, fmt::format("Contents of the memory block were written to the file:\n\t{}",
-                                    m_fpath.c_str()));
+    WNDX_LOG(LL::STAT, "Contents of the memory block were written to the file:\n\t{}\n", m_fpath.c_str());
   } catch(std::exception const& err) {
-    log_g.msg(LL::CRIT, fmt::format("File::write() unhandled std::exception suppressed:\n{}\n", err.what()));
+    WNDX_LOG(LL::CRIT, "File::write() UNHANDLED std::exception suppressed:\n{}\n", err.what());
     return 35;
   }
   return 0;
@@ -190,16 +187,16 @@ int File::heap_alloc() noexcept
   try {
     m_block = { new char_type[m_block_size]{} };
     if (!m_block) {
-      log_g.msg(LL::CRIT, "[FAIL] File::heap_alloc() memory block == nullptr!");
+      WNDX_LOG(LL::CRIT, "[FAIL] File::heap_alloc() memory block == nullptr!\n", "");
       return 30;
     }
-    log_g.msg(LL::DBUG, "[ OK ] File::heap_alloc()");
+    WNDX_LOG(LL::DBUG, "[ OK ] File::heap_alloc()\n", "");
   } catch(std::bad_alloc const& err) {
-      log_g.msg(LL::ERRO, fmt::format("std::bad_alloc - insufficient memory? :\n{}\n", err.what()));
+      WNDX_LOG(LL::ERRO, "std::bad_alloc - insufficient memory? :\n{}\n", err.what());
       File::~File();
       return 31;
   } catch(std::exception const& err) {
-      log_g.msg(LL::CRIT, fmt::format("File::heap_alloc() unhandled std::exception suppressed:\n{}\n", err.what()));
+      WNDX_LOG(LL::CRIT, "File::heap_alloc() UNHANDLED std::exception suppressed:\n{}\n", err.what());
       File::~File();
       return 32;
   }
@@ -233,15 +230,15 @@ int File::fcontent()
   std::basic_fstream<char_type> ifs(m_fpath, openmode_r);
   // invariants & validation/safety checks
   if (!ifs) {
-    log_g.msg(LL::ERRO, "can not open input file!");
+    WNDX_LOG(LL::ERRO, "can not open input file!\n", "");
     return 20;
   }
   if (ifs.fail()) {
-    log_g.msg(LL::ERRO, "ifs.fail()");
+    WNDX_LOG(LL::ERRO, "ifs.fail()\n", "");
     return 21;
   }
   if (!ifs.good()) {
-    log_g.msg(LL::ERRO, "!ifs.good()");
+    WNDX_LOG(LL::ERRO, "!ifs.good()\n", "");
     return 22;
   }
 
@@ -252,16 +249,10 @@ int File::fcontent()
     ifs.seekg(0, ifs.beg);
     ifs.read(m_block, size);
 
-    log_g.msg(LL::INFO, "The entire contents of the file are in memory.");
+    WNDX_LOG(LL::INFO, "The entire contents of the file are in memory\n", "");
 
   } catch(std::exception const& err) {
-    log_g.msg(LL::CRIT, fmt::format("File::fcontent() unhandled std::exception suppressed:\n{}\n", err.what()));
-
-    // TODO: make this possible.
-    // log_g.msg(LL::CRIT) << "an unhandled std::exception was caught:" << '\n';
-    // log_g.msg << LL::CRIT << "an unhandled std::exception was caught:" << '\n';
-    //       << err.what() << '\n' << __FILE__ << '\n';
-
+    WNDX_LOG(LL::CRIT, "File::fcontent() UNHANDLED std::exception suppressed:\n{}\n", err.what());
     return 25;
   }
   return 0;
@@ -275,19 +266,19 @@ int File::read_to_block()
   try {
     rc = fcontent();
     if (rc != 0) {
-      log_g.msg(LL::ERRO, fmt::format("[FAIL] File::read_to_block() -> {}", rc));
+      WNDX_LOG(LL::ERRO, "[FAIL] File::read_to_block() -> {}\n", rc);
       return rc;
     }
-    // XXX: this is not very convenient & certainly not terse. -> make_format_args inside logger.
-    log_g.msg(LL::DBUG, "[ OK ] File::read_to_block() : {}\n", fmt::make_format_args(m_fpath.c_str()));
+    WNDX_LOG(LL::DBUG, "[ OK ] File::read_to_block() : {}\n", m_fpath.c_str());
   }
   catch(std::exception const& err) {
-    log_g.msg(LL::CRIT, fmt::format("File::read_to_block() unhandled std::exception suppressed:\n"
-                                    "{}\n", err.what()));
+    WNDX_LOG(LL::CRIT, "File::read_to_block() UNHANDLED std::exception suppressed:\n"
+                       "{}\n", err.what());
     return 5;
   } catch(...) {
-    log_g.msg(LL::CRIT, "File::read_to_block() unhandled anonymous exception occurred but was caught!\n"
-                        "THIS IS EXTREMELY BAD!\n");
+    WNDX_LOG(LL::CRIT, "File::read_to_block() {}\n{}\n",
+                       "UNHANDLED anonymous exception occurred but was caught!",
+                       "THIS IS EXTREMELY BAD!");
     return 6;
   }
   return 0;
