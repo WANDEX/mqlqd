@@ -48,8 +48,8 @@ enum class SIG
   POLL     = 29,
   PWR      = 30,
   SYS      = 31,
-// TODO: SIG::32
-// TODO: SIG::33
+  WTF32    = 32, // ?
+  WTF33    = 33, // ?
   RTMIN    = 34,
   RTMIN_1  = 35,
   RTMIN_2  = 36,
@@ -129,8 +129,8 @@ fmt::formatter<mqlqd::SIG> : formatter<string_view> {
     case SIG::POLL    : name = "SIGPOLL"     ; break;
     case SIG::PWR     : name = "SIGPWR"      ; break;
     case SIG::SYS     : name = "SIGSYS"      ; break;
-// TODO: SIG::32
-// TODO: SIG::33
+    case SIG::WTF32   : name = "WTF32"       ; break; // ?
+    case SIG::WTF33   : name = "WTF33"       ; break; // ?
     case SIG::RTMIN   : name = "SIGRTMIN"    ; break;
     case SIG::RTMIN_1 : name = "SIGRTMIN+1"  ; break;
     case SIG::RTMIN_2 : name = "SIGRTMIN+2"  ; break;
