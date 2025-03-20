@@ -1,35 +1,70 @@
-## fmt fetch
-## XXX: prefer fmtlib version installed in the system || fetch if not found
+## fmt fetch from wndx_sane lib by wndx.
 
-cmake_path(APPEND dep_dir ${PROJECT_BINARY_DIR} "_deps")
+## BEG CONF
+set(pkg_name "fmt")
+set(pkg_ver "9.1.0")
+# set(pkg_ver "11.1.4")
+set(pkg_url "https://github.com/fmtlib/fmt.git")
+set(pkg_tgt "${pkg_name}::${pkg_name}") ## target
 
-cmake_path(APPEND fmt_dir ${dep_dir} "fmt") # lib dir root
-cmake_path(APPEND fmt_sub ${fmt_dir} "sub")
-cmake_path(APPEND fmt_src ${fmt_dir} "src")
-cmake_path(APPEND fmt_bin ${fmt_dir} "bin")
+option(FMT_INSTALL "" ON)
+option(FMT_OS "" OFF)
+## END CONF
 
-# find_package(fmt 9.1.0)
-# if(NOT fmt_FOUND)
-if(TRUE)
-  message(">> fetching fmt of required version!")
-  include(FetchContent)
-  FetchContent_Declare(fmt
-    GIT_REPOSITORY    https://github.com/fmtlib/fmt.git
-    GIT_TAG           9.1.0
-    SUBBUILD_DIR      ${fmt_sub}
-    SOURCE_DIR        ${fmt_src}
-    BINARY_DIR        ${fmt_bin}
-  )
-  # option(FMT_INSTALL "" ON)
-  option(FMT_OS "" OFF)
-  FetchContent_MakeAvailable(fmt)
+if(WNDX_SANE_DIR_3RDPARTY)
+  if(IS_ABSOLUTE "${WNDX_SANE_DIR_3RDPARTY}" AND EXISTS "${WNDX_SANE_DIR_3RDPARTY}")
+    message(">> dir for the 3rdparty dependency '${pkg_name}':")
+    message(">> ${WNDX_SANE_DIR_3RDPARTY}")
+    cmake_path(APPEND dep_dir "${WNDX_SANE_DIR_3RDPARTY}")
+  else()
+    cmake_path(APPEND dep_dir "${CMAKE_SOURCE_DIR}" ".3rdparty")
+  endif()
 else()
-  message(">> found fmt of required version!")
+  cmake_path(APPEND dep_dir "${PROJECT_BINARY_DIR}" "_deps")
 endif()
 
-target_include_directories(mqlqd_deps PUBLIC "${fmt_src}/include")
+cmake_path(APPEND pkg_dir "${dep_dir}" "${pkg_name}") # lib dir root
+cmake_path(APPEND pkg_sub "${pkg_dir}" "sub")
+cmake_path(APPEND pkg_src "${pkg_dir}" "src")
+cmake_path(APPEND pkg_bin "${pkg_dir}" "bin")
+cmake_path(APPEND pkg_inc "${pkg_src}" "include")
 
-## link with the static library libfmtd.a
+set(${pkg_name}_DIR "${pkg_bin}")
+
+find_package("${pkg_name}" "${pkg_ver}"
+  PATHS "${pkg_bin}"
+  NO_DEFAULT_PATH
+)
+if(NOT ${pkg_name}_FOUND)
+  message(">> fetch ${pkg_name} of required version ${pkg_ver}")
+  include(FetchContent)
+  FetchContent_Declare(   "${pkg_name}"
+    GIT_REPOSITORY        "${pkg_url}"
+    GIT_TAG               "${pkg_ver}"
+    SUBBUILD_DIR          "${pkg_sub}"
+    SOURCE_DIR            "${pkg_src}"
+    BINARY_DIR            "${pkg_bin}"
+    OVERRIDE_FIND_PACKAGE
+  )
+  FetchContent_MakeAvailable("${pkg_name}")
+else()
+  message(">> found ${pkg_name} of required version ${pkg_ver}")
+endif()
+
+## link with the static library fmt
 ## which is found in the fetched locally lib dir.
-target_link_libraries(mqlqd_deps PRIVATE -L"${fmt_bin}" -lfmtd)
+## NOTE: this is the same stuff, left for reference.
+if(TRUE)
+  if(TRUE)
+    target_link_libraries(wndx_sane_deps "${pkg_tgt}")
+  else()
+    target_include_directories(wndx_sane_deps PUBLIC "${pkg_inc}")
+    target_link_libraries(wndx_sane_deps PRIVATE "${pkg_tgt}")
+  endif()
+else()
+  target_include_directories(wndx_sane_deps PUBLIC "${pkg_inc}")
+  target_link_libraries(wndx_sane_deps PRIVATE
+    -L"${pkg_bin}" -l$<$<CONFIG:Debug>:fmtd>$<$<CONFIG:Release>:fmt>
+  )
+endif()
 

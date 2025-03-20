@@ -9,5 +9,5 @@ target_sources(mqlqd_client
     client.cpp
 )
 
-target_link_libraries(mqlqd_client PRIVATE mqlqd_src)
+target_link_libraries(mqlqd_client PRIVATE wndx_sane_src)
 

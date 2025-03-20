@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.19)
 ## ^ POLICIES
 project(
   mqlqd
-  VERSION       0.0.0.3
+  VERSION       0.0.1
   LANGUAGES     CXX
   DESCRIPTION   "File transfer over TCP/IP on sockets (POSIX) [client -> server]"
   HOMEPAGE_URL  "https://github.com/WANDEX/mqlqd"
@@ -13,17 +13,39 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+function(targets_and_linking)
+  ## library targets & compilation options/flags
+  include(cmake/wndx_sane_create_targets.cmake)
+  wndx_sane_create_targets(
+    OPT
+    CXX_STD cxx_std_20
+    HPATH "include" "mqlqd"
+  )
+
+  ## link core library with the libc -lc (to work with the socket API)
+  target_link_libraries(wndx_sane_core INTERFACE c)
+
+  ## link sources with project dependencies from the core library target.
+  target_link_libraries(wndx_sane_src INTERFACE wndx::wndx_sane::core)
+
+  ## link sources with project dependencies
+  target_link_libraries(wndx_sane_src PUBLIC wndx::wndx_sane::deps)
+
+  ## link sources with project dev interface (for the compilation flags/options)
+  target_link_libraries(wndx_sane_src PRIVATE wndx::wndx_sane::dev)
+
+  ## find/fetch dependecies:
+  include(cmake/cxxopts.cmake)
+  include(cmake/fmt.cmake)
+  add_subdirectory(src)
+endfunction(targets_and_linking)
+
 ## GUARD: check the real root of the source tree.
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   set(MQLQD_REAL_ROOT_OF_SRC_TREE ON)
 else()
   set(MQLQD_REAL_ROOT_OF_SRC_TREE OFF)
-  ## library targets & compilation options/flags
-  include(cmake/comp_opts_cxx.cmake)
-  ## find/fetch dependecies:
-  include(cmake/cxxopts.cmake)
-  include(cmake/fmt.cmake)
-  add_subdirectory(src)
+  targets_and_linking()
 endif()
 
 if(MQLQD_REAL_ROOT_OF_SRC_TREE)
@@ -37,14 +59,9 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
 
   ## For the list of supported compilers visit:
   ## https://cmake.org/cmake/help/latest/prop_tgt/COMPILE_WARNING_AS_ERROR.html
-  option(CMAKE_COMPILE_WARNING_AS_ERROR "treat compilation warnings as errors"  ON)
+  option(CMAKE_COMPILE_WARNING_AS_ERROR "treat compilation warnings as errors" OFF)
 
-  ## library targets & compilation options/flags
-  include(cmake/comp_opts_cxx.cmake)
-  ## find/fetch dependecies:
-  include(cmake/cxxopts.cmake)
-  include(cmake/fmt.cmake)
-  add_subdirectory(src)
+  targets_and_linking()
 
   if(MQLQD_BUILD_PACKAGE)
     set(package_files include/ src/ cmake/ CMakeLists.txt LICENSE)
@@ -109,7 +126,7 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
     include(GNUInstallDirs)
 
     install(TARGETS mqlqd_client mqlqd_daemon
-      _mqlqd_base mqlqd_core mqlqd_dev mqlqd
+      _wndx_sane_base wndx_sane_core wndx_sane_dev
       EXPORT ${PROJECT_NAME}Targets
       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -117,7 +134,7 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
     )
 
     install(EXPORT ${PROJECT_NAME}Targets
-      NAMESPACE   wandex::
+      NAMESPACE   wndx::
       DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
     )
 

@@ -26,6 +26,6 @@ else()
   message(">> found cxxopts of required version!")
 endif()
 
-target_include_directories(mqlqd_deps PUBLIC "${cxxopts_src}/include")
-target_precompile_headers(mqlqd_deps PRIVATE cxxopts.hpp)
+target_include_directories(wndx_sane_deps PUBLIC "${cxxopts_src}/include")
+target_precompile_headers(wndx_sane_deps PRIVATE cxxopts.hpp)
 

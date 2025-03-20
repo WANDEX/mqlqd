@@ -19,7 +19,7 @@
 ## or
 # ./scripts/build.sh gtest *wildcard*
 
-bt="Debug"
+bt="${BUILD_TYPE:-Debug}"
 compiler="${CC:-_}"
 # get compiler basename in case declared via full path
 cmbn=$(basename "$compiler")
@@ -80,7 +80,7 @@ vsep() {
 }
 
 vsep "CONFIGURE" "${BLU}"
-cmake -S . -B "$bdir" -G Ninja -D CMAKE_BUILD_TYPE=${bt} -D MQLQD_BUILD_TESTS=${tt} -Wdev -Werror=dev ${fresh}
+cmake -S . -B "$bdir" -G Ninja -D CMAKE_BUILD_TYPE="${bt}" -D MQLQD_BUILD_TESTS="${tt}" -Wdev -Werror=dev ${fresh}
 
 vsep "BUILD" "${CYN}"
 cmake --build "$bdir" --config ${bt} ${clean_first}
