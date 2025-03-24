@@ -120,45 +120,11 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
   endif(MQLQD_MEMCHECK_ENABLE)
 
   if(MQLQD_INSTALL_ENABLE)
-    message(STATUS "Generating Install")
-    include(CMakePackageConfigHelpers)
-    include(GNUInstallDirs)
-
-    install(TARGETS mqlqd_client mqlqd_daemon
-      _wndx_sane_base wndx_sane_core wndx_sane_dev
-      EXPORT ${PROJECT_NAME}Targets
-      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    )
-
-    install(EXPORT ${PROJECT_NAME}Targets
-      NAMESPACE   wndx::
-      DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
-    )
-
-    configure_package_config_file(
-      cmake/${PROJECT_NAME}Config.cmake.in
-      "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-      INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
-    )
-    install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-      DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
-    )
-
-    write_basic_package_version_file(
-      "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-      COMPATIBILITY SameMinorVersion
-    ) ## YYYY.MM.N1 is compatible with YYYY.MM.N2.
-
-    install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-      DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
-    )
-
-    install(DIRECTORY include/mqlqd
-      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-      FILES_MATCHING
-      PATTERN     "*.hpp"
+    include(cmake/wndx_sane_install.cmake)
+    wndx_sane_install(
+      TARGETS mqlqd_client mqlqd_daemon
+        _wndx_sane_base wndx_sane_core wndx_sane_dev
+      PATTERNS "*.hpp"
     )
   endif(MQLQD_INSTALL_ENABLE)
 endif(MQLQD_REAL_ROOT_OF_SRC_TREE)
