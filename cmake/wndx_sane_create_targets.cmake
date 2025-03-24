@@ -3,44 +3,38 @@
 
 ## vars & funcs defined and come from the funcs.cmake
 include(cmake/funcs.cmake) # useful project functions / variables
-include(GNUInstallDirs)
 
 function(add_alias name target)
   add_library(wndx::${name} ALIAS ${target})
   set_target_properties(${target} PROPERTIES EXPORT_NAME ${name})
 endfunction()
 
-function(wndx_sane_path ARG_VAR_NAME) ## ARGN
-  unset(${ARG_VAR_NAME} PARENT_SCOPE) ## unset old variable
+function(wndx_sane_path arg_VAR_NAME) ## ARGN
+  unset(${arg_VAR_NAME} PARENT_SCOPE) ## unset old variable
   file(REAL_PATH "${CMAKE_CURRENT_SOURCE_DIR}" args)
   cmake_path(APPEND args ${ARGN})
-  set(${ARG_VAR_NAME} "${args}" PARENT_SCOPE) ## set literal variable
+  set(${arg_VAR_NAME} "${args}" PARENT_SCOPE) ## set literal variable
   # message("${ARGN}")
-  # message("${ARG_VAR_NAME}")
+  # message("${arg_VAR_NAME}")
 endfunction()
 
 function(wndx_sane_create_targets) ## args
-  set(opt OPT OPTIONAL)
-  set(cxx_std CXX_STD STRING)
-  set(hpath HPATH STRINGS)
-  cmake_parse_arguments(
-    arg
-    "${opt}"
-    "${cxx_std}"
-    "${hpath}"
+  cmake_parse_arguments(arg # pfx
+    "" # opt
+    "CXX_STD" # ovk
+    "HPATH" # mvk
     ${ARGN}
   )
-  # message("OPT: ${arg_OPT}, OVK: ${arg_OVK}, HPATH: ${arg_HPATH}")
+  message(DEBUG "CXX_STD: ${arg_CXX_STD}, HPATH: ${arg_HPATH}")
   if(arg_UNPARSED_ARGUMENTS)
-    message(WARNING "UNPARSED: ${arg_UNPARSED_ARGUMENTS}")
+    message(WARNING "UNPARSED: wndx_sane_create_targets() ${arg_UNPARSED_ARGUMENTS}")
   endif()
   if(arg_KEYWORDS_MISSING_VALUES)
-    message(WARNING " MISSING: ${arg_KEYWORDS_MISSING_VALUES}")
+    message(WARNING " MISSING: wndx_sane_create_targets() ${arg_KEYWORDS_MISSING_VALUES}")
   endif()
   if(NOT arg_CXX_STD MATCHES "^cxx_std_..$")
-    message(WARNING "wndx_sane_create_targets() CXX_STD is not passed!")
     set(arg_CXX_STD cxx_std_20)
-    message("used by default: ${arg_CXX_STD}")
+    message(WARNING "wndx_sane_create_targets() CXX_STD not provided => used by default: ${arg_CXX_STD}")
   endif()
 
   wndx_sane_path(WNDX_SANE_PATH_TMP "${arg_HPATH}")
@@ -129,7 +123,7 @@ function(wndx_sane_create_targets) ## args
       -Wold-style-cast
       -Wundef
       -Wshadow
-      -ftrapv # XXX: sane default or delete for the "better"?
+      -ftrapv
     )
 
     target_compile_options(wndx_sane_dev INTERFACE
@@ -171,8 +165,8 @@ function(wndx_sane_create_targets) ## args
         #   -static-libasan -lrt # linux
         # )
       elseif(WIN32)
-        # TODO: what to use here...
-        target_add_check_cxx_compiler_flag(wndx_sane_dev -static-libgcc ) # XXX works?
+        # FIXME: what to use here...
+        # target_add_check_cxx_compiler_flag(wndx_sane_dev /static-libgcc )
       endif()
     endif(wndx_sane_SNTZ_ADDR)
 
@@ -206,4 +200,4 @@ function(wndx_sane_create_targets) ## args
 
   endif()
 
-endfunction(wndx_sane_create_targets)
+endfunction()

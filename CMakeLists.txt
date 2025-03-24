@@ -17,7 +17,6 @@ function(targets_and_linking)
   ## library targets & compilation options/flags
   include(cmake/wndx_sane_create_targets.cmake)
   wndx_sane_create_targets(
-    OPT
     CXX_STD cxx_std_20
     HPATH "include" "mqlqd"
   )
