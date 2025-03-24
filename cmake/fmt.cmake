@@ -1,4 +1,4 @@
-## fmt fetch from wndx_sane lib by wndx.
+## fmt fetch from wndx_sane lib.
 
 ## BEG CONF
 set(pkg_name "fmt")
@@ -11,6 +11,7 @@ option(FMT_INSTALL "" ON)
 option(FMT_OS "" OFF)
 ## END CONF
 
+unset(dep_dir)
 if(WNDX_SANE_DIR_3RDPARTY)
   if(IS_ABSOLUTE "${WNDX_SANE_DIR_3RDPARTY}" AND EXISTS "${WNDX_SANE_DIR_3RDPARTY}")
     message(">> dir for the 3rdparty dependency '${pkg_name}':")
@@ -23,6 +24,9 @@ else()
   cmake_path(APPEND dep_dir "${PROJECT_BINARY_DIR}" "_deps")
 endif()
 
+foreach(variable IN LISTS pkg_dir pkg_sub pkg_src pkg_bin pkg_inc)
+  unset(${variable})
+endforeach()
 cmake_path(APPEND pkg_dir "${dep_dir}" "${pkg_name}") # lib dir root
 cmake_path(APPEND pkg_sub "${pkg_dir}" "sub")
 cmake_path(APPEND pkg_src "${pkg_dir}" "src")
