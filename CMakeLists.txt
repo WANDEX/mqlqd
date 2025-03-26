@@ -103,8 +103,7 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
   endif(MQLQD_COVERAGE_ENABLE)
 
   if(MQLQD_BUILD_TESTS)
-    ## prefer GoogleTest version installed in the system || fetch if not found
-    include(cmake/gtest.cmake)
+    include(cmake/GTest.cmake)
     add_subdirectory(tests/units)
   endif(MQLQD_BUILD_TESTS)
 
