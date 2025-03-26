@@ -138,7 +138,7 @@ function(wndx_sane_create_targets) ## args
 
     ## credit: https://gavinchou.github.io/experience/summary/syntax/gcc-address-sanitizer/
     ## TODO: remove this if clause as it is not finished!
-    if(wndx_sane_SNTZ_ADDR)
+    if(WNDX_SANE_SNTZ_ADDR)
       message(NOTICE ">> ADDRESS SANITIZER ENABLED")
       target_compile_options(wndx_sane_dev INTERFACE
         -ggdb -fno-omit-frame-pointer # call stack and line number report format
@@ -168,7 +168,7 @@ function(wndx_sane_create_targets) ## args
         # FIXME: what to use here...
         # target_add_check_cxx_compiler_flag(wndx_sane_dev /static-libgcc )
       endif()
-    endif(wndx_sane_SNTZ_ADDR)
+    endif(WNDX_SANE_SNTZ_ADDR)
 
   endif()
 
