@@ -47,6 +47,7 @@ function(wndx_sane_find) ## args
   cmake_path(APPEND pkg_bin "${pkg_dir}" "bin")
   cmake_path(APPEND pkg_inc "${pkg_src}" "include")
 
+  ## so that the find_package will look at the specified dir first
   set(${pkg_name}_DIR "${pkg_bin}")
 
   find_package("${pkg_name}" "${pkg_ver}"
@@ -55,9 +56,9 @@ function(wndx_sane_find) ## args
   )
   if(NOT ${pkg_name}_FOUND OR ${arg_FORCE_FETCH})
     if(${arg_FORCE_FETCH})
-      message(">> FORCE fetch ${pkg_name} of required version ${pkg_tag}")
+      message(">> FORCE fetch ${pkg_name} of required version ${pkg_ver}")
     else()
-      message(">> fetch ${pkg_name} of required version ${pkg_tag}")
+      message(">> fetch ${pkg_name} of required version ${pkg_ver}")
     endif()
     include(FetchContent)
     FetchContent_Declare(   "${pkg_name}"
@@ -70,17 +71,8 @@ function(wndx_sane_find) ## args
     )
     FetchContent_MakeAvailable("${pkg_name}")
   else()
-    message(">> found ${pkg_name} of required version ${pkg_tag}")
+    message(">> found ${pkg_name} of required version ${pkg_ver}")
   endif()
-
-  # if(NOT ${arg_PKG_NO_LINK})
-  #   if(${arg_PKG_INC})
-  #     target_include_directories(wndx_sane_deps PUBLIC "${pkg_inc}")
-  #     target_link_libraries(wndx_sane_deps PRIVATE "${pkg_tgt}")
-  #   else()
-  #     target_link_libraries(wndx_sane_deps "${pkg_tgt}")
-  #   endif()
-  # endif(NOT ${arg_PKG_NO_LINK})
 
   if(NOT ${arg_PKG_NO_LINK})
     if(${arg_PKG_NO_INCL})
@@ -90,12 +82,6 @@ function(wndx_sane_find) ## args
       target_include_directories(wndx_sane_deps PUBLIC "${pkg_inc}")
       target_link_libraries(wndx_sane_deps PRIVATE "${pkg_tgt}")
     endif()
-  # else()
-  #   target_include_directories(wndx_sane_deps PUBLIC "${pkg_inc}")
-  #   target_link_libraries(wndx_sane_deps PRIVATE
-  #     -L"${pkg_bin}" -l$<$<CONFIG:Debug>:fmtd>$<$<CONFIG:Release>:fmt>
-  #   )
   endif()
-
 endfunction(wndx_sane_find)
 
