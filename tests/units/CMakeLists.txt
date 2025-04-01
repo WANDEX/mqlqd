@@ -11,7 +11,7 @@ if(TARGET code_coverage)
   target_link_libraries(tests_units PRIVATE code_coverage)
 endif()
 
-target_link_libraries(tests_units PRIVATE GTest::gtest_main)
+target_link_libraries(tests_units PRIVATE gtest::gtest_main)
 
 # enable CMake’s test runner to discover the tests included in the binary (for ctest)
 include(GoogleTest)

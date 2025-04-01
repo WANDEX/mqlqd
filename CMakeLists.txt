@@ -62,6 +62,11 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
 
   targets_and_linking()
 
+  if(MQLQD_BUILD_TESTS)
+    include(cmake/gtest.cmake)
+    add_subdirectory(tests/units)
+  endif(MQLQD_BUILD_TESTS)
+
   if(MQLQD_BUILD_PACKAGE)
     set(package_files include/ src/ cmake/ CMakeLists.txt LICENSE)
     set(fpath_zip ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-src.zip)
@@ -77,6 +82,7 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
   if(MQLQD_COVERAGE_ENABLE)
     if(${GNU_COMP})
       add_library(code_coverage INTERFACE)
+      add_dependencies(code_coverage tests_units)
       ## NOTE: without optimizations
       ## => other optimization levels/options obviously ruin coverage report.
       target_compile_options(code_coverage INTERFACE -g -O0 --coverage)
@@ -102,11 +108,6 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
     endif()
   endif(MQLQD_COVERAGE_ENABLE)
 
-  if(MQLQD_BUILD_TESTS)
-    include(cmake/GTest.cmake)
-    add_subdirectory(tests/units)
-  endif(MQLQD_BUILD_TESTS)
-
   if(MQLQD_MEMCHECK_ENABLE)
     set(dpath_units "${PROJECT_BINARY_DIR}/tests/units")
     add_custom_target(memcheck
@@ -116,6 +117,7 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
       WORKING_DIRECTORY "${dpath_units}"
       DEPENDS tests_units
     )
+    add_dependencies(memcheck tests_units)
   endif(MQLQD_MEMCHECK_ENABLE)
 
   if(MQLQD_INSTALL_ENABLE)
