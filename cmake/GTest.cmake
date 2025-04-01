@@ -2,10 +2,18 @@
 
 ## BEG CONF
 set(pkg_name "GTest")
+# set(pkg_name "gtest")
+# set(pkg_name "googletest")
 set(pkg_repo "https://github.com/google/googletest.git")
-set(pkg_tag "release-1.12.1")
-set(pkg_ver "1.12.1")
-set(pkg_tgt "${pkg_name}::gtest_main") ## target
+if(FALSE)
+  set(pkg_ver "1.16.0")
+  set(pkg_tag "v${pkg_ver}")
+else()
+  set(pkg_ver "1.12.1")
+  set(pkg_tag "58d77fa8070e8cec2dc1ed015d66b454c8d78850") # last C++11 tag release-1.12.1
+endif()
+# set(pkg_tgt "${pkg_name}::gtest_main") ## target
+set(pkg_tgt "GTest::gtest_main") ## target
 
 option(BUILD_GMOCK "" OFF)
 option(INSTALL_GTEST "" OFF)
