@@ -47,6 +47,7 @@ project_name=$(basename "$(git rev-parse --show-toplevel)")
 bt="${BUILD_TYPE:-Debug}"
 generator="${GENERATOR:-Ninja}" # "MSYS Makefiles", "Unix Makefiles", Ninja
 compiler="${CC:-_}"
+v="${VERBOSE:-0}"
 # get compiler basename in case declared via full path
 cmbn=$(basename "$compiler")
 bdir="build/dev-$bt-$cmbn"
@@ -62,7 +63,7 @@ fi
 
 verbose=""
 cmake_log_level=""
-if false; then
+if [ "${v}" = "1" ]; then
   verbose="--verbose"
   cmake_log_level="--log-level=DEBUG"
 fi
