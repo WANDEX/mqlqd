@@ -26,6 +26,19 @@ else()
   message(">> found cxxopts of required version!")
 endif()
 
-target_include_directories(wndx_sane_deps PUBLIC "${cxxopts_src}/include")
-target_precompile_headers (wndx_sane_deps PUBLIC [["cxxopts.hpp"]])
+if(FALSE)
+  target_include_directories(wndx_sane_deps PUBLIC "${cxxopts_src}/include")
+  target_precompile_headers (wndx_sane_deps PUBLIC [["cxxopts.hpp"]])
+else()
+  # target_sources(wndx_sane_deps PUBLIC cxxopts.hpp)
 
+  target_include_directories(wndx_sane_deps PUBLIC
+    $<BUILD_INTERFACE:${cxxopts_src}/include>
+    $<INSTALL_INTERFACE:include> # <prefix>
+  )
+  target_sources(wndx_sane_deps PUBLIC
+    $<BUILD_INTERFACE:${cxxopts_src}/include/cxxopts.hpp>
+    $<INSTALL_INTERFACE:include/cxxopts.hpp> # <prefix>
+  )
+  install(FILES cxxopts.hpp DESTINATION include)
+endif()
