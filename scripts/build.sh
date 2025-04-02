@@ -47,6 +47,8 @@ project_name=$(basename "$(git rev-parse --show-toplevel)")
 bt="${BUILD_TYPE:-Debug}"
 generator="${GENERATOR:-Ninja}" # "MSYS Makefiles", "Unix Makefiles", Ninja
 compiler="${CC:-_}"
+verbose="${VERBOSE:-0}"
+deploy="${DEPLOY:-0}"
 # get compiler basename in case declared via full path
 cmbn=$(basename "$compiler")
 bdir="build/dev-$bt-$cmbn"
@@ -60,10 +62,10 @@ fi
 
 [ -n "$CTEST_OUTPUT_ON_FAILURE" ] || export CTEST_OUTPUT_ON_FAILURE=1
 
-verbose=""
+_verbose=""
 cmake_log_level=""
-if false; then
-  verbose="--verbose"
+if [ "$verbose" = 1 ]; then
+  _verbose="--verbose"
   cmake_log_level="--log-level=DEBUG"
 fi
 
@@ -115,11 +117,11 @@ cmake -S . -B "$bdir" -G "$generator" -D CMAKE_BUILD_TYPE="${bt}" -D MQLQD_BUILD
 -Wdev -Werror=dev ${fresh} ${cmake_log_level}
 
 vsep "BUILD" "${CYN}"
-cmake --build "$bdir" --config "${bt}" ${clean_first} ${verbose}
+cmake --build "$bdir" --config "${bt}" ${clean_first} ${_verbose}
 
 notify "BUILT"
 
-gtest_binary="./$bdir/tests/units/tests_units"
+gtest_binary="./$bdir/bin/tests_units"
 if [ "$tt" = ON ] && [ ! -x "$gtest_binary" ]; then
   printf "%s\n^ %s\n" "$gtest_binary" \
     "File not found or not executable, exit."
@@ -152,5 +154,11 @@ case "$opt" in
     "$gtest_binary" --gtest_filter="$test_filter"
     ;;
 esac
+
+if [ "$deploy" = 1 ]; then
+  vsep "DEPLOY" "${MAG}"
+  cmake --install "$bdir" --config "${bt}" --prefix "$bdir/deploy"
+fi
+
 [ -n "$opt" ] && vsep "COMPLETED" "${GRN}"
 

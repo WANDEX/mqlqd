@@ -44,11 +44,12 @@ function(wndx_sane_create_targets) ## args
   add_library(_wndx_sane_base INTERFACE)
   target_include_directories(_wndx_sane_base INTERFACE
     $<BUILD_INTERFACE:${WNDX_SANE_PATH_TMP}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}> # XXX
   )
   target_compile_features(_wndx_sane_base INTERFACE ${arg_CXX_STD})
 
   ## target for dependencies (link inheritance)
-  add_library(wndx_sane_deps "")
+  add_library(wndx_sane_deps)
   add_alias(wndx_sane::deps wndx_sane_deps)
   target_include_directories(wndx_sane_deps PUBLIC
     $<BUILD_INTERFACE:${WNDX_SANE_PATH_TMP}>
@@ -59,7 +60,7 @@ function(wndx_sane_create_targets) ## args
   target_compile_features(wndx_sane_deps PUBLIC ${arg_CXX_STD})
 
   ## target for src (link inheritance)
-  add_library(wndx_sane_src "")
+  add_library(wndx_sane_src)
   add_alias(wndx_sane::src wndx_sane_src)
   target_include_directories(wndx_sane_src PUBLIC
     $<BUILD_INTERFACE:${WNDX_SANE_PATH_TMP}>

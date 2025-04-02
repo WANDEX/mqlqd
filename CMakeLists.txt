@@ -21,8 +21,8 @@ function(targets_and_linking)
     HPATH "include" "mqlqd"
   )
 
-  ## link core library with the libc -lc (to work with the socket API)
-  target_link_libraries(wndx_sane_core INTERFACE c)
+  ## link core library with the libc -lc (to work with the BSD API: socket, signal)
+  # target_link_libraries(wndx_sane_core INTERFACE c)
 
   ## link sources with project dependencies from the core library target.
   target_link_libraries(wndx_sane_src INTERFACE wndx::wndx_sane::core)
@@ -62,6 +62,14 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
   ## For the list of supported compilers visit:
   ## https://cmake.org/cmake/help/latest/prop_tgt/COMPILE_WARNING_AS_ERROR.html
   option(CMAKE_COMPILE_WARNING_AS_ERROR "treat compilation warnings as errors" OFF)
+
+  ## output dir is correct by default for most build setups.
+  ## however, when building lib as a DLL, it is important to have the DLL in the same
+  ## dir as the executable using it. Thus, we put all executables in a single /bin dir.
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+  ## On macOS, property ignored for the linker import files
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
   targets_and_linking()
 

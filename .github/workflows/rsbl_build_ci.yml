@@ -40,10 +40,10 @@ jobs:
       - name: CMake Configure
         run : >
           cmake -S . -B ${{inputs.BUILD_DIR}} -D CMAKE_BUILD_TYPE=${{inputs.BUILD_TYPE}}
-          -D MQLQD_BUILD_TESTS=ON
+          -D MQLQD_BUILD_TESTS=ON --log-level=DEBUG
 
       - name: Build
-        run : cmake --build ${{inputs.BUILD_DIR}} --config ${{inputs.BUILD_TYPE}} -j $(getconf _NPROCESSORS_ONLN)
+        run : cmake --build ${{inputs.BUILD_DIR}} --config ${{inputs.BUILD_TYPE}} -j $(getconf _NPROCESSORS_ONLN) --verbose
 
       - name: Tests
         run : ctest --test-dir ${{inputs.BUILD_DIR}} -C ${{inputs.BUILD_TYPE}} --output-on-failure

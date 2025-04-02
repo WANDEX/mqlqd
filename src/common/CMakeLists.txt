@@ -6,3 +6,8 @@ target_sources(wndx_sane_src
     file.cpp
     log.cpp
 )
+
+## XXX: only to make wndx_sane_deps target archive not empty =>
+## AppleClang will not compile static library without objects in archive.
+target_sources(wndx_sane_deps PRIVATE log.cpp)
+

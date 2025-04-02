@@ -7,8 +7,8 @@ set(pkg_ver "9.1.0")
 set(pkg_tag "${pkg_ver}")
 set(pkg_tgt "${pkg_name}::${pkg_name}") ## target
 
-option(FMT_INSTALL "" ON)
-option(FMT_OS "" OFF)
+option(FMT_INSTALL OFF)
+option(FMT_OS OFF)
 ## END CONF
 
 include(cmake/wndx_sane_find.cmake)
