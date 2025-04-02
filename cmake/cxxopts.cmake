@@ -20,12 +20,12 @@ if(TRUE) # XXX: ^ will not work cxxopts has weird configuration...
     SOURCE_DIR        ${cxxopts_src}
     BINARY_DIR        ${cxxopts_bin}
   )
-  # option(CXXOPTS_ENABLE_INSTALL "" ON)
+  option(CXXOPTS_ENABLE_INSTALL "" OFF)
   FetchContent_MakeAvailable(cxxopts)
 else()
   message(">> found cxxopts of required version!")
 endif()
 
 target_include_directories(wndx_sane_deps PUBLIC "${cxxopts_src}/include")
-target_precompile_headers(wndx_sane_deps PRIVATE cxxopts.hpp)
+target_precompile_headers (wndx_sane_deps PUBLIC [["cxxopts.hpp"]])
 
