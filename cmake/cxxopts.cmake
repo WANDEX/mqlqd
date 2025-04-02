@@ -40,5 +40,5 @@ else()
     $<BUILD_INTERFACE:${cxxopts_src}/include/cxxopts.hpp>
     $<INSTALL_INTERFACE:include/cxxopts.hpp> # <prefix>
   )
-  install(FILES cxxopts.hpp DESTINATION include)
+  # install(FILES cxxopts.hpp DESTINATION include)
 endif()
