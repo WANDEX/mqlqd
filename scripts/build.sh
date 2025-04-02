@@ -45,6 +45,7 @@ notify() {
 project_name=$(basename "$(git rev-parse --show-toplevel)")
 
 bt="${BUILD_TYPE:-Debug}"
+generator="${GENERATOR:-Ninja}" # "MSYS Makefiles", "Unix Makefiles", Ninja
 compiler="${CC:-_}"
 # get compiler basename in case declared via full path
 cmbn=$(basename "$compiler")
@@ -110,7 +111,7 @@ vsep() {
 }
 
 vsep "CONFIGURE" "${BLU}"
-cmake -S . -B "$bdir" -G Ninja -D CMAKE_BUILD_TYPE="${bt}" -D MQLQD_BUILD_TESTS="${tt}" \
+cmake -S . -B "$bdir" -G "$generator" -D CMAKE_BUILD_TYPE="${bt}" -D MQLQD_BUILD_TESTS="${tt}" \
 -Wdev -Werror=dev ${fresh} ${cmake_log_level}
 
 vsep "BUILD" "${CYN}"

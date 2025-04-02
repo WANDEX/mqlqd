@@ -3,9 +3,9 @@
 ## BEG CONF
 set(pkg_name "gtest")
 set(pkg_repo "https://github.com/google/googletest.git")
-if(FALSE)
+if(TRUE)
   set(pkg_ver "1.16.0")
-  set(pkg_tag "v${pkg_ver}")
+  set(pkg_tag "6910c9d9165801d8827d628cb72eb7ea9dd538c5") # v1.16.0
 else()
   set(pkg_ver "1.12.1")
   set(pkg_tag "58d77fa8070e8cec2dc1ed015d66b454c8d78850") # last C++11 tag release-1.12.1

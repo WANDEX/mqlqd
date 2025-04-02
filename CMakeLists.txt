@@ -34,9 +34,11 @@ function(targets_and_linking)
   target_link_libraries(wndx_sane_src PRIVATE wndx::wndx_sane::dev)
 
   ## find/fetch dependecies:
-  include(cmake/cxxopts.cmake)
-  include(cmake/fmt.cmake)
-  add_subdirectory(src)
+  if(MQLQD_BUILD_SRC)
+    include(cmake/cxxopts.cmake)
+    include(cmake/fmt.cmake)
+    add_subdirectory(src)
+  endif(MQLQD_BUILD_SRC)
 endfunction(targets_and_linking)
 
 ## GUARD: check the real root of the source tree.
@@ -48,6 +50,7 @@ else()
 endif()
 
 if(MQLQD_REAL_ROOT_OF_SRC_TREE)
+  option(MQLQD_BUILD_SRC        "whether or not src should be built"          ON)
   option(MQLQD_BUILD_TESTS      "whether or not tests should be built"        OFF) # TODO: UNIMPLEMENTED
   option(MQLQD_BUILD_PACKAGE    "whether or not the package should be built"  ON)
   option(MQLQD_COVERAGE_ENABLE  "whether or not to enable the tests coverage" OFF)
