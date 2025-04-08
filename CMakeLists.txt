@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 3.23)
 
 ## ^ POLICIES
 project(
@@ -64,8 +64,8 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
   option(CMAKE_COMPILE_WARNING_AS_ERROR "treat compilation warnings as errors" OFF)
 
   ## output dir is correct by default for most build setups.
-  ## however, when building lib as a DLL, it is important to have the DLL in the same
-  ## dir as the executable using it. Thus, we put all executables in a single /bin dir.
+  ## however, when building lib as a DLL, it is important to have the DLL in the same dir
+  ## as the executable using it. Thus, we put all executables in a single /bin dir.
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
   ## On macOS, property ignored for the linker import files
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
@@ -103,7 +103,7 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
         ### before taking new coverage analysis data:
         ## find all coverage files in the project binary dir
         file(GLOB_RECURSE prev_cov_files LIST_DIRECTORIES false
-          ABSOLUTE "${PROJECT_BINARY_DIR}" *.gcda) # XXX *.gcno
+          ABSOLUTE "${CMAKE_BINARY_DIR}" *.gcda) # XXX *.gcno
         ## clean from the previous coverage data files (if any)
         if(NOT prev_cov_files STREQUAL "")
           file(REMOVE ${prev_cov_files})
@@ -120,12 +120,11 @@ if(MQLQD_REAL_ROOT_OF_SRC_TREE)
   endif(MQLQD_COVERAGE_ENABLE)
 
   if(MQLQD_MEMCHECK_ENABLE)
-    set(dpath_units "${PROJECT_BINARY_DIR}/tests/units")
     add_custom_target(memcheck
       COMMAND valgrind --tool=memcheck -s --leak-check=full --show-leak-kinds=all
                       --error-exitcode=73 # --exit-on-first-error=yes
                       -- ./tests_units --gtest_brief=1
-      WORKING_DIRECTORY "${dpath_units}"
+      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
       DEPENDS tests_units
     )
     add_dependencies(memcheck tests_units)
