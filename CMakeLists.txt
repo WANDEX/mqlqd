@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.23)
 ## ^ POLICIES
 project(
   mqlqd
-  VERSION       0.0.1
+  VERSION       0.1.0
   LANGUAGES     CXX
   DESCRIPTION   "File transfer over TCP/IP on sockets (POSIX) [client -> server]"
   HOMEPAGE_URL  "https://github.com/WANDEX/mqlqd"
