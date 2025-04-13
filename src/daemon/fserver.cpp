@@ -1,8 +1,8 @@
 
-#include "fserver.hpp"
+#include "mqlqd/fserver.hpp"
 
-#include "aliases.hpp"
-#include "file.hpp"
+#include "mqlqd/aliases.hpp"
+#include "mqlqd/file.hpp"
 
 #include <fmt/format.h>
 
@@ -19,8 +19,6 @@ extern "C" {
 #include <netinet/tcp.h>        // TCP protocol | tcp(7)
 
 #include <unistd.h>             // | close(2).
-
-// #include <stdlib.h>             // XXX needed?
 
 } // extern "C"
 

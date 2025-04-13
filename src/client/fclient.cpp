@@ -1,8 +1,8 @@
 
-#include "fclient.hpp"
+#include "mqlqd/fclient.hpp"
 
-#include "aliases.hpp"
-#include "file.hpp"
+#include "mqlqd/aliases.hpp"
+#include "mqlqd/file.hpp"
 
 #include <fmt/format.h>
 

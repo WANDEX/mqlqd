@@ -1,6 +1,6 @@
 ## daemon
 
-add_executable(mqlqd_daemon "")
+add_executable(mqlqd_daemon)
 
 target_sources(mqlqd_daemon
   PRIVATE
@@ -9,5 +9,5 @@ target_sources(mqlqd_daemon
     daemon.cpp
 )
 
-target_link_libraries(mqlqd_daemon PRIVATE wndx_sane_src)
+target_link_libraries(mqlqd_daemon PRIVATE mqlqd_src)
 

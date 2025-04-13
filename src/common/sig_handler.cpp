@@ -5,10 +5,10 @@
 // ref: signal(7)
 // NOTE: The default action for an unhandled real-time signal is to terminate the receiving process.
 
-#include "sig_handler.hpp"
-#include "sig_to_str.hpp"       // enum class SIG with fmt format specialization
+#include "mqlqd/aliases.hpp"
 
-#include "log.hpp"
+#include "mqlqd/sig_handler.hpp"
+#include "mqlqd/sig_to_str.hpp" // enum class SIG with fmt format specialization
 
 #include <csignal>              // sigaction, SIGRTMAX
 #include <string_view>
@@ -24,6 +24,7 @@
 
 
 namespace mqlqd {
+using namespace wndx;
 
 void sig_print(LL ll, int sig, std::string_view const extra_msg)
 {

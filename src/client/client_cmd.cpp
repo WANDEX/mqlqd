@@ -1,10 +1,10 @@
 // client command line (cmd)
 
-#include "aliases.hpp"
-#include "config.hpp"
-#include "file.hpp"
+#include "mqlqd/fclient.hpp"
 
-#include "fclient.hpp"
+#include "mqlqd/aliases.hpp"
+#include "mqlqd/config.hpp"
+#include "mqlqd/file.hpp"
 
 #include <cxxopts.hpp>
 
@@ -45,11 +45,11 @@ cmd_opts(int argc, const char *argv[])
     options.set_width(80);
     options.add_options()
       ("a,addr", "Server IP address with the mqlqd_daemon. "
-                 "(default: " + std::string{cfg::addr} + ')',
+                 "(default: " + std::string{mqlqd::cfg::addr} + ')',
        cxxopts::value<cmd_opt_t>())
 
       ("p,port", "Port number of the daemon on the server. "
-                 "(default: " + fmt::to_string<port_t>(cfg::port) + ')',
+                 "(default: " + fmt::to_string<port_t>(mqlqd::cfg::port) + ')',
        cxxopts::value<port_t>())
 
       ("c,cat",  "Print file content (cat like utility mode).")
@@ -135,10 +135,10 @@ cmd_opts(int argc, const char *argv[])
     if (cmd_opts.count("cat")) return 0;
 
     // server address with the running mqlqd daemon. (file server)
-    const addr_t addr{ cmd_opts.count("addr") ? cmd_opts["addr"].as<cmd_opt_t>() : cfg::addr };
+    const addr_t addr{ cmd_opts.count("addr") ? cmd_opts["addr"].as<cmd_opt_t>() : mqlqd::cfg::addr };
 
     // port number of the daemon on the server. (cmd option overrides value from config)
-    const port_t port{ cmd_opts.count("port") ? cmd_opts["port"].as<port_t>() : cfg::port };
+    const port_t port{ cmd_opts.count("port") ? cmd_opts["port"].as<port_t>() : mqlqd::cfg::port };
 
 
     Fclient fclient{ addr, port };

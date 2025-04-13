@@ -1,10 +1,10 @@
 // daemon command line (cmd)
 
-#include "aliases.hpp"
-#include "config.hpp"
-#include "file.hpp"
+#include "mqlqd/fserver.hpp"
 
-#include "fserver.hpp"
+#include "mqlqd/aliases.hpp"
+#include "mqlqd/config.hpp"
+#include "mqlqd/file.hpp"
 
 #include <cxxopts.hpp>
 
@@ -46,7 +46,7 @@ cmd_opts(int argc, const char *argv[])
        cxxopts::value<cmd_opt_t>()->default_value("./mqlqd_storage"))
 
       ("p,port", "Use port number as identity of the daemon on the server. "
-                 "(default: " + fmt::to_string<port_t>(cfg::port) + ')',
+                 "(default: " + fmt::to_string<port_t>(mqlqd::cfg::port) + ')',
        cxxopts::value<port_t>())
 
       ("h,help", "Show usage help.")
@@ -85,7 +85,7 @@ cmd_opts(int argc, const char *argv[])
     }
 
     // use port number as identity on the server. (cmd option overrides value from config)
-    const port_t port{ cmd_opts.count("port") ? cmd_opts["port"].as<port_t>() : cfg::port };
+    const port_t port{ cmd_opts.count("port") ? cmd_opts["port"].as<port_t>() : mqlqd::cfg::port };
 
 
     /**

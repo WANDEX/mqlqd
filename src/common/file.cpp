@@ -1,7 +1,7 @@
 
-#include "file.hpp"
+#include "mqlqd/aliases.hpp"
 
-#include "aliases.hpp"
+#include "mqlqd/file.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -17,6 +17,8 @@
 #endif // !MQLQD_FILE_CONTENTS_BOUNDARY
 
 namespace mqlqd {
+using namespace wndx;
+
 namespace file {
 
 /**

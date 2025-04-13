@@ -1,6 +1,6 @@
 #pragma once
 
-#include "aliases.hpp"          // sv_t & other project-wide aliases
+#include "aliases.hpp"
 
 #include <fmt/format.h>         // for the fmt formatter specialization of the custom types.
 
