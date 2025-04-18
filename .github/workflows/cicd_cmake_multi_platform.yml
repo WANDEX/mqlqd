@@ -1,6 +1,6 @@
-## CMake on multiple platforms. AUTHOR: WANDEX
+## CMake CI/CD on multiple platforms. AUTHOR: WANDEX
 ## project: build, test, deploy
-name: cmake-multi-platform
+name: CI/CD cmake-multi-platform
 
 defaults:
   run:
@@ -13,13 +13,13 @@ on:
     paths-ignore:
       - '.*'
       - 'scripts/**'
-      - 'README'
+      - 'README*'
   pull_request:
     # branches: [ "master" ]
     paths-ignore:
       - '.*'
       - 'scripts/**'
-      - 'README'
+      - 'README*'
 
 env:
   PRJ_NAME   : "mqlqd"
@@ -83,6 +83,8 @@ jobs:
     steps:
       ## https://github.com/marketplace/actions/checkout
     - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
 
       ## Turn repeated input strings (such as the build output directory) into step outputs.
       ## These step outputs can be used throughout the workflow file as regular variables.
