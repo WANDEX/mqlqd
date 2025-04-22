@@ -58,23 +58,22 @@ Usage:
   -u, --urge 1-7  Log urgency level. (All messages </> Only critical)
 
 
-BUILD
-=====
-To make clean build
-$ ./scripts/build.sh clean
-
-To make cleaner build (for edge cases)
-$ ./scripts/build.sh cleaner
-
-Ninja (build system) is optional: change Generator -G Ninja in the above build script.
-
+BUILD FROM SOURCE
+=================
+$ git clone --recurse-submodules git@github.com:WANDEX/mqlqd.git && cd mqlqd
+$ cmake -E make_directory build
+$ cmake -S . -B build
+$ cmake --build build
 
 REQUIREMENTS
 ============
 Platform requirement: Linux, BSD or origin from the UNIX family (POSIX compliant os).
 * libc    To work with the socket API (socket API support is mandatory for the platform)
 
-3rd party dependencies (fetched automatically with CMake fetch content)
+git submodules:
+* wndx::sane (https://github.com/WANDEX/wndx_sane)
+
+3rdparty  dependencies (CMake fetch content at configure time):
 * fmtlib  (https://github.com/fmtlib/fmt)
 * cxxopts (https://github.com/jarro2783/cxxopts)
 
