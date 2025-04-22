@@ -59,7 +59,7 @@ function(targets_and_linking)
     ## find/fetch dependecies:
     find_package(cxxopts REQUIRED)
     find_package(fmt REQUIRED)
-    add_subdirectory(src)
+    add_subdirectory(src/mqlqd)
   endif()
 endfunction(targets_and_linking)
 
