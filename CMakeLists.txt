@@ -98,16 +98,10 @@ if(MQLQD_IS_TOP_PROJECT)
   endif(MQLQD_BUILD_TESTS)
 
   if(MQLQD_BUILD_PACKAGE)
-    # TODO: use list() & cmake_path()
-    set(package_files include/ src/ cmake/ CMakeLists.txt LICENSE)
-    set(fpath_zip ${CMAKE_CURRENT_BINARY_DIR}/src_package.zip)
-    add_custom_command(
-      OUTPUT  ${fpath_zip}
-      COMMAND ${CMAKE_COMMAND} -E tar c ${fpath_zip} --format=zip -- ${package_files}
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      DEPENDS ${package_files}
+    include(wndx_sane_package)
+    wndx_sane_package(TGT_NAME src_package FILES
+      include/ src/ cmake/ CMakeLists.txt LICENSE README
     )
-    add_custom_target(src_package DEPENDS ${fpath_zip})
   endif(MQLQD_BUILD_PACKAGE)
 
   if(MQLQD_COVERAGE_ENABLE)
