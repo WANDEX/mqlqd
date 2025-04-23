@@ -105,30 +105,10 @@ if(MQLQD_IS_TOP_PROJECT)
   endif(MQLQD_BUILD_PACKAGE)
 
   if(MQLQD_COVERAGE_ENABLE)
-    if(${GNU_COMP})
-      add_library(code_coverage INTERFACE)
-      add_dependencies(code_coverage tests_units)
-      ## NOTE: without optimizations
-      ## => other optimization levels/options obviously ruin coverage report.
-      target_compile_options(code_coverage INTERFACE -g -O0 --coverage)
-      target_link_options(code_coverage INTERFACE --coverage)
-      if(MQLQD_COVERAGE_CLEAN)
-        ### before taking new coverage analysis data:
-        ## find all coverage files in the project binary dir
-        file(GLOB_RECURSE prev_cov_files LIST_DIRECTORIES false
-          ABSOLUTE "${CMAKE_BINARY_DIR}" *.gcda) # XXX *.gcno
-        ## clean from the previous coverage data files (if any)
-        if(NOT prev_cov_files STREQUAL "")
-          file(REMOVE ${prev_cov_files})
-          message(NOTICE ">> Cleared of previous coverage data files.")
-        else()
-          message(NOTICE ">> Nothing to clean up. (no coverage data files found)")
-        endif()
-      endif(MQLQD_COVERAGE_CLEAN)
-      message(NOTICE ">> Code Coverage will be collected!")
-    else()
-      message(WARNING "Code Coverage analysis enabled only on the GNU/GCC toolchain!")
-    endif()
+    include(wndx_sane_coverage)
+    wndx_sane_coverage(TGT_NAME code_coverage TGT_DEPS tests_units
+      CLEAN WNDX_SANE_COVERAGE_CLEAN
+    )
   endif(MQLQD_COVERAGE_ENABLE)
 
   if(MQLQD_MEMCHECK_ENABLE)
