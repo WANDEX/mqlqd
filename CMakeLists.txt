@@ -112,14 +112,11 @@ if(MQLQD_IS_TOP_PROJECT)
   endif(MQLQD_COVERAGE_ENABLE)
 
   if(MQLQD_MEMCHECK_ENABLE)
-    add_custom_target(memcheck
-      COMMAND valgrind --tool=memcheck -s --leak-check=full --show-leak-kinds=all
-                      --error-exitcode=73 # --exit-on-first-error=yes
-                      -- ./tests_units --gtest_brief=1
-      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-      DEPENDS tests_units
+    include(wndx_sane_memcheck)
+    wndx_sane_memcheck(TGT_NAME memcheck
+      TGT_EXEC tests_units
+      TGT_DEPS tests_units
     )
-    add_dependencies(memcheck tests_units)
   endif(MQLQD_MEMCHECK_ENABLE)
 
   if(MQLQD_INSTALL_ENABLE)
