@@ -69,7 +69,7 @@ endif()
 
 if(MQLQD_IS_TOP_PROJECT)
   option(MQLQD_BUILD_SRC        "whether or not src should be built"          ON)
-  option(MQLQD_BUILD_TESTS      "whether or not tests should be built"        OFF) # TODO: UNIMPLEMENTED
+  option(MQLQD_BUILD_TESTS      "whether or not tests should be built"        OFF)
   option(MQLQD_BUILD_PACKAGE    "whether or not the package should be built"  ON)
   option(MQLQD_COVERAGE_ENABLE  "whether or not to enable the tests coverage" OFF)
   option(MQLQD_COVERAGE_CLEAN   "clean coverage data before taking new"       ON)
@@ -85,13 +85,12 @@ if(MQLQD_IS_TOP_PROJECT)
   ## however, when building lib as a DLL, it is important to have the DLL in the same dir
   ## as the executable using it. Thus, we put all executables in a single /bin dir.
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-  ## On macOS, property ignored for the linker import files
+  ## on macOS, property ignored for the linker import files
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
   targets_and_linking()
 
-  message(DEBUG "MQLQD_BUILD_TESTS=${MQLQD_BUILD_TESTS}") # XXX
   if(MQLQD_BUILD_TESTS)
     find_package(gtest REQUIRED)
     add_subdirectory(tests/units)
