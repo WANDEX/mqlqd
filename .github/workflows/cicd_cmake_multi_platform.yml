@@ -1,6 +1,8 @@
 ## CMake CI/CD on multiple platforms. AUTHOR: WANDEX
 ## project: build, test, deploy
 name: CI/CD cmake-multi-platform
+permissions:
+  contents: write ## for the action release
 
 defaults:
   run:
@@ -153,6 +155,7 @@ jobs:
       working-directory: ${{ steps.str3.outputs.dir_path_env }}
       run : |
         env > post.txt && cat post.txt
+      # env > post.txt && diff bef.txt post.txt > env.diff && cat env.diff
       # env > post.txt && diff -u bef.txt post.txt > env.diff && cat env.diff
       # TODO: must find a convenient cross-platform way to install diffutils.
 
@@ -165,10 +168,9 @@ jobs:
       run : cmake -G >cmake_pl_generators.txt 2>&1 || true && cat cmake_pl_generators.txt
 
     - name: Configure CMake
+      working-directory: ${{ steps.str2.outputs.dir_path_build }}
       run : >
-        cmake -G ${{ matrix.gen }} --log-level=DEBUG
-        -S "${{ steps.str1.outputs.dir_path_prj }}"
-        -B "${{ steps.str2.outputs.dir_path_build }}"
+        cmake -S .. -B . -G ${{ matrix.gen }} --log-level=DEBUG
         -D CMAKE_INSTALL_PREFIX=${{ steps.str3.outputs.dir_path_deploy }}
         -D CMAKE_CXX_COMPILER=${{ matrix.cxx }}
         -D CMAKE_C_COMPILER=${{ matrix.cc }}
@@ -178,14 +180,16 @@ jobs:
 
       ## Build program with the given configuration. Note that --config is needed for multi-config generator.
     - name: Build
-      run : cmake --build "${{ steps.str2.outputs.dir_path_build }}" --config ${{ matrix.bt }} --verbose
+      working-directory: ${{ steps.str2.outputs.dir_path_build }}
+      run : cmake --build . --config ${{ matrix.bt }} --verbose
 
     - name: Test
       working-directory: ${{ steps.str2.outputs.dir_path_build }}
       run: ctest --build-config ${{ matrix.bt }} --output-on-failure
 
     - name: Package source code
-      run : cmake --build "${{ steps.str2.outputs.dir_path_build }}" --target src_package --config ${{ matrix.bt }}
+      working-directory: ${{ steps.str2.outputs.dir_path_build }}
+      run : cmake --build . --config ${{ matrix.bt }} --target package_src
 
     - name: Deploy ${{ steps.strip.outputs.__strip }}
       working-directory: ${{ steps.str2.outputs.dir_path_build }}
@@ -217,25 +221,37 @@ jobs:
         compression-level: 6
         overwrite: true ## optional, default is false
 
-    # - name: Cache
-    #   uses: actions/cache@v4.0.2
-    #   with:
-    #     ## A list of files, directories, and wildcard patterns to cache and restore
-    #     path:
-    #     ## An explicit key for restoring and saving the cache
-    #     key:
-    #     ## An ordered list of keys to use for restoring stale cache if no cache hit occurred for key. Note `cache-hit` returns false in this case.
-    #     restore-keys: ## optional
-    #     ## The chunk size used to split up large files during upload, in bytes
-    #     upload-chunk-size: ## optional
-    #     ## An optional boolean when enabled, allows windows runners to save or restore caches that can be restored or saved respectively on other platforms
-    #     enableCrossOsArchive: ## optional, default is false
-    #     ## Fail the workflow if cache entry is not found
-    #     fail-on-cache-miss: ## optional, default is false
-    #     ## Check if a cache entry exists for the given input(s) (key, restore-keys) without downloading the cache
-    #     lookup-only: ## optional, default is false
-    #     ## Run the post step to save the cache even if another step before fails
-    #     save-always: ## optional, default is false
+    - name : archive
+      id   : archive
+      shell: bash
+      if   : ${{ github.ref_type == 'tag' && matrix.bt == 'Release' }}
+      working-directory: ${{ steps.str2.outputs.dir_path_build }}
+      run  : |
+        PRJNAME=${{ env.PRJ_NAME }}
+        VERSION=$GITHUB_REF_NAME
+        ARCH=$(uname -m)
+        PRJVERA=$PRJNAME-$VERSION-$ARCH
+        PKGNAME=$PRJVERA-${{ matrix.bp }}
+        TARBALL=$PKGNAME.tar.gz
+        SHASUM=$PKGNAME.tar.gz.sha256
+        cp -r deploy $PRJVERA
+        tar -czf $TARBALL $PRJVERA
+        cmake -E sha256sum $TARBALL > $SHASUM
+        echo "TARBALL=$TARBALL" >> $GITHUB_OUTPUT
+        echo  "SHASUM=$SHASUM"  >> $GITHUB_OUTPUT
+
+      ## https://github.com/marketplace/actions/gh-release
+    - name : release
+      uses : softprops/action-gh-release@v2
+      if   : ${{ github.ref_type == 'tag' && matrix.bt == 'Release' }}
+      with :
+        generate_release_notes: true
+        draft: true
+        token: ${{ secrets.GITHUB_TOKEN }}
+        files: |
+          ${{ steps.str2.outputs.dir_path_build }}/${{ env.PRJ_NAME }}-*-src.tar.gz
+          ${{ steps.str2.outputs.dir_path_build }}/${{ steps.archive.outputs.TARBALL }}
+          ${{ steps.str2.outputs.dir_path_build }}/${{ steps.archive.outputs.SHASUM }}
 
     ## END steps
   ## END multi-build-test-deploy
