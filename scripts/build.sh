@@ -35,6 +35,7 @@ fi
 at_path() { hash "$1" >/dev/null 2>&1 ;} # if $1 is found at $PATH -> return 0
 
 notify() {
+  EC="$?" ## save error/exit code of the previously executed command
   at_path notify-send || return 0
   stag="string:x-dunst-stack-tag"
   bg="string:bgcolor:"
@@ -53,6 +54,13 @@ notify() {
   notify-send -u "$urg" -h "$stag:$prj_name" -h "$stag:hi" -h "$bg" -h "$fg" "[$prj_name]" "$arg"
 }
 
+# shellcheck disable=SC2068 # Intentional - to re-split trailing arguments.
+run_ctest() { cmake -E time ctest --output-on-failure --test-dir "$bdir" $@ ;} # shortcut
+
+sep="=============================================================================="
+vsep() { printf "\n%b%.78s%b\n\n" "${2}" "[${1}]${sep}" "${END}" ;}
+
+
 prj_name=""
 prj_name_upper=""
 if at_path rg; then
@@ -61,6 +69,7 @@ else
   prj_name=$(basename "$(git rev-parse --show-toplevel)")
 fi
 prj_name_upper=$(echo "$prj_name" | tr "[:lower:]" "[:upper:]")
+
 
 PRJ_BUILD_TESTS="${BUILD_TESTS:-"${prj_name_upper}_BUILD_TESTS"}"
 bt="${BUILD_TYPE:-Debug}"
@@ -71,7 +80,6 @@ deploy="${DEPLOY:-0}"
 cmbn=$(basename "$compiler") # get compiler basename in case declared via full path
 bdir="build/dev-$bt-$cmbn"
 
-beg_epoch=$(date +%s) # for the first call of the time_spent_on_step
 
 _verbose=""
 cmake_log_level=""
@@ -105,35 +113,17 @@ else
   tt=OFF
 fi
 
-time_spent_on_step() {
-  # HACK: because standard utility/command 'time' does not work.
-  end_epoch=$(date +%s)
-  diff_secs=$((end_epoch-beg_epoch))
-  # small insignificant optimization
-  [ "$diff_secs" = 0 ] && beg_epoch="$end_epoch" && return
-  spent_time=$(date -d "@${diff_secs}" "+%Mm %Ss")
-  beg_epoch=$(date +%s)
-  printf "step took:%b %s.%b\n" "${BLD}" "$spent_time" "${END}"
-}
-
-und='=========================='
-sep="${und}${und}${und}"
-vsep() {
-  time_spent_on_step
-  printf "\n%s[%s]\n%s\n\n" "${2}" "${1}" "${sep}${END}"
-}
 
 vsep "CONFIGURE" "${BLU}"
+cmake -E time \
 cmake -S . -B "$bdir" -G "$generator" -D CMAKE_BUILD_TYPE="${bt}" -D "$PRJ_BUILD_TESTS=${tt}" \
--Wdev -Werror=dev ${fresh} ${cmake_log_level}
+-Wdev -Werror=dev ${fresh} ${cmake_log_level} \
+|| { notify ERROR "CONFIGURE ERROR" ; exit "$EC" ;}
 
 vsep "BUILD" "${CYN}"
-cmake --build "$bdir" --config "${bt}" ${clean_first} ${_verbose}
-
-notify "BUILT"
-
-# shellcheck disable=SC2068 # Intentional - to re-split trailing arguments.
-run_ctest() { ctest --output-on-failure --test-dir "$bdir" $@ ;} # shortcut
+cmake -E time \
+cmake --build "$bdir" --config "${bt}" ${clean_first} ${_verbose} \
+|| { notify ERROR "BUILD ERROR" ; exit "$EC" ;}
 
 [ -n "$opt" ] && vsep "TESTS" "${RED}"
 [ -n "$test_filter" ] || test_filter='.*'
@@ -169,5 +159,6 @@ if [ "$deploy" = 1 ]; then
   cmake --install "$bdir" --config "${bt}" --prefix "$bdir/deploy"
 fi
 
-[ -n "$opt" ] && vsep "COMPLETED" "${GRN}"
+vsep   "COMPLETED" "${GRN}"
+notify "COMPLETED"
 
