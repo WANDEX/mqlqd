@@ -98,7 +98,7 @@ if(MQLQD_IS_TOP_PROJECT)
 
   if(MQLQD_BUILD_PACKAGE)
     include(wndx_sane_package)
-    wndx_sane_package(TGT_NAME src_package FILES
+    wndx_sane_package(SUFFIX src DST_DIR FILES
       include/ src/ cmake/ CMakeLists.txt LICENSE README
     )
   endif(MQLQD_BUILD_PACKAGE)
