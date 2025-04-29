@@ -55,7 +55,7 @@ notify() {
 }
 
 # shellcheck disable=SC2068 # Intentional - to re-split trailing arguments.
-run_ctest() { cmake -E time ctest --output-on-failure --test-dir "$bdir" $@ ;} # shortcut
+run_ctest() { cmake -E time ctest --output-on-failure --test-dir "$_bdir" $@ ;} # shortcut
 
 sep="=============================================================================="
 vsep() { printf "\n%b%.78s%b\n\n" "${2}" "[${1}]${sep}" "${END}" ;}
@@ -77,6 +77,7 @@ generator="${GENERATOR:-Ninja}" # "MSYS Makefiles", "Unix Makefiles", Ninja
 compiler="${CC:-_}"
 verbose="${VERBOSE:-0}"
 deploy="${DEPLOY:-0}"
+rel="${REL:-0}"
 cmbn=$(basename "$compiler") # get compiler basename in case declared via full path
 bdir="build/dev-$bt-$cmbn"
 
@@ -113,16 +114,26 @@ else
   tt=OFF
 fi
 
+## source and build dirs provided as the relative paths
+if [ "$rel" = 1 ]; then
+  cd "$bdir" || exit 11
+  pwd
+  _sdir="../.."
+  _bdir="."
+else
+  _sdir="."
+  _bdir="$bdir"
+fi
 
 vsep "CONFIGURE" "${BLU}"
 cmake -E time \
-cmake -S . -B "$bdir" -G "$generator" -D CMAKE_BUILD_TYPE="${bt}" -D "$PRJ_BUILD_TESTS=${tt}" \
+cmake -S "$_sdir" -B "$_bdir" -G "$generator" -D CMAKE_BUILD_TYPE="${bt}" -D "$PRJ_BUILD_TESTS=${tt}" \
 -Wdev -Werror=dev ${fresh} ${cmake_log_level} \
 || { notify ERROR "CONFIGURE ERROR" ; exit "$EC" ;}
 
 vsep "BUILD" "${CYN}"
 cmake -E time \
-cmake --build "$bdir" --config "${bt}" ${clean_first} ${_verbose} \
+cmake --build "$_bdir" --config "${bt}" ${clean_first} ${_verbose} \
 || { notify ERROR "BUILD ERROR" ; exit "$EC" ;}
 
 [ -n "$opt" ] && vsep "TESTS" "${RED}"
@@ -143,7 +154,7 @@ case "$opt" in
     run_ctest --rerun-failed
   ;;
   gtest|gt)
-    gtest_binary="./$bdir/bin/tests_units"
+    gtest_binary="./$_bdir/bin/tests_units"
     if [ "$tt" = ON ] && [ ! -x "$gtest_binary" ]; then
       printf "%s\n^ %s\n" "$gtest_binary" "File not found or not executable, exit."
       exit 5
@@ -156,7 +167,7 @@ esac
 
 if [ "$deploy" = 1 ]; then
   vsep "DEPLOY" "${MAG}"
-  cmake --install "$bdir" --config "${bt}" --prefix "$bdir/deploy"
+  cmake --install "$_bdir" --config "${bt}" --prefix "$_bdir/deploy"
 fi
 
 vsep   "COMPLETED" "${GRN}"
