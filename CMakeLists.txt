@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.29)
+cmake_minimum_required(VERSION 3.29..4.1)
 
 ## ^ POLICIES
 project(
@@ -29,7 +29,6 @@ list(APPEND CMAKE_MODULE_PATH
 
 function(targets_and_linking)
   add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/wndx/sane")
-  include(wndx_sane_modules)
   include(wndx_sane_create_targets)
   ## library targets & compilation options/flags
   wndx_sane_create_targets(PFX wndx LIB mqlqd
@@ -42,9 +41,6 @@ function(targets_and_linking)
   target_link_libraries(mqlqd_dev  INTERFACE wndx::sane::dev ) # inherit dev
   target_link_libraries(mqlqd_deps    PUBLIC wndx::sane::deps) # inherit deps
   target_link_libraries(mqlqd_src     PUBLIC wndx::sane::src ) # inherit src
-
-  ## link core library with the libc -lc (to work with the BSD API: socket, signal)
-  # target_link_libraries(mqlqd_core INTERFACE c) # XXX: project is linking to libc by itself
 
   ## link sources with project dependencies from the core library target
   target_link_libraries(mqlqd_src INTERFACE wndx::mqlqd::core)
@@ -75,7 +71,6 @@ if(MQLQD_IS_TOP_PROJECT)
   option(MQLQD_COVERAGE_CLEAN   "clean coverage data before taking new"       ON)
   option(MQLQD_INSTALL_ENABLE   "whether or not to enable the install rule"   ON)
   option(MQLQD_MEMCHECK_ENABLE  "detect leaks via valgrind memcheck tool"     OFF)
-  option(MQLQD_SNTZ_ADDR        "whether or not to enable address sanitizer"  OFF) # TODO: UNIMPLEMENTED
 
   ## for the list of supported compilers visit:
   ## https://cmake.org/cmake/help/latest/prop_tgt/COMPILE_WARNING_AS_ERROR.html
@@ -91,30 +86,32 @@ if(MQLQD_IS_TOP_PROJECT)
 
   targets_and_linking()
 
+  if(MQLQD_COVERAGE_ENABLE)
+    include(wndx_sane_coverage)
+    wndx_sane_coverage(TGT_NAME code_coverage
+      CLEAN MQLQD_COVERAGE_CLEAN
+    )
+  endif(MQLQD_COVERAGE_ENABLE)
+
   if(MQLQD_BUILD_TESTS)
-    find_package(gtest REQUIRED)
     add_subdirectory(tests/units)
   endif(MQLQD_BUILD_TESTS)
 
   if(MQLQD_BUILD_PACKAGE)
     include(wndx_sane_package)
-    wndx_sane_package(SUFFIX src DST_DIR FILES
-      include/ src/ cmake/ CMakeLists.txt LICENSE README
+    wndx_sane_package(SUFFIX src FILES
+      cmake/ include/ scripts/ src/ tests/ CMakeLists.txt LICENSE README
     )
   endif(MQLQD_BUILD_PACKAGE)
-
-  if(MQLQD_COVERAGE_ENABLE)
-    include(wndx_sane_coverage)
-    wndx_sane_coverage(TGT_NAME code_coverage TGT_DEPS tests_units
-      CLEAN WNDX_SANE_COVERAGE_CLEAN
-    )
-  endif(MQLQD_COVERAGE_ENABLE)
 
   if(MQLQD_MEMCHECK_ENABLE)
     include(wndx_sane_memcheck)
     wndx_sane_memcheck(TGT_NAME memcheck
-      TGT_EXEC tests_units
-      TGT_DEPS tests_units
+      TGT_EXEC tests_units --gtest_brief=1
+      # VALGRIND_OPTS --read-var-info=yes --show-leak-kinds=definite --track-origins=yes
+      # DRMEMORY_OPTS -brief -no_crash_at_error
+      # EXIT_ON_FIRST_ERROR
+      # FORCE_DRMEMORY
     )
   endif(MQLQD_MEMCHECK_ENABLE)
 
@@ -122,8 +119,8 @@ if(MQLQD_IS_TOP_PROJECT)
     include(wndx_sane_install)
     wndx_sane_install(
       TARGETS mqlqd_client mqlqd_daemon
+      PHD "include/mqlqd"
       PATTERNS "*.hpp"
     )
   endif(MQLQD_INSTALL_ENABLE)
 endif(MQLQD_IS_TOP_PROJECT)
-
