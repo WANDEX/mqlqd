@@ -1,5 +1,6 @@
-## CMake CI/CD on multiple platforms. AUTHOR: WANDEX
-## project: build, test, deploy
+## CI/CD CMake on multiple platforms.
+## AUTHOR: github.com/WANDEX. LICENSE: MIT.
+## CMake project: build, test, memcheck, package, deploy.
 name: CI/CD cmake-multi-platform
 permissions:
   contents: write ## for the action release
@@ -11,81 +12,79 @@ defaults:
 on:
   workflow_dispatch:
   push:
-    # branches: [ "master" ]
     paths-ignore:
       - '.*'
+      - '!.drmemory_suppress'
       - 'scripts/**'
       - 'README*'
   pull_request:
-    # branches: [ "master" ]
     paths-ignore:
       - '.*'
+      - '!.drmemory_suppress'
       - 'scripts/**'
       - 'README*'
 
 env:
   PRJ_NAME   : "mqlqd"
+  TESTS_DIR  : "tests/units"
   BUILD_TESTS: "MQLQD_BUILD_TESTS=ON"
+  MEMCHECK   : "MQLQD_MEMCHECK_ENABLE=OFF"
 
 jobs:
   multi-build-test-deploy:
     continue-on-error: false
+    runs-on : ${{ matrix.pl }}
     strategy:
       fail-fast: false
       matrix:
-        gen: [Ninja] ## default generator
-        cc : [gcc, clang] ## compilers
-        bt : [Release, Debug] ## build type
-        pl : [ubuntu-latest, macos-latest] ## platform
-        # exclude:
-        #   - pl : windows-latest
-        #     cc : gcc
-        #   - pl : windows-latest
-        #     cc : clang
+        bt : [Debug, Release] ## build type
+        bp :
+          - "lnx_gcc"
+          - "lnx_clang"
+          - "mac_gcc"
+          - "mac_clang"
+          - "mac_Xcode"
         include:
           - name: "ubuntu gcc"
-            pl : ubuntu-latest
-            cc : gcc
-            cxx: g++
             bp : "lnx_gcc"
+            pl : ubuntu-latest
+            cc : gcc
+            cxx: g++
+            gen: "Ninja"
           - name: "ubuntu clang"
+            bp : "lnx_clang"
             pl : ubuntu-latest
             cc : clang
             cxx: clang++
-            bp : "lnx_clang"
+            gen: "Ninja"
           - name: "macOS gcc"
+            bp : "mac_gcc"
             pl : macos-latest
             cc : gcc
             cxx: g++
-            bp : "mac_gcc"
+            gen: "Ninja"
           - name: "macOS clang"
+            bp : "mac_clang"
             pl : macos-latest
             cc : clang
             cxx: clang++
-            bp : "mac_clang"
+            gen: "Ninja"
           - name: "macOS Xcode"
+            bp : "mac_Xcode"
             pl : macos-latest
             cc : cc
             cxx: c++
-            bp : "mac_Xcode"
             gen: "Xcode"
-            bt: Debug
-          # - name: "windows MSVC"
-          #   pl : windows-latest
-          #   cc : cl
-          #   cxx: cl
-          #   bp : "win_cl"
-          #   gen: "Visual Studio 17 2022"
         ## END include
       ## END matrix
     ## END strategy
-    runs-on: ${{ matrix.pl }}
 
     name: "${{ matrix.bp }}_${{ matrix.bt }} | CC=${{ matrix.cc }} CXX=${{ matrix.cxx }} | ${{ matrix.pl }}"
     steps:
       ## https://github.com/marketplace/actions/checkout
     - uses: actions/checkout@v4
       with:
+        ref: ${{ github.ref }}
         submodules: 'recursive'
 
       ## Turn repeated input strings (such as the build output directory) into step outputs.
@@ -95,8 +94,9 @@ jobs:
       id   : str1
       shell: bash
       run  : |
+        echo "date=$(date +%y-%m-%d)" >> "$GITHUB_OUTPUT"
         echo "date_time=$(date +%y-%m-%d_%H-%M-%S)" >> "$GITHUB_OUTPUT"
-        echo "dir_path_prj=${{ github.workspace }}" >> "$GITHUB_OUTPUT" # full path
+        echo "dir_path_prj=${{ github.workspace }}" >> "$GITHUB_OUTPUT"
         echo "dir_name_build=build_${{ env.PRJ_NAME }}_${{ matrix.bp }}_${{ matrix.bt }}" >> "$GITHUB_OUTPUT"
     - name: set reusable str2
       id   : str2
@@ -117,7 +117,7 @@ jobs:
       shell: bash
       run  : echo "__strip=--strip" >> "$GITHUB_OUTPUT"
 
-    - name: Date Time
+    - name: Date Time ${{ steps.str1.outputs.date_time }}
       run : |
         echo "${{ steps.str1.outputs.date_time }}"
         echo "${{ steps.str2.outputs.dir_path_build }}"
@@ -170,13 +170,13 @@ jobs:
     - name: Configure CMake
       working-directory: ${{ steps.str2.outputs.dir_path_build }}
       run : >
-        cmake -S .. -B . -G ${{ matrix.gen }} --log-level=DEBUG
+        cmake -S .. -B . -G "${{ matrix.gen }}" --log-level=DEBUG
         -D CMAKE_INSTALL_PREFIX=${{ steps.str3.outputs.dir_path_deploy }}
         -D CMAKE_CXX_COMPILER=${{ matrix.cxx }}
         -D CMAKE_C_COMPILER=${{ matrix.cc }}
         -D CMAKE_BUILD_TYPE=${{ matrix.bt }}
         -D CMAKE_CONFIGURATION_TYPES=${{ matrix.bt }}
-        -D ${{ env.BUILD_TESTS }}
+        -D ${{ env.BUILD_TESTS }} -D ${{ env.MEMCHECK }}
 
       ## Build program with the given configuration. Note that --config is needed for multi-config generator.
     - name: Build
@@ -185,7 +185,13 @@ jobs:
 
     - name: Test
       working-directory: ${{ steps.str2.outputs.dir_path_build }}
-      run: ctest --build-config ${{ matrix.bt }} --output-on-failure
+      run: ctest --test-dir ${{ env.TESTS_DIR }} --build-config ${{ matrix.bt }} --output-on-failure
+
+      ## drmemory currently not works on windows-latest/windows-2025 => Dr. Memory internal crash at PC 0x*.
+    - name: Memcheck
+      if  : ${{ false && matrix.bt == 'Debug' && matrix.pl != 'windows-latest' }}
+      working-directory: ${{ steps.str2.outputs.dir_path_build }}
+      run : cmake --build . --config ${{ matrix.bt }} --target memcheck
 
     - name: Package source code
       working-directory: ${{ steps.str2.outputs.dir_path_build }}
@@ -235,18 +241,32 @@ jobs:
         TARBALL=$PKGNAME.tar.gz
         SHASUM=$PKGNAME.tar.gz.sha256
         cp -r deploy $PRJVERA
-        tar -czf $TARBALL $PRJVERA
+        cmake -E tar -czf $TARBALL $PRJVERA
         cmake -E sha256sum $TARBALL > $SHASUM
-        echo "TARBALL=$TARBALL" >> $GITHUB_OUTPUT
-        echo  "SHASUM=$SHASUM"  >> $GITHUB_OUTPUT
+        echo "TARBALL=$TARBALL" >> "$GITHUB_OUTPUT"
+        echo  "SHASUM=$SHASUM"  >> "$GITHUB_OUTPUT"
+
+      ## https://github.com/ericcornelissen/git-tag-annotation-action
+    - name : extract git tag annotation for release body text
+      id   : git
+      shell: bash
+      if   : ${{ github.ref_type == 'tag' && matrix.bt == 'Release' }}
+      run  : |
+        { ## handle multi-line output
+          echo 'annotation<<EOF'
+          git tag -l "$GITHUB_REF_NAME" --format '%(body)'
+          echo 'EOF'
+        } >> "$GITHUB_OUTPUT"
+        echo "tag=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
 
       ## https://github.com/marketplace/actions/gh-release
     - name : release
       uses : softprops/action-gh-release@v2
       if   : ${{ github.ref_type == 'tag' && matrix.bt == 'Release' }}
       with :
+        body : ${{ steps.git.outputs.annotation }}
         generate_release_notes: true
-        draft: true
+        draft: false
         token: ${{ secrets.GITHUB_TOKEN }}
         files: |
           ${{ steps.str2.outputs.dir_path_build }}/${{ env.PRJ_NAME }}-*-src.tar.gz
