@@ -20,7 +20,7 @@ namespace mqlqd {
 // to not suppress core dumps etc -> should be disabled => 0
 #ifndef MQLQD_CATCH_THEM_ALL
 #define MQLQD_CATCH_THEM_ALL 1
-#endif // !MQLQD_CATCH_THEM_ALL
+#endif//MQLQD_CATCH_THEM_ALL
 
 /**
  * @brief parse command line options.
@@ -77,7 +77,7 @@ cmd_opts(int argc, const char *argv[])
 
     std::error_code ec {};
     if (fs::is_directory(storage_dir, ec)) {
-      WNDX_LOG(LL::NTFY, "Directory exist, and will be used as the storage dir\n", "");
+      WNDX_LOG(LL::NTFY, "Directory exist, and will be used as the storage dir\n");
     } else {
       // make dir for the storage with permissions for owner only.
       rc = file::mkdir(storage_dir, fs::perms::owner_all);
@@ -120,7 +120,7 @@ cmd_opts(int argc, const char *argv[])
   } catch(...) {
     WNDX_LOG(LL::CRIT, "UNHANDLED anonymous exception occurred but was caught!\n{}\n", "THIS IS VERY BAD!");
     return 3;
-#endif // MQLQD_CATCH_THEM_ALL
+#endif//MQLQD_CATCH_THEM_ALL
   }
   return 0;
 }

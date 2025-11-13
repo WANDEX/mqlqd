@@ -14,7 +14,7 @@
 // show boundaries of the files in the cat mode
 #ifndef MQLQD_FILE_CONTENTS_BOUNDARY
 #define MQLQD_FILE_CONTENTS_BOUNDARY 0
-#endif // !MQLQD_FILE_CONTENTS_BOUNDARY
+#endif//MQLQD_FILE_CONTENTS_BOUNDARY
 
 namespace mqlqd {
 using namespace wndx;
@@ -60,7 +60,7 @@ mkdir(fs::path const& dpath, fs::perms const& perms, bool force) noexcept
 {
   std::error_code ec {};
   if (fs::is_directory(dpath, ec)) {
-    WNDX_LOG(LL::DBUG, "Directory exist, and will be used as is\n", "");
+    WNDX_LOG(LL::DBUG, "Directory exist, and will be used as is\n");
     if (force) {
       // TODO: validate that directory permissions are set as requested.
     }
@@ -69,11 +69,11 @@ mkdir(fs::path const& dpath, fs::perms const& perms, bool force) noexcept
       if (fs::create_directory(dpath, dpath.parent_path(), ec)) {
         fs::permissions(dpath, perms, ec);
         if (ec.value() == 0) {
-          WNDX_LOG(LL::NTFY, "Created new directory with requested access permissions.\n", "");
+          WNDX_LOG(LL::NTFY, "Created new directory with requested access permissions.\n");
         } else {
-          WNDX_LOG(LL::ERRO, "Created new directory, but failed to set requested perms.\n", "");
+          WNDX_LOG(LL::ERRO, "Created new directory, but failed to set requested perms.\n");
           if (fs::remove(dpath, ec)) {
-            WNDX_LOG(LL::NTFY, "Removed empty directory created with incorrect perms.\n", "");
+            WNDX_LOG(LL::NTFY, "Removed empty directory created with incorrect perms.\n");
             return 7;
           } else {
             WNDX_LOG(LL::CRIT,
@@ -148,22 +148,22 @@ File::to_finfo() const noexcept
 File::write()
 {
   if (!m_block) {
-    WNDX_LOG(LL::CRIT, "empty memory block, nothing to write!\n", "");
+    WNDX_LOG(LL::CRIT, "empty memory block, nothing to write!\n");
     return 33;
   }
   // open file for writing
   std::basic_fstream<char_type> ofs(m_fpath, openmode_w);
   // TODO: reinspect checks
   if (!ofs) {
-    WNDX_LOG(LL::ERRO, "can not open output file!\n", "");
+    WNDX_LOG(LL::ERRO, "can not open output file!\n");
     return 30;
   }
   if (ofs.fail()) {
-    WNDX_LOG(LL::ERRO, "ofs.fail()\n", "");
+    WNDX_LOG(LL::ERRO, "ofs.fail()\n");
     return 31;
   }
   if (!ofs.good()) {
-    WNDX_LOG(LL::ERRO, "!ofs.good()\n", "");
+    WNDX_LOG(LL::ERRO, "!ofs.good()\n");
     return 32;
   }
 
@@ -189,10 +189,10 @@ int File::heap_alloc() noexcept
   try {
     m_block = { new char_type[m_block_size]{} };
     if (!m_block) {
-      WNDX_LOG(LL::CRIT, "[FAIL] File::heap_alloc() memory block == nullptr!\n", "");
+      WNDX_LOG(LL::CRIT, "[FAIL] File::heap_alloc() memory block == nullptr!\n");
       return 30;
     }
-    WNDX_LOG(LL::DBUG, "[ OK ] File::heap_alloc()\n", "");
+    WNDX_LOG(LL::DBUG, "[ OK ] File::heap_alloc()\n");
   } catch(std::bad_alloc const& err) {
       WNDX_LOG(LL::ERRO, "std::bad_alloc - insufficient memory? :\n{}\n", err.what());
       File::~File();
@@ -232,15 +232,15 @@ int File::fcontent()
   std::basic_fstream<char_type> ifs(m_fpath, openmode_r);
   // invariants & validation/safety checks
   if (!ifs) {
-    WNDX_LOG(LL::ERRO, "can not open input file!\n", "");
+    WNDX_LOG(LL::ERRO, "can not open input file!\n");
     return 20;
   }
   if (ifs.fail()) {
-    WNDX_LOG(LL::ERRO, "ifs.fail()\n", "");
+    WNDX_LOG(LL::ERRO, "ifs.fail()\n");
     return 21;
   }
   if (!ifs.good()) {
-    WNDX_LOG(LL::ERRO, "!ifs.good()\n", "");
+    WNDX_LOG(LL::ERRO, "!ifs.good()\n");
     return 22;
   }
 
@@ -251,7 +251,7 @@ int File::fcontent()
     ifs.seekg(0, ifs.beg);
     ifs.read(m_block, size);
 
-    WNDX_LOG(LL::INFO, "The entire contents of the file are in memory\n", "");
+    WNDX_LOG(LL::INFO, "The entire contents of the file are in memory\n");
 
   } catch(std::exception const& err) {
     WNDX_LOG(LL::CRIT, "File::fcontent() UNHANDLED std::exception suppressed:\n{}\n", err.what());
@@ -293,14 +293,14 @@ void File::print_fcontent() const noexcept
   }
 #if MQLQD_FILE_CONTENTS_BOUNDARY
   std::cerr << ">>> [BEG] " << m_fpath << " - file content >>>" << '\n';
-#endif // MQLQD_FILE_CONTENTS_BOUNDARY
+#endif//MQLQD_FILE_CONTENTS_BOUNDARY
   // NOTE: for loop is necessary for printing full contents of the binary file!
   for (size_t i = 0; i < m_block_size; i++) {
     fmt::print("{:c}", m_block[i]);
   }
 #if MQLQD_FILE_CONTENTS_BOUNDARY
   std::cerr << "<<< [END] " << m_fpath << " - file content <<<" << '\n';
-#endif // MQLQD_FILE_CONTENTS_BOUNDARY
+#endif//MQLQD_FILE_CONTENTS_BOUNDARY
 }
 
 } // namespace file

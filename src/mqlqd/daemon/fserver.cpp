@@ -27,19 +27,19 @@ namespace mqlqd {
 Fserver::Fserver(port_t const& port, fs::path const& storage_dir) noexcept
   : m_port{ port }, m_storage_dir{ storage_dir }
 {
-  WNDX_LOG(LL::DBUG, "INSIDE ctor Fserver()\n", "");
+  WNDX_LOG(LL::DBUG, "INSIDE ctor Fserver()\n");
 }
 
 Fserver::~Fserver() noexcept
 {
-  WNDX_LOG(LL::DBUG, "INSIDE dtor ~Fserver()\n", "");
+  WNDX_LOG(LL::DBUG, "INSIDE dtor ~Fserver()\n");
   // TODO: close_fd() | close(2) wrapper
   // close file descriptors. ref: close(2).
   if (m_fd_con > 0) {
     m_rc = close(m_fd_con);
     switch (m_rc) {
     case -1: log_g.errnum(errno, "[FAIL] m_fd_con close()"); break;
-    case  0:  WNDX_LOG(LL::DBUG, "[ OK ] m_fd_con close()\n", ""); break;
+    case  0:  WNDX_LOG(LL::DBUG, "[ OK ] m_fd_con close()\n"); break;
     default:  WNDX_LOG(LL::CRIT, "UNEXPECTED return code: m_fd_con close() -> {}\n", m_rc);
     }
     m_fd_con = -1;
@@ -48,7 +48,7 @@ Fserver::~Fserver() noexcept
     m_rc = close(m_fd);
     switch (m_rc) {
     case -1: log_g.errnum(errno, "[FAIL] m_fd close()"); break;
-    case  0:  WNDX_LOG(LL::DBUG, "[ OK ] m_fd close()\n", ""); break;
+    case  0:  WNDX_LOG(LL::DBUG, "[ OK ] m_fd close()\n"); break;
     default:  WNDX_LOG(LL::CRIT, "UNEXPECTED return code: m_fd close() -> {}\n", m_rc);
     }
     m_fd = -1;
@@ -58,7 +58,7 @@ Fserver::~Fserver() noexcept
    * between the old & new class instance by the empty line.
    * For the daemon mode -> file server (in the infinite loop).
    */
-  WNDX_LOG(LL::DBUG, "END OF dtor ~Fserver()\n\n", "");
+  WNDX_LOG(LL::DBUG, "END OF dtor ~Fserver()\n\n");
 }
 
 [[nodiscard]] int
@@ -90,7 +90,7 @@ Fserver::recv_files_info()
     m_rc = recv_file_info(i);
     if (m_rc != 0) return m_rc;
   }
-  WNDX_LOG(LL::INFO, "[ OK ] received info of the upcoming transfer of the files\n", "");
+  WNDX_LOG(LL::INFO, "[ OK ] received info of the upcoming transfer of the files\n");
   return 0;
 }
 
@@ -162,13 +162,13 @@ Fserver::recv_loop(int fd, void *buf, size_t len)
   while ((nbytes = recv(fd, bufptr, toread, 0)) > 0) {
     switch (nbytes) {
     case -1: log_g.errnum(errno, "[FAIL] recv() error occurred"); return -1;
-    case  0:  WNDX_LOG(LL::WARN, "[FAIL] recv() -> 0 - orderly shutdown!\n", ""); return -2;
+    case  0:  WNDX_LOG(LL::WARN, "[FAIL] recv() -> 0 - orderly shutdown!\n"); return -2;
     default:  WNDX_LOG(LL::DBUG, "nbytes recv_loop() :  {}\n", nbytes);
     }
     bufptr += nbytes; // next position to read into
     toread -= static_cast<size_t>(nbytes); // read less next time
   }
-  WNDX_LOG(LL::DBUG, "[ OK ] recv_loop() finished\n", "");
+  WNDX_LOG(LL::DBUG, "[ OK ] recv_loop() finished\n");
   return 0;
 }
 
@@ -182,7 +182,7 @@ Fserver::create_socket()
     log_g.errnum(errno, "[FAIL] socket()");
     return -1;
   }
-  WNDX_LOG(LL::DBUG, "[ OK ] socket()\n", "");
+  WNDX_LOG(LL::DBUG, "[ OK ] socket()\n");
   return m_fd; // return file descriptor
 }
 
@@ -195,7 +195,7 @@ Fserver::bind_socket()
     log_g.errnum(errno, "[FAIL] bind()");
     return -1;
   }
-  WNDX_LOG(LL::DBUG, "[ OK ] bind()\n", "");
+  WNDX_LOG(LL::DBUG, "[ OK ] bind()\n");
   return m_rc; // return the return code -> 0 - success.
 }
 
@@ -207,7 +207,7 @@ Fserver::set_socket_in_listen_state()
   m_rc = listen(m_fd, m_backlog);
   switch (m_rc) {
   case -1: log_g.errnum(errno, "[FAIL] listen()"); break;
-  case  0:  WNDX_LOG(LL::INFO, "[ OK ] marked socket to accept incoming connection requests\n", ""); break;
+  case  0:  WNDX_LOG(LL::INFO, "[ OK ] marked socket to accept incoming connection requests\n"); break;
   default:  WNDX_LOG(LL::CRIT, "UNEXPECTED return code: listen() -> {}\n", m_rc);
   }
   if (m_fd_con == 0) {
@@ -224,8 +224,8 @@ Fserver::accept_connection()
                           reinterpret_cast<socklen_t *>(&m_addrlen));
   switch (m_fd_con) {
   case -1: log_g.errnum(errno, "[FAIL] accept()"); break;
-  case  0:  WNDX_LOG(LL::WARN, "[DOUBT] accept() -> 0 ???\n", ""); break;
-  default:  WNDX_LOG(LL::DBUG, "[ OK ] accept() - new connected socket created\n", "");
+  case  0:  WNDX_LOG(LL::WARN, "[DOUBT] accept() -> 0 ???\n"); break;
+  default:  WNDX_LOG(LL::DBUG, "[ OK ] accept() - new connected socket created\n");
   }
   if (m_fd_con > 0) {
     WNDX_LOG(LL::NTFY, "accepted connection from: {}\n", inet_ntoa(m_sockaddr_in.sin_addr));
@@ -238,41 +238,41 @@ Fserver::init()
 {
   m_rc = create_socket();
   if (m_rc == -1) {
-    WNDX_LOG(LL::ERRO, "[FAIL] in init() : create_socket()\n", "");
+    WNDX_LOG(LL::ERRO, "[FAIL] in init() : create_socket()\n");
     return -1;
   }
 
   m_rc = fill_sockaddr_in();
   if (m_rc != 0) {
-    WNDX_LOG(LL::ERRO, "[FAIL] in init() : fill_sockaddr_in()\n", "");
+    WNDX_LOG(LL::ERRO, "[FAIL] in init() : fill_sockaddr_in()\n");
     return m_rc;
   }
 
   m_rc = bind_socket();
   if (m_rc != 0) {
-    WNDX_LOG(LL::ERRO, "[FAIL] in init() : bind_socket()\n", "");
+    WNDX_LOG(LL::ERRO, "[FAIL] in init() : bind_socket()\n");
     return m_rc;
   }
 
   m_rc = set_socket_in_listen_state();
   if (m_rc != 0) {
-    WNDX_LOG(LL::ERRO, "[FAIL] in init() : set_socket_in_listen_state()\n", "");
+    WNDX_LOG(LL::ERRO, "[FAIL] in init() : set_socket_in_listen_state()\n");
     return m_rc;
   }
 
   m_rc = accept_connection();
   if (m_rc < 1) { // a non negative integer on success (XXX: excluding 0 i guess... right?)
-    WNDX_LOG(LL::ERRO, "[FAIL] in init() : accept_connection()\n", "");
+    WNDX_LOG(LL::ERRO, "[FAIL] in init() : accept_connection()\n");
     return m_rc;
   }
 
   m_rc = mkdir_sub_storage();
   if (m_rc != 0) {
-    WNDX_LOG(LL::ERRO, "[FAIL] in init() : mkdir_sub_storage()\n", "");
+    WNDX_LOG(LL::ERRO, "[FAIL] in init() : mkdir_sub_storage()\n");
     return m_rc;
   }
 
-  WNDX_LOG(LL::STAT, "[ OK ] init() - server initialized\n", "");
+  WNDX_LOG(LL::STAT, "[ OK ] init() - server initialized\n");
   return 0;
 }
 

@@ -32,24 +32,24 @@ namespace mqlqd {
 Fclient::Fclient(addr_t const& addr, port_t const& port) noexcept
   : m_addr{ addr }, m_port{ port }
 {
-  WNDX_LOG(LL::DBUG, "INSIDE ctor Fclient()\n", "");
+  WNDX_LOG(LL::DBUG, "INSIDE ctor Fclient()\n");
 }
 
 Fclient::~Fclient() noexcept
 {
-  WNDX_LOG(LL::DBUG, "INSIDE dtor ~Fclient()\n", "");
+  WNDX_LOG(LL::DBUG, "INSIDE dtor ~Fclient()\n");
   // TODO: close_fd() | close(2) wrapper
   // close file descriptor. ref: close(2).
   if (m_fd > 0) {
     m_rc = close(m_fd);
     switch (m_rc) {
     case -1: log_g.errnum(errno, "[FAIL] m_fd close()"); break;
-    case  0:  WNDX_LOG(LL::DBUG, "[ OK ] m_fd close()\n", ""); break;
+    case  0:  WNDX_LOG(LL::DBUG, "[ OK ] m_fd close()\n"); break;
     default:  WNDX_LOG(LL::CRIT, "UNEXPECTED return code: m_fd close() -> {}\n", m_rc);
     }
     m_fd = -1;
   }
-  WNDX_LOG(LL::DBUG, "END OF dtor ~Fclient()\n", "");
+  WNDX_LOG(LL::DBUG, "END OF dtor ~Fclient()\n");
 }
 
 [[nodiscard]] int
@@ -79,7 +79,7 @@ Fclient::send_files_info(std::vector<file::mqlqd_finfo> const& vfinfo)
     m_rc = send_file_info(finfo);
     if (m_rc != 0) return m_rc;
   }
-  WNDX_LOG(LL::INFO, "[ OK ] sent info of the upcoming transfer of the files.\n", "");
+  WNDX_LOG(LL::INFO, "[ OK ] sent info of the upcoming transfer of the files.\n");
   return 0;
 }
 
@@ -132,13 +132,13 @@ Fclient::send_loop(int fd, void const* buf, size_t len)
   while ((nbytes = send(fd, bufptr, toread, 0)) > 0) {
     switch (nbytes) {
     case -1: log_g.errnum(errno, "[FAIL] send() error occurred"); return -1;
-    case  0:  WNDX_LOG(LL::CRIT, "[FAIL] send() -> 0 - nothing to send!\n", ""); return -2;
+    case  0:  WNDX_LOG(LL::CRIT, "[FAIL] send() -> 0 - nothing to send!\n"); return -2;
     default:  WNDX_LOG(LL::DBUG, "nbytes send_loop() :  {}\n", nbytes);
     }
     bufptr += nbytes; // next position to send into
     toread -= static_cast<size_t>(nbytes); // send less next time
   }
-  WNDX_LOG(LL::DBUG, "[ OK ] send_loop() finished\n", "");
+  WNDX_LOG(LL::DBUG, "[ OK ] send_loop() finished\n");
   return 0;
 }
 
@@ -151,7 +151,7 @@ Fclient::create_socket()
     log_g.errnum(errno, "[FAIL] socket()");
     return -1;
   }
-  WNDX_LOG(LL::DBUG, "[ OK ] socket()\n", "");
+  WNDX_LOG(LL::DBUG, "[ OK ] socket()\n");
   return m_fd; // return file descriptor
 }
 
@@ -162,7 +162,7 @@ Fclient::create_connection()
   m_rc = connect(m_fd, reinterpret_cast<const struct sockaddr *>(&m_sockaddr_in), m_addrlen);
   switch (m_rc) {
   case -1: log_g.errnum(errno, "[FAIL] connect()"); break;
-  case  0:  WNDX_LOG(LL::DBUG, "[ OK ] connect()\n", ""); break;
+  case  0:  WNDX_LOG(LL::DBUG, "[ OK ] connect()\n"); break;
   default:  WNDX_LOG(LL::CRIT, "UNEXPECTED return code: connect() -> {}\n", m_rc);
   }
   if (m_rc == 0) {
@@ -177,23 +177,23 @@ Fclient::init()
 {
   m_rc = create_socket();
   if (m_rc == -1) {
-    WNDX_LOG(LL::ERRO, "[FAIL] in init() : create_socket()\n", "");
+    WNDX_LOG(LL::ERRO, "[FAIL] in init() : create_socket()\n");
     return -1;
   }
 
   m_rc = fill_sockaddr_in();
   if (m_rc != 1) {
-    WNDX_LOG(LL::ERRO, "[FAIL] in init() : fill_sockaddr_in()\n", "");
+    WNDX_LOG(LL::ERRO, "[FAIL] in init() : fill_sockaddr_in()\n");
     return m_rc;
   }
 
   m_rc = create_connection();
   if (m_rc == -1) {
-    WNDX_LOG(LL::ERRO, "[FAIL] in init() : create_connection()\n", "");
+    WNDX_LOG(LL::ERRO, "[FAIL] in init() : create_connection()\n");
     return m_rc;
   }
 
-  WNDX_LOG(LL::STAT, "[ OK ] init() - client initialized.\n", "");
+  WNDX_LOG(LL::STAT, "[ OK ] init() - client initialized.\n");
   return 0;
 }
 
@@ -215,8 +215,8 @@ Fclient::fill_sockaddr_in()
   m_rc = inet_pton(AF_INET, m_addr.data(), &m_sockaddr_in.sin_addr);
   switch (m_rc) {
   case -1: log_g.errnum(errno, "[FAIL] inet_pton()"); break;
-  case  0:  WNDX_LOG(LL::WARN, "[FAIL] not valid network address in the specified address family!\n", ""); break;
-  case  1:  WNDX_LOG(LL::INFO, "[ OK ] network address was successfully converted\n", ""); break;
+  case  0:  WNDX_LOG(LL::WARN, "[FAIL] not valid network address in the specified address family!\n"); break;
+  case  1:  WNDX_LOG(LL::INFO, "[ OK ] network address was successfully converted\n"); break;
   default:  WNDX_LOG(LL::CRIT, "UNEXPECTED return code: inet_pton() -> {}\n", m_rc);
   }
   return m_rc;

@@ -20,7 +20,7 @@ namespace mqlqd {
 // to not suppress core dumps etc -> should be disabled => 0
 #ifndef MQLQD_CATCH_THEM_ALL
 #define MQLQD_CATCH_THEM_ALL 1
-#endif // !MQLQD_CATCH_THEM_ALL
+#endif//MQLQD_CATCH_THEM_ALL
 
 /**
  * @brief parse command line options.
@@ -165,7 +165,7 @@ cmd_opts(int argc, const char *argv[])
   } catch(...) {
     WNDX_LOG(LL::CRIT, "UNHANDLED anonymous exception occurred but was caught!\n{}\n", "THIS IS VERY BAD!");
     return 3;
-#endif // MQLQD_CATCH_THEM_ALL
+#endif//MQLQD_CATCH_THEM_ALL
   }
   return 0;
 }
