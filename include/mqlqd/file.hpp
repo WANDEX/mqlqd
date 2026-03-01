@@ -7,7 +7,7 @@
 #include <filesystem>
 
 
-namespace mqlqd {
+namespace wndx::mqlqd {
 namespace file {
 
 // value chosen arbitrarily ->
@@ -101,28 +101,28 @@ public:
 };
 
 } // namespace file
-} // namespace mqlqd
+} // namespace wndx::mqlqd
 
 // overload for the std::ostream (to print file info structure in the readable text form)
-inline std::ostream& operator<<(std::ostream& os, mqlqd::file::mqlqd_finfo const &finfo) {
+inline std::ostream& operator<<(std::ostream& os, wndx::mqlqd::file::mqlqd_finfo const &finfo) {
   return os << "     finfo.fname: " << finfo.fname << '\n'
             << "finfo.block_size: " << '[' << finfo.block_size << ']' << '\n';
 }
 
 // fmt formatter specialization for finfo (one-liner -> more terse + also faster than ostream)
-template <> struct fmt::formatter<mqlqd::file::mqlqd_finfo> {
+template <> struct fmt::formatter<wndx::mqlqd::file::mqlqd_finfo> {
   constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
   template <typename FormatContext>
-  auto format(mqlqd::file::mqlqd_finfo const& finfo, FormatContext &ctx) const {
+  auto format(wndx::mqlqd::file::mqlqd_finfo const& finfo, FormatContext &ctx) const {
     return format_to(ctx.out(), "[{}] {}", finfo.block_size, finfo.fname);
   }
 };
 
 // fmt formatter specialization for File (one-liner -> more terse + also faster than ostream)
-template <> struct fmt::formatter<mqlqd::file::File> {
+template <> struct fmt::formatter<wndx::mqlqd::file::File> {
   constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
   template <typename FormatContext>
-  auto format(mqlqd::file::File const& file, FormatContext &ctx) const {
+  auto format(wndx::mqlqd::file::File const& file, FormatContext &ctx) const {
     return format_to(ctx.out(), "[{}] {}", file.m_block_size, file.m_fpath.c_str());
   }
 };

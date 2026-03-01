@@ -14,13 +14,15 @@
 #include <vector>
 
 
-namespace mqlqd {
+namespace wndx::mqlqd {
 
+// clang-format off
 // catch all possible exceptions (like Pokemons)
 // to not suppress core dumps etc -> should be disabled => 0
 #ifndef MQLQD_CATCH_THEM_ALL
 #define MQLQD_CATCH_THEM_ALL 1
 #endif//MQLQD_CATCH_THEM_ALL
+// clang-format on
 
 /**
  * @brief parse command line options.
@@ -170,5 +172,5 @@ cmd_opts(int argc, const char *argv[])
   return 0;
 }
 
-} // namespace mqlqd
+} // namespace wndx::mqlqd
 

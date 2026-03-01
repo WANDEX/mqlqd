@@ -2,7 +2,7 @@
 
 #include "aliases.hpp"
 
-namespace mqlqd {
+namespace wndx::mqlqd {
 namespace cfg {
 
 inline constexpr addr_t addr{ "127.0.0.1" };  // i.e. localhost
@@ -29,5 +29,5 @@ inline constexpr sv_t def_uid{ "f000::f000:f000:f000:f000" };
  */
 
 } // namespace cfg
-} // namespace mqlqd
+} // namespace wndx::mqlqd
 

@@ -22,7 +22,7 @@ extern "C" {
 
 } // extern "C"
 
-namespace mqlqd {
+namespace wndx::mqlqd {
 
 Fserver::Fserver(port_t const& port, fs::path const& storage_dir) noexcept
   : m_port{ port }, m_storage_dir{ storage_dir }
@@ -309,5 +309,5 @@ Fserver::mkdir_sub_storage()
   return 0;
 }
 
-} // namespace mqlqd
+} // namespace wndx::mqlqd
 

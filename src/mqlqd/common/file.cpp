@@ -11,15 +11,15 @@
 #include <memory>               // std::unique_ptr
 
 
+// clang-format off
 // show boundaries of the files in the cat mode
 #ifndef MQLQD_FILE_CONTENTS_BOUNDARY
 #define MQLQD_FILE_CONTENTS_BOUNDARY 0
 #endif//MQLQD_FILE_CONTENTS_BOUNDARY
+// clang-format on
 
-namespace mqlqd {
-using namespace wndx;
 
-namespace file {
+namespace wndx::mqlqd::file {
 
 /**
  * @brief check that the file is regular file.
@@ -303,6 +303,5 @@ void File::print_fcontent() const noexcept
 #endif//MQLQD_FILE_CONTENTS_BOUNDARY
 }
 
-} // namespace file
-} // namespace mqlqd
+} // namespace wndx::mqlqd::file
 

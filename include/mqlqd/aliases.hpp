@@ -3,8 +3,9 @@
 
 #include "wndx/sane/aliases.hpp"
 
-namespace mqlqd {
-using namespace wndx;
+namespace wndx::mqlqd {
+
+using namespace wndx::sane;
 
 using addr_t = sv_t;
 using port_t = u16;
@@ -14,7 +15,7 @@ using port_t = u16;
 // => Common type for the command line options.
 using cmd_opt_t = std::string;
 
-} // namespace mqlqd
+} // namespace wndx::mqlqd
 
 // In the end of the file after defining project-wide aliases. For the convenience.
 // To not include logger declarations separately in each translation unit.

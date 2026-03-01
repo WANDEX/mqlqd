@@ -18,7 +18,7 @@ extern "C" {
 } // extern "C"
 
 
-namespace mqlqd {
+namespace wndx::mqlqd {
 
 class Fserver final
 {
@@ -194,5 +194,5 @@ private:
 
 };
 
-} // namespace mqlqd
+} // namespace wndx::mqlqd
 

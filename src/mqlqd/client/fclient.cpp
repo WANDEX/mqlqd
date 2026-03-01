@@ -27,7 +27,7 @@ extern "C" {
 
 } // extern "C"
 
-namespace mqlqd {
+namespace wndx::mqlqd {
 
 Fclient::Fclient(addr_t const& addr, port_t const& port) noexcept
   : m_addr{ addr }, m_port{ port }
@@ -222,5 +222,5 @@ Fclient::fill_sockaddr_in()
   return m_rc;
 }
 
-} // namespace mqlqd
+} // namespace wndx::mqlqd
 

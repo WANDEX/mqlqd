@@ -4,7 +4,7 @@
 #include <fmt/format.h>
 
 
-namespace mqlqd {
+namespace wndx::mqlqd {
 
 /**
  * names and respective values were copied from the htop program interface.
@@ -83,15 +83,15 @@ enum class SIG
   RTMIN_30 = 64,
 };
 
-} // namespace mqlqd
+} // namespace wndx::mqlqd
 
 // NOTE: fmt demands to specialize/declare this here!
 // [template_spec_redecl_out_of_scope].
 // @brief format enum SIG in the readable text form.
 template <> struct
-fmt::formatter<mqlqd::SIG> : formatter<string_view> {
+fmt::formatter<wndx::mqlqd::SIG> : formatter<string_view> {
   // parse is inherited from formatter<string_view>.
-  using SIG =  mqlqd::SIG;
+  using SIG =  wndx::mqlqd::SIG;
   template <typename FormatContext>
   auto format(SIG sig, FormatContext& ctx) const {
     string_view name = "unknown";
@@ -168,7 +168,7 @@ fmt::formatter<mqlqd::SIG> : formatter<string_view> {
 };
 
 // overload for the std::ostream (to print SIG in the readable text form)
-inline std::ostream& operator<<(std::ostream& os, mqlqd::SIG const sig) {
+inline std::ostream& operator<<(std::ostream& os, wndx::mqlqd::SIG const sig) {
   return os << fmt::to_string(sig);
 }
 

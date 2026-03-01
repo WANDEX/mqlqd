@@ -14,6 +14,7 @@
 #include <string_view>
 
 
+// clang-format off
 #ifndef SIGRTMAX
 // Darwin macOS see: https://github.com/apple-oss-distributions/xnu/blob/main/bsd/sys/signal.h
 #define SIGRTMAX 32
@@ -21,10 +22,10 @@
 #warning "<signal.h> does not provide SIGRTMAX, assuming SIGRTMAX=32"
 #endif//warning
 #endif//SIGRTMAX
+// clang-format on
 
 
-namespace mqlqd {
-using namespace wndx;
+namespace wndx::mqlqd {
 
 void sig_print(LL ll, int sig, std::string_view const extra_msg)
 {
@@ -93,5 +94,5 @@ void sig_handler()
   sig_handler_set(sig_handler);
 }
 
-} // namespace mqlqd
+} // namespace wndx::mqlqd
 
