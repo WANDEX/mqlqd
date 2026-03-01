@@ -5,10 +5,10 @@
 // ref: signal(7)
 // NOTE: The default action for an unhandled real-time signal is to terminate the receiving process.
 
-#include "mqlqd/aliases.hpp"
+#include "wndx/mqlqd/aliases.hpp"
 
-#include "mqlqd/sig_handler.hpp"
-#include "mqlqd/sig_to_str.hpp" // enum class SIG with fmt format specialization
+#include "wndx/mqlqd/sig_handler.hpp"
+#include "wndx/mqlqd/sig_to_str.hpp" // enum class SIG with fmt format specialization
 
 #include <csignal>              // sigaction, SIGRTMAX
 #include <string_view>

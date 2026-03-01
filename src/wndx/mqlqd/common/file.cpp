@@ -1,7 +1,7 @@
 
-#include "mqlqd/aliases.hpp"
+#include "wndx/mqlqd/aliases.hpp"
 
-#include "mqlqd/file.hpp"
+#include "wndx/mqlqd/file.hpp"
 
 #include <filesystem>
 #include <fstream>

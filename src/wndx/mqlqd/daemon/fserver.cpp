@@ -1,8 +1,8 @@
 
-#include "mqlqd/fserver.hpp"
+#include "wndx/mqlqd/fserver.hpp"
 
-#include "mqlqd/aliases.hpp"
-#include "mqlqd/file.hpp"
+#include "wndx/mqlqd/aliases.hpp"
+#include "wndx/mqlqd/file.hpp"
 
 #include <fmt/format.h>
 

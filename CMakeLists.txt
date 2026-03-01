@@ -39,7 +39,7 @@ macro(targets_and_linking)
   ## library targets & compilation options/flags
   wndx_sane_create_targets(PFX wndx LIB mqlqd
     CXX_STD cxx_std_${CMAKE_CXX_STANDARD}
-    PHD "include/mqlqd"
+    PHD "include/wndx/mqlqd"
   )
 
   ## inherit from wndx::sane targets
@@ -61,7 +61,7 @@ macro(targets_and_linking)
     ## find/fetch dependecies:
     find_package(fmt REQUIRED)
     find_package(cxxopts REQUIRED)
-    add_subdirectory(src/mqlqd)
+    add_subdirectory(src/wndx/mqlqd)
   endif()
 endmacro(targets_and_linking)
 
@@ -131,7 +131,7 @@ if(MQLQD_INSTALL_ENABLE)
   include(wndx_sane_install)
   wndx_sane_install(
     TARGETS mqlqd_client mqlqd_daemon
-    PHD "include/mqlqd"
+    PHD "include/wndx/mqlqd"
     PATTERNS "*.hpp"
     NAMESPACE wndx::
     # RUNTIME_DEPENDENCIES

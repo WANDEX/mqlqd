@@ -1,10 +1,10 @@
 // client command line (cmd)
 
-#include "mqlqd/fclient.hpp"
+#include "wndx/mqlqd/fclient.hpp"
 
-#include "mqlqd/aliases.hpp"
-#include "mqlqd/config.hpp"
-#include "mqlqd/file.hpp"
+#include "wndx/mqlqd/aliases.hpp"
+#include "wndx/mqlqd/config.hpp"
+#include "wndx/mqlqd/file.hpp"
 
 #include <cxxopts.hpp>
 
