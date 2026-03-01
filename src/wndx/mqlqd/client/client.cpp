@@ -4,19 +4,19 @@ namespace wndx::mqlqd {
 
 void sig_handler();
 
-[[nodiscard]] int
-cmd_opts(int argc, const char *argv[]);
+// NOLINTNEXTLINE(*-avoid-c-arrays)
+[[nodiscard]] int cmd_opts(int argc, char const* argv[]);
 
 } // namespace wndx::mqlqd
 
 
-int main(int argc, const char *argv[])
+int main(int argc, char const* argv[])
 {
   int rc{ -1 }; // return code also known as the error code
   wndx::mqlqd::sig_handler();
   rc = wndx::mqlqd::cmd_opts(argc, argv);
-  if (rc != 0) return rc;
-
+  if (rc != 0) {
+    return rc;
+  }
   return 0;
 }
-

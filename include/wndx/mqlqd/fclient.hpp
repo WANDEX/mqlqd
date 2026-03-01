@@ -6,15 +6,11 @@
 #include "aliases.hpp"
 #include "file.hpp"
 
-#include <filesystem>
 #include <vector>
 
 extern "C" {
 
-// seems like it has most of the needed type definitions.
-// #include <netdb.h>
-
-#include <netinet/in.h>         // Internet domain sockets | sockaddr(3type)
+#include <netinet/in.h> // Internet domain sockets | sockaddr(3type)
 
 } // extern "C"
 
@@ -24,22 +20,22 @@ namespace wndx::mqlqd {
 class Fclient final
 {
 public:
-  Fclient() = delete;
-  Fclient(Fclient &&) = delete;
-  Fclient(const Fclient &) = delete;
-  Fclient &operator=(Fclient &&) = delete;
-  Fclient &operator=(const Fclient &) = delete;
+  Fclient()                          = delete;
+  Fclient(Fclient&&)                 = delete;
+  Fclient(Fclient const&)            = delete;
+  Fclient& operator=(Fclient&&)      = delete;
+  Fclient& operator=(Fclient const&) = delete;
   ~Fclient() noexcept;
 
   explicit Fclient(addr_t const& addr, port_t const& port) noexcept;
 
   /**
-   * @brief initialize everything & start on success of all underlying functions.
+   * @brief initialize everything & start on success of all underlying
+   * functions.
    *
    * @return 0 on success, else return fail code of the underlying functions.
    */
-  [[nodiscard]] int
-  init();
+  [[nodiscard]] int init();
 
   /**
    * @brief description
@@ -57,19 +53,16 @@ public:
    * @param  TODO
    * @return TODO
    */
-  [[nodiscard]] int
-  send_files(std::vector<file::File> const& vfiles);
+  [[nodiscard]] int send_files(std::vector<file::File> const& vfiles);
 
 protected:
-
   /**
    * @brief man socket(2).
    *
    * @return file descriptor for the new socket (on success).
    * @return -1 on error.
    */
-  [[nodiscard]] int
-  create_socket();
+  [[nodiscard]] int create_socket();
 
   /**
    * @brief man connect(2).
@@ -77,10 +70,8 @@ protected:
    * @return  0 on success.
    * @return -1 on error.
    */
-  [[nodiscard]] int
-  create_connection();
+  [[nodiscard]] int create_connection();
 
-protected:
   /****************************************************************************
    * following are the helper methods.
    */
@@ -88,8 +79,7 @@ protected:
   /**
    * @brief fill the sockaddr_in structure.
    */
-  [[nodiscard]] int
-  fill_sockaddr_in();
+  [[nodiscard]] int fill_sockaddr_in();
 
   /**
    * @brief send num_files_total, so that the server knows how many to expect.
@@ -97,8 +87,7 @@ protected:
    * @param  TODO
    * @return TODO
    */
-  [[nodiscard]] int
-  send_num_files_total(const size_t num_files_total);
+  [[nodiscard]] int send_num_files_total(size_t const num_files_total) const;
 
   /**
    * @brief description
@@ -106,8 +95,7 @@ protected:
    * @param  TODO
    * @return TODO
    */
-  [[nodiscard]] int
-  send_file_info(file::mqlqd_finfo const& finfo);
+  [[nodiscard]] int send_file_info(file::mqlqd_finfo const& finfo);
 
   /**
    * @brief description
@@ -116,8 +104,7 @@ protected:
    * @return TODO
    *
    */
-  [[nodiscard]] int
-  send_file(file::File const& file);
+  [[nodiscard]] int send_file(file::File const& file);
 
   /**
    * @brief man send(2).
@@ -127,14 +114,13 @@ protected:
    * @return -2 on send() -> 0 - nothing to send etc.
    */
   template <typename T = file::File::char_type>
-  [[nodiscard]] int
-  send_loop(int fd, void const* buf, size_t len);
+  [[nodiscard]] int send_loop(int fd, void const* buf, size_t len);
 
 
 private:
   // initialized via explicit ctor
-  const addr_t m_addr {};
-  const port_t m_port {};
+  addr_t const m_addr{};
+  port_t const m_port{};
 
   // for the simple return code. (val chosen arbitrarily)
   int m_rc{ -42 };
@@ -143,15 +129,13 @@ private:
   // -1 is the socket() return value on error. ref: socket(2)
   int m_fd{ -1 };
 
-  socklen_t m_addrlen {}; // XXX: part of addrinfo
+  socklen_t m_addrlen{}; // part of addrinfo
 
-  struct sockaddr_in m_sockaddr_in {};
+  struct sockaddr_in m_sockaddr_in{};
 
   // TODO: probably better to rewrite later using addrinfo structure.
   //       If it make sense!
   // addrinfo    m_addrinfo    {};
-
 };
 
 } // namespace wndx::mqlqd
-

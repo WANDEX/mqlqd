@@ -1,8 +1,9 @@
 // client command line (cmd)
 
+#include "wndx/mqlqd/aliases.hpp"
+
 #include "wndx/mqlqd/fclient.hpp"
 
-#include "wndx/mqlqd/aliases.hpp"
 #include "wndx/mqlqd/config.hpp"
 #include "wndx/mqlqd/file.hpp"
 
@@ -14,15 +15,16 @@
 #include <vector>
 
 
-namespace wndx::mqlqd {
-
-// clang-format off
 // catch all possible exceptions (like Pokemons)
 // to not suppress core dumps etc -> should be disabled => 0
+// clang-format off
 #ifndef MQLQD_CATCH_THEM_ALL
-#define MQLQD_CATCH_THEM_ALL 1
+#define MQLQD_CATCH_THEM_ALL 1 // NOLINT(*-macro-usage)
 #endif//MQLQD_CATCH_THEM_ALL
 // clang-format on
+
+
+namespace wndx::mqlqd {
 
 /**
  * @brief parse command line options.
@@ -35,11 +37,10 @@ namespace wndx::mqlqd {
  * @param  argv - as in the usual main() entry point.
  * @return error code.
  */
-[[nodiscard]] int
-cmd_opts(int argc, const char *argv[])
+[[nodiscard]] int cmd_opts(int argc, char const* argv[])
 {
-  try
-  {
+  try {
+    // clang-format off
     cxxopts::Options options("mqlqd_client",
       "Transfer file(s) over TCP/IP to the server running the mqlqd_daemon.");
     options.custom_help("[OPTIONS]");
@@ -64,15 +65,16 @@ cmd_opts(int argc, const char *argv[])
 
       ("files_trail", "File path(s) as trailing argument(s).",
        cxxopts::value<std::vector<cmd_opt_t>>());
+    // clang-format on
     // to support file paths supplied as trailing arguments:
     // e.g. (after all options) file1.txt file2.txt file3.txt
-    options.parse_positional({"files_trail"});
+    options.parse_positional({ "files_trail" });
 
     // initialize cmd options variable
     cxxopts::ParseResult cmd_opts{ options.parse(argc, argv) };
 
     // initialize logger with the specific log file.
-    log_g  = Logger{ "/tmp/mqlqd/logs/client.log"sv };
+    log_g = Logger{ "/tmp/mqlqd/logs/client.log"sv };
 
     if (cmd_opts.count("help")) {
       std::cout << options.help() << '\n';
@@ -87,16 +89,20 @@ cmd_opts(int argc, const char *argv[])
     }
 
     if (cmd_opts.count("urge")) {
-      // force specific log urgency level. (has priority over the value in config).
+      // force specific log urgency level. (has priority over the value in
+      // config).
       const LL urgency{ cmd_opts["urge"].as<int>() };
       log_g.set_urgency(urgency);
     }
 
     int rc{ 42 }; // reusable variable for the return codes
 
-    // total number of file paths passed via all options: via option & positional arguments.
-    const std::size_t n_files_passed{ cmd_opts.count("file") + cmd_opts.count("files_trail") };
-    // vector of files info (subset of the File classes, helper info for the transmission)
+    // total number of file paths passed via all options: via option &
+    // positional arguments.
+    std::size_t const n_files_passed{ cmd_opts.count("file") +
+                                      cmd_opts.count("files_trail") };
+    // vector of files info (subset of the File classes, helper info for the
+    // transmission)
     std::vector<file::mqlqd_finfo> vfinfo;
     vfinfo.reserve(n_files_passed);
     // vector of class instances
@@ -106,25 +112,31 @@ cmd_opts(int argc, const char *argv[])
     if (cmd_opts.count("file")) {
       // add files passed via -f --file cmd options.
       for (fs::path const fp : cmd_opts["file"].as<std::vector<cmd_opt_t>>()) {
-        vfiles.emplace_back(file::File{ fp, fs::file_size(fp) });
+        vfiles.emplace_back(fp, fs::file_size(fp));
       }
     }
     if (cmd_opts.count("files_trail")) {
       // add files passed via trailing cmd arguments.
-      for (fs::path const fp : cmd_opts["files_trail"].as<std::vector<cmd_opt_t>>()) {
-        vfiles.emplace_back(file::File{ fp, fs::file_size(fp) });
+      for (fs::path const fp :
+           cmd_opts["files_trail"].as<std::vector<cmd_opt_t>>())
+      {
+        vfiles.emplace_back(fp, fs::file_size(fp));
       }
     }
 
-    // loop over each file path passed via the cmd arguments (optional + positional).
-    for (file::File &file : vfiles) {
+    // loop over each file path passed via the cmd arguments (optional +
+    // positional).
+    for (file::File& file : vfiles) {
       /**
        * Read contents of the file(s) into the block(s) of memory.
-       * We are doing this here to not have potential bottleneck later -> on the transmission step.
-       * (especially in terms of reading speed from the users block devices e.g. Slow HDD etc.).
+       * We are doing this here to not have potential bottleneck later -> on the
+       * transmission step. (especially in terms of reading speed from the users
+       * block devices e.g. Slow HDD etc.).
        */
       rc = file.read_to_block();
-      if (rc != 0) return rc;
+      if (rc != 0) {
+        return rc;
+      }
       if (cmd_opts.count("cat")) {
         file.print_fcontent();
       } else {
@@ -134,43 +146,57 @@ cmd_opts(int argc, const char *argv[])
 
     // if we are in the cat mode -> simply finish =>
     // as user do not need to initialize file client & do transmission.
-    if (cmd_opts.count("cat")) return 0;
+    if (cmd_opts.count("cat")) {
+      return 0;
+    }
 
     // server address with the running mqlqd daemon. (file server)
-    const addr_t addr{ cmd_opts.count("addr") ? cmd_opts["addr"].as<cmd_opt_t>() : mqlqd::cfg::addr };
+    addr_t const addr{ cmd_opts.count("addr") ? cmd_opts["addr"].as<cmd_opt_t>()
+                                              : mqlqd::cfg::addr };
 
-    // port number of the daemon on the server. (cmd option overrides value from config)
-    const port_t port{ cmd_opts.count("port") ? cmd_opts["port"].as<port_t>() : mqlqd::cfg::port };
+    // port number of the daemon on the server. (cmd option overrides value from
+    // config)
+    port_t const port{ cmd_opts.count("port") ? cmd_opts["port"].as<port_t>()
+                                              : mqlqd::cfg::port };
 
 
     Fclient fclient{ addr, port };
     // initialize file client.
     rc = fclient.init();
-    if (rc != 0) return rc;
+    if (rc != 0) {
+      return rc;
+    }
 
     // attempt to send info of the upcoming transmission of the files.
     rc = fclient.send_files_info(vfinfo);
-    if (rc != 0) return rc;
+    if (rc != 0) {
+      return rc;
+    }
 
     // server is ready to accept provided files => start sending files.
     rc = fclient.send_files(vfiles);
-    if (rc != 0) return rc;
+    if (rc != 0) {
+      return rc;
+    }
 
 
-  } catch(cxxopts::exceptions::exception const& err) {
-    WNDX_LOG(LL::ERRO, "Fail during parsing of the cmd options:\n{}\n", err.what());
+  } catch (cxxopts::exceptions::exception const& err) {
+    WNDX_LOG(LL::ERRO, "Fail during parsing of the cmd options:\n{}\n",
+             err.what());
     return 1;
-  } catch(std::exception const& err) {
-    WNDX_LOG(LL::CRIT, "UNHANDLED std::exception was caught:\n{}\n", err.what());
+  } catch (std::exception const& err) {
+    WNDX_LOG(LL::CRIT, "UNHANDLED std::exception was caught:\n{}\n",
+             err.what());
     return 2;
 #if MQLQD_CATCH_THEM_ALL
-  } catch(...) {
-    WNDX_LOG(LL::CRIT, "UNHANDLED anonymous exception occurred but was caught!\n{}\n", "THIS IS VERY BAD!");
+  } catch (...) {
+    WNDX_LOG(LL::CRIT,
+             "UNHANDLED anonymous exception occurred but was caught!\n{}\n",
+             "THIS IS VERY BAD!");
     return 3;
-#endif//MQLQD_CATCH_THEM_ALL
+#endif // MQLQD_CATCH_THEM_ALL
   }
   return 0;
 }
 
 } // namespace wndx::mqlqd
-
