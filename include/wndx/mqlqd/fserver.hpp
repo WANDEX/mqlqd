@@ -6,6 +6,7 @@
 #include "aliases.hpp"
 
 #include "file.hpp"
+#include "rc.hpp"
 
 #include <vector>
 
@@ -37,7 +38,7 @@ public:
    * @brief @return 0 on success, else return fail code of the underlying
    * functions.
    */
-  [[nodiscard]] int init();
+  [[nodiscard]] rc init();
 
   /**
    * @brief recv info files structures, with the files information.
@@ -45,7 +46,7 @@ public:
    * @param  TODO
    * @return TODO
    */
-  [[nodiscard]] int recv_files_info();
+  [[nodiscard]] rc recv_files_info();
 
 
   /**
@@ -54,7 +55,7 @@ public:
    * @param  TODO
    * @return TODO
    */
-  [[nodiscard]] int recv_files();
+  [[nodiscard]] rc recv_files();
 
 protected:
   /**
@@ -95,13 +96,15 @@ protected:
    * following are the helper methods.
    */
 
+  [[nodiscard]] auto host_addr_ipv4() const noexcept;
+
   /**
    * @brief make unique sub-dirs inside the root storage dir.
    * (to differentiate the source of the files and store them separately).
    *
    * @return  0 on success - when all sub-dirs successfully created.
    */
-  [[nodiscard]] int mkdir_sub_storage();
+  [[nodiscard]] rc mkdir_sub_storage();
 
   /**
    * @brief fill the sockaddr_in structure.
@@ -147,12 +150,19 @@ private:
   // initialized via explicit ctor
   port_t const m_port{};
 
+  // path to the storage dir. (root of the storage)
+  fs::path const m_storage_dir;
+
+  // sub-storage inside the storage (for incoming files)
+  // see: mkdir_sub_storage() - overrides this variable.
+  fs::path m_storage_dir_sub{ m_storage_dir };
+
   // The backlog defines the maximum length to which
   // the queue of pending connections may grow. ref: listen(2)
   int const m_backlog{ 1 };
 
-  // for the simple return code. (val chosen arbitrarily)
-  int m_rc{ -42 };
+  // reusable for the POSIX return codes
+  int m_rc{ static_cast<int>(rc::INIT) };
 
   // file descriptor returned by the socket().
   // -1 is the socket() return value on error. ref: socket(2)
@@ -163,13 +173,6 @@ private:
   int m_fd_con{ -1 };
 
   size_t m_num_files_total{ 0 };
-
-  // path to the storage dir. (root of the storage)
-  fs::path const m_storage_dir; // initialized via explicit ctor
-
-  // sub-storage inside the storage (for incoming files)
-  // see: mkdir_sub_storage() - overrides this variable.
-  fs::path m_storage_dir_sub{ m_storage_dir };
 
   socklen_t m_addrlen{};
 

@@ -2,6 +2,8 @@
 
 #include "aliases.hpp" // IWYU pragma: keep
 
+#include "rc.hpp"
+
 #include <fmt/format.h> // for the fmt formatter specialization of the custom types.
 
 #include <filesystem>
@@ -14,17 +16,17 @@ namespace wndx::mqlqd::file {
 static constexpr size_t fname_max_len{ 79 };
 
 // @brief struct file info.
-struct mqlqd_finfo
+struct Finfo
 {
   size_t block_size{ 0 };
   char   fname[fname_max_len]{ "mqlqd_default_file_name" };
 };
 
-[[nodiscard]] int is_r(fs::path const& fpath) noexcept;
+[[nodiscard]] rc is_r(fs::path const& fpath) noexcept;
 
-[[nodiscard]] int mkdir(fs::path const&  dpath,
-                        fs::perms const& perms = fs::perms::group_all,
-                        bool             force = false) noexcept;
+[[nodiscard]] rc mkdir(fs::path const&  dpath,
+                       fs::perms const& perms = fs::perms::group_all,
+                       bool             force = false) noexcept;
 
 
 class File final
@@ -58,32 +60,29 @@ public:
   File& operator=(File const&) = delete;
   ~File() noexcept;
 
-  explicit File(fs::path const& fpath, std::size_t const sz) noexcept;
+  explicit File(fs::path fpath, size_t sz) noexcept;
 
   // @brief construct class instance from the file info structure.
-  explicit File(mqlqd_finfo const& finfo, fs::path dpath) noexcept;
+  explicit File(Finfo const& finfo, fs::path dpath) noexcept;
 
   // @bief convert essentials of the instance into file info structure.
-  [[nodiscard]] mqlqd_finfo to_finfo() const noexcept;
+  [[nodiscard]] Finfo to_finfo() const noexcept;
 
   /**
    * @brief for writing file to the disk.
    *
    * mostly for files constructed from the file info structure.
    */
-  [[nodiscard]] int write();
+  [[nodiscard]] rc write() const noexcept;
 
 
   void heap_cleanup() noexcept;
 
-  [[nodiscard]]
-  int heap_alloc() noexcept;
+  [[nodiscard]] rc heap_alloc() noexcept;
 
-  [[nodiscard]]
-  int fcontent();
+  [[nodiscard]] rc fcontent() const noexcept;
 
-  [[nodiscard]]
-  int read_to_block();
+  [[nodiscard]] rc read_to_block();
 
   void print_fcontent() const noexcept;
 
@@ -107,8 +106,8 @@ public:
 
 // overload for the std::ostream (to print file info structure in the readable
 // text form)
-inline std::ostream& operator<<(std::ostream&                         os,
-                                wndx::mqlqd::file::mqlqd_finfo const& finfo)
+inline std::ostream& operator<<(std::ostream&                   os,
+                                wndx::mqlqd::file::Finfo const& finfo)
 {
   return os << "     finfo.fname: " << finfo.fname << '\n'
             << "finfo.block_size: " << '[' << finfo.block_size << ']' << '\n';
@@ -117,12 +116,11 @@ inline std::ostream& operator<<(std::ostream&                         os,
 // fmt formatter specialization for finfo
 // (one-liner -> more terse + also faster than ostream)
 template <>
-struct fmt::formatter<wndx::mqlqd::file::mqlqd_finfo>
+struct fmt::formatter<wndx::mqlqd::file::Finfo>
 {
   static constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
   template <typename FormatContext>
-  auto format(wndx::mqlqd::file::mqlqd_finfo const& finfo,
-              FormatContext&                        ctx) const
+  auto format(wndx::mqlqd::file::Finfo const& finfo, FormatContext& ctx) const
   {
     return format_to(ctx.out(), "[{}] {}", finfo.block_size, finfo.fname);
   }

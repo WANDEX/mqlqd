@@ -6,6 +6,7 @@
 
 #include "wndx/mqlqd/config.hpp"
 #include "wndx/mqlqd/file.hpp"
+#include "wndx/mqlqd/rc.hpp"
 
 #include <cxxopts.hpp>
 
@@ -14,7 +15,7 @@
 #include <string>
 
 
-// catch all possible exceptions (like Pokemons)
+// catch all possible exceptions (like Pokemon's)
 // to not suppress core dumps etc -> should be disabled => 0
 // clang-format off
 #ifndef MQLQD_CATCH_THEM_ALL
@@ -36,13 +37,14 @@ namespace wndx::mqlqd {
  * @param  argv - as in the usual main() entry point.
  * @return error code.
  */
-[[nodiscard]] int cmd_opts(int argc, char const* argv[])
+// NOLINTNEXTLINE(*-avoid-c-arrays)
+[[nodiscard]] rc cmd_opts(int argc, char const* argv[])
 {
   try {
     // clang-format off
     cxxopts::Options options("mqlqd_daemon",
         "Accept file(s) over TCP/IP from the clients running the mqlqd_client.");
-    options.set_width(80);
+    options.set_width(80); // NOLINT(*-magic-numbers) - standard TERM width
     options.add_options()
       ("d,dir", "Path to the storage dir, else default storage under cwd.",
        cxxopts::value<cmd_opt_t>()->default_value("./mqlqd_storage"))
@@ -63,17 +65,15 @@ namespace wndx::mqlqd {
 
     if (cmd_opts.count("help")) {
       std::cout << options.help() << '\n';
-      exit(0);
+      return rc::SUCCESS;
     }
 
-    if (cmd_opts.count("urge")) {
-      // force specific log urgency level. (has priority over the value in
-      // config).
+    if (cmd_opts.count("urge")) { // force specific log urgency level
       const LL urgency{ cmd_opts["urge"].as<int>() };
       log_g.set_urgency(urgency);
     }
 
-    int rc{ 42 }; // reusable variable for the return codes
+    rc rc{ rc::INIT }; // reusable variable for the return codes
 
     // path to the storage dir. (storage for incoming files)
     fs::path const storage_dir{ cmd_opts["dir"].as<cmd_opt_t>() };
@@ -85,7 +85,7 @@ namespace wndx::mqlqd {
     } else {
       // make dir for the storage with permissions for owner only.
       rc = file::mkdir(storage_dir, fs::perms::owner_all);
-      if (rc != 0) {
+      if (rc != rc::SUCCESS) {
         return rc;
       }
     }
@@ -105,36 +105,38 @@ namespace wndx::mqlqd {
       Fserver fserver{ port, storage_dir };
       // initialize file server.
       rc = fserver.init();
-      if (rc != 0) {
+      if (rc != rc::SUCCESS) {
         return rc;
-      } // attempt to receive info of the upcoming transmission of the files.
+      }
+
+      // attempt to receive info of the upcoming transmission of the files.
       rc = fserver.recv_files_info();
-      if (rc != 0) {
+      if (rc != rc::SUCCESS) {
         return rc;
-      } // server is ready to accept provided files => start accepting files.
+      }
+
+      // server is ready to accept provided files => start accepting files.
       rc = fserver.recv_files();
-      if (rc != 0) {
+      if (rc != rc::SUCCESS) {
         return rc;
       }
     }
 
   } catch (cxxopts::exceptions::exception const& err) {
-    WNDX_LOG(LL::ERRO, "Fail during parsing of the cmd options:\n{}\n",
-             err.what());
-    return 1;
+    WNDX_LOG(LL::ERRO, "{}:\n{}\n", rc::ERRO_CMD_OPT, err.what());
+    return rc::ERRO_CMD_OPT;
   } catch (std::exception const& err) {
-    WNDX_LOG(LL::CRIT, "UNHANDLED std::exception was caught:\n{}\n",
+    WNDX_LOG(LL::CRIT, "{} was caught:\n{}\n", rc::CRIT_EX_UNHANDLED,
              err.what());
-    return 2;
+    return rc::CRIT_EX_UNHANDLED;
 #if MQLQD_CATCH_THEM_ALL
   } catch (...) {
-    WNDX_LOG(LL::CRIT,
-             "UNHANDLED anonymous exception occurred but was caught!\n{}\n",
-             "THIS IS VERY BAD!");
-    return 3;
+    WNDX_LOG(LL::CRIT, "{} occurred but was caught!\n{}\n",
+             rc::CRIT_EX_ANONYMOUS, "THIS IS VERY BAD!");
+    return rc::CRIT_EX_ANONYMOUS;
 #endif // MQLQD_CATCH_THEM_ALL
   }
-  return 0;
+  return rc::SUCCESS;
 }
 
 } // namespace wndx::mqlqd

@@ -6,6 +6,7 @@
 
 #include "wndx/mqlqd/config.hpp"
 #include "wndx/mqlqd/file.hpp"
+#include "wndx/mqlqd/rc.hpp"
 
 #include <cxxopts.hpp>
 
@@ -15,7 +16,7 @@
 #include <vector>
 
 
-// catch all possible exceptions (like Pokemons)
+// catch all possible exceptions (like Pokemon's)
 // to not suppress core dumps etc -> should be disabled => 0
 // clang-format off
 #ifndef MQLQD_CATCH_THEM_ALL
@@ -37,7 +38,8 @@ namespace wndx::mqlqd {
  * @param  argv - as in the usual main() entry point.
  * @return error code.
  */
-[[nodiscard]] int cmd_opts(int argc, char const* argv[])
+// NOLINTNEXTLINE(*-avoid-c-arrays)
+[[nodiscard]] rc cmd_opts(int argc, char const* argv[])
 {
   try {
     // clang-format off
@@ -45,7 +47,7 @@ namespace wndx::mqlqd {
       "Transfer file(s) over TCP/IP to the server running the mqlqd_daemon.");
     options.custom_help("[OPTIONS]");
     options.positional_help("[file paths as trailing arguments ...]");
-    options.set_width(80);
+    options.set_width(80); // NOLINT(*-magic-numbers) - standard TERM width
     options.add_options()
       ("a,addr", "Server IP address with the mqlqd_daemon. "
                  "(default: " + std::string{mqlqd::cfg::addr} + ')',
@@ -78,45 +80,39 @@ namespace wndx::mqlqd {
 
     if (cmd_opts.count("help")) {
       std::cout << options.help() << '\n';
-      exit(0);
+      return rc::SUCCESS;
     }
 
     if (!cmd_opts.count("file") && !cmd_opts.count("files_trail")) {
-      std::cerr << options.help() << '\n'
-                << "Look up the usage help." << '\n'
-                << "No files were provided, exit." << '\n';
-      exit(10);
+      WNDX_LOG(LL::WARN, "Lookup the usage via --help.\n{}, exit.\n",
+               rc::WARN_CMD_FILE_REQ);
+      return rc::WARN_CMD_FILE_REQ;
     }
 
-    if (cmd_opts.count("urge")) {
-      // force specific log urgency level. (has priority over the value in
-      // config).
+    if (cmd_opts.count("urge")) { // force specific log urgency level
       const LL urgency{ cmd_opts["urge"].as<int>() };
       log_g.set_urgency(urgency);
     }
 
-    int rc{ 42 }; // reusable variable for the return codes
+    rc rc{ rc::INIT }; // reusable variable for the return codes
 
-    // total number of file paths passed via all options: via option &
-    // positional arguments.
+    // total number of file paths passed via the cmd args (opts + trailing)
     std::size_t const n_files_passed{ cmd_opts.count("file") +
                                       cmd_opts.count("files_trail") };
-    // vector of files info (subset of the File classes, helper info for the
-    // transmission)
-    std::vector<file::mqlqd_finfo> vfinfo;
+    // vector of files info - subset of the File classes,
+    // helper info for the transmission
+    std::vector<file::Finfo> vfinfo;
     vfinfo.reserve(n_files_passed);
     // vector of class instances
     std::vector<file::File> vfiles;
     vfiles.reserve(n_files_passed);
 
-    if (cmd_opts.count("file")) {
-      // add files passed via -f --file cmd options.
+    if (cmd_opts.count("file")) { // add files via -f --file cmd options
       for (fs::path const fp : cmd_opts["file"].as<std::vector<cmd_opt_t>>()) {
         vfiles.emplace_back(fp, fs::file_size(fp));
       }
     }
-    if (cmd_opts.count("files_trail")) {
-      // add files passed via trailing cmd arguments.
+    if (cmd_opts.count("files_trail")) { // add files via trailing cmd args
       for (fs::path const fp :
            cmd_opts["files_trail"].as<std::vector<cmd_opt_t>>())
       {
@@ -124,8 +120,7 @@ namespace wndx::mqlqd {
       }
     }
 
-    // loop over each file path passed via the cmd arguments (optional +
-    // positional).
+    // loop over each file path passed via the cmd args (opts + trailing)
     for (file::File& file : vfiles) {
       /**
        * Read contents of the file(s) into the block(s) of memory.
@@ -134,7 +129,7 @@ namespace wndx::mqlqd {
        * block devices e.g. Slow HDD etc.).
        */
       rc = file.read_to_block();
-      if (rc != 0) {
+      if (rc != rc::SUCCESS) {
         return rc;
       }
       if (cmd_opts.count("cat")) {
@@ -147,56 +142,51 @@ namespace wndx::mqlqd {
     // if we are in the cat mode -> simply finish =>
     // as user do not need to initialize file client & do transmission.
     if (cmd_opts.count("cat")) {
-      return 0;
+      return rc::SUCCESS;
     }
 
     // server address with the running mqlqd daemon. (file server)
     addr_t const addr{ cmd_opts.count("addr") ? cmd_opts["addr"].as<cmd_opt_t>()
                                               : mqlqd::cfg::addr };
 
-    // port number of the daemon on the server. (cmd option overrides value from
-    // config)
+    // port number of the daemon on the server. (daemon instance)
     port_t const port{ cmd_opts.count("port") ? cmd_opts["port"].as<port_t>()
                                               : mqlqd::cfg::port };
-
 
     Fclient fclient{ addr, port };
     // initialize file client.
     rc = fclient.init();
-    if (rc != 0) {
+    if (rc != rc::SUCCESS) {
       return rc;
     }
 
     // attempt to send info of the upcoming transmission of the files.
     rc = fclient.send_files_info(vfinfo);
-    if (rc != 0) {
+    if (rc != rc::SUCCESS) {
       return rc;
     }
 
     // server is ready to accept provided files => start sending files.
     rc = fclient.send_files(vfiles);
-    if (rc != 0) {
+    if (rc != rc::SUCCESS) {
       return rc;
     }
 
-
   } catch (cxxopts::exceptions::exception const& err) {
-    WNDX_LOG(LL::ERRO, "Fail during parsing of the cmd options:\n{}\n",
-             err.what());
-    return 1;
+    WNDX_LOG(LL::ERRO, "{}:\n{}\n", rc::ERRO_CMD_OPT, err.what());
+    return rc::ERRO_CMD_OPT;
   } catch (std::exception const& err) {
-    WNDX_LOG(LL::CRIT, "UNHANDLED std::exception was caught:\n{}\n",
+    WNDX_LOG(LL::CRIT, "{} was caught:\n{}\n", rc::CRIT_EX_UNHANDLED,
              err.what());
-    return 2;
+    return rc::CRIT_EX_UNHANDLED;
 #if MQLQD_CATCH_THEM_ALL
   } catch (...) {
-    WNDX_LOG(LL::CRIT,
-             "UNHANDLED anonymous exception occurred but was caught!\n{}\n",
-             "THIS IS VERY BAD!");
-    return 3;
+    WNDX_LOG(LL::CRIT, "{} occurred but was caught!\n{}\n",
+             rc::CRIT_EX_ANONYMOUS, "THIS IS VERY BAD!");
+    return rc::CRIT_EX_ANONYMOUS;
 #endif // MQLQD_CATCH_THEM_ALL
   }
-  return 0;
+  return rc::SUCCESS;
 }
 
 } // namespace wndx::mqlqd

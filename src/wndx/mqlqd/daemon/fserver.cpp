@@ -4,6 +4,7 @@
 #include "wndx/mqlqd/fserver.hpp"
 
 #include "wndx/mqlqd/file.hpp"
+#include "wndx/mqlqd/rc.hpp"
 
 #include <fmt/format.h>
 
@@ -54,12 +55,18 @@ Fserver::~Fserver() noexcept
     }
     m_fd = -1;
   }
-  /*
-   * NOTE: extra new line to split log messages
-   * between the old & new class instance by the empty line.
-   * For the daemon mode -> file server (in the infinite loop).
-   */
+  // extra new line to split log messages
+  // between the old & new class instance by the empty line.
+  // For the daemon mode -> file server (in the infinite loop).
   WNDX_LOG(LL::DBUG, "END OF dtor ~Fserver()\n\n");
+}
+
+[[nodiscard]] auto Fserver::host_addr_ipv4() const noexcept
+{
+  return inet_ntoa(m_sockaddr_in.sin_addr); // FIXME(concurrency-mt-unsafe)
+  // const char *inet_ntop(socklen_t size;
+  //                       int af, const void *restrict src,
+  //                       char dst[restrict size], socklen_t size);
 }
 
 [[nodiscard]] int Fserver::recv_num_files_total()
@@ -83,13 +90,12 @@ Fserver::~Fserver() noexcept
   return 0;
 }
 
-[[nodiscard]] int Fserver::recv_files_info()
+[[nodiscard]] rc Fserver::recv_files_info()
 {
-  // recv m_num_files_total first => so that the server knows how many files to
-  // expect.
+  // recv m_num_files_total so that the server knows how many files to expect
   m_rc = recv_num_files_total();
   if (m_rc != 0) {
-    return m_rc;
+    return rc::UNIX_SOCK_RECV_ERRO;
   }
   // reserve in order to avoid potential reallocations later. (if many files)
   m_vfiles.reserve(m_num_files_total);
@@ -97,19 +103,19 @@ Fserver::~Fserver() noexcept
   for (size_t i = 0; i < m_num_files_total; i++) {
     m_rc = recv_file_info(i);
     if (m_rc != 0) {
-      return m_rc;
+      return rc::UNIX_SOCK_RECV_ERRO;
     }
   }
   WNDX_LOG(LL::INFO,
            "[ OK ] received info of the upcoming transfer of the files\n");
-  return 0;
+  return rc::SUCCESS;
 }
 
 [[nodiscard]] int Fserver::recv_file_info(size_t const i)
 {
   WNDX_LOG(LL::DBUG, "INSIDE recv_file_info() : {}\n", i);
-  file::mqlqd_finfo finfo{};
-  m_rc = recv_loop<file::mqlqd_finfo>(m_fd_con, &finfo, sizeof(finfo));
+  file::Finfo finfo{};
+  m_rc = recv_loop<file::Finfo>(m_fd_con, &finfo, sizeof(finfo));
   if (m_rc != 0) {
     WNDX_LOG(LL::ERRO, "[FAIL] recv_file_info() in recv_loop() -> {} : {}\n",
              m_rc, finfo);
@@ -124,17 +130,17 @@ Fserver::~Fserver() noexcept
   return 0;
 }
 
-[[nodiscard]] int Fserver::recv_files()
+[[nodiscard]] rc Fserver::recv_files()
 {
   for (size_t i = 0; i < m_num_files_total; i++) {
     m_rc = recv_file(i);
     if (m_rc != 0) {
-      return m_rc;
+      return rc::UNIX_SOCK_RECV_ERRO;
     }
   }
   WNDX_LOG(LL::NTFY, "[ OK ] all files are received: {}/{}\n",
            m_num_files_total, m_num_files_total);
-  return 0;
+  return rc::SUCCESS;
 }
 
 [[nodiscard]] int Fserver::recv_file(size_t const i)
@@ -147,7 +153,7 @@ Fserver::~Fserver() noexcept
 
   // TODO: it will be cool to make - "the small buffer optimization"
   //       => fixed size buffer on the stack for the small files.
-  m_rc = file.heap_alloc();
+  m_rc = static_cast<int>(file.heap_alloc());
   if (m_rc != 0) {
     return m_rc;
   }
@@ -160,7 +166,7 @@ Fserver::~Fserver() noexcept
   WNDX_LOG(LL::STAT, "[ OK ] recv_file() : {}\n", file);
 
   // write file to the storage dir.
-  m_rc = file.write();
+  m_rc = static_cast<int>(file.write());
   if (m_rc != 0) {
     return m_rc;
   }
@@ -170,7 +176,7 @@ Fserver::~Fserver() noexcept
 template <typename T>
 [[nodiscard]] int Fserver::recv_loop(int fd, void* buf, size_t len)
 {
-  T*      bufptr{ static_cast<T*>(buf) }; // FIXME reinterpret_cast
+  T*      bufptr{ static_cast<T*>(buf) };
   size_t  toread{ len };
   ssize_t nbytes{ -1 }; // nbytes recv || -1 - error val. ref: recv(2).
   // loop till all bytes are recv or till the error.
@@ -241,7 +247,7 @@ template <typename T>
   // casts are the necessity! ref: bind(2), accept(2)
   // NOLINTNEXTLINE(*-reinterpret-cast)
   m_fd_con = accept(m_fd, reinterpret_cast<struct sockaddr*>(&m_sockaddr_in),
-                    &m_addrlen); // FIXME?
+                    &m_addrlen);
   switch (m_fd_con) {
   case -1: log_g.errnum(errno, "[FAIL] accept()"); break;
   case 0 : WNDX_LOG(LL::WARN, "[DOUBT] accept() -> 0 ???\n"); break;
@@ -249,53 +255,51 @@ template <typename T>
     WNDX_LOG(LL::DBUG, "[ OK ] accept() - new connected socket created\n");
   }
   if (m_fd_con > 0) {
-    WNDX_LOG(LL::NTFY, "accepted connection from: {}\n",
-             inet_ntoa(m_sockaddr_in.sin_addr)); // FIXME(concurrency-mt-unsafe)
+    WNDX_LOG(LL::NTFY, "accepted connection from: {}\n", host_addr_ipv4());
   }
   return m_fd_con;
 }
 
-[[nodiscard]] int Fserver::init()
+[[nodiscard]] rc Fserver::init()
 {
   m_rc = create_socket();
   if (m_rc == -1) {
     WNDX_LOG(LL::ERRO, "[FAIL] in init() : create_socket()\n");
-    return -1;
+    return rc::UNIX_SOCK_MAKE_ERRO;
   }
 
   m_rc = fill_sockaddr_in();
   if (m_rc != 0) {
     WNDX_LOG(LL::ERRO, "[FAIL] in init() : fill_sockaddr_in()\n");
-    return m_rc;
+    return rc::UNIX_SOCK_ADDR_ERRO;
   }
 
   m_rc = bind_socket();
   if (m_rc != 0) {
     WNDX_LOG(LL::ERRO, "[FAIL] in init() : bind_socket()\n");
-    return m_rc;
+    return rc::UNIX_SOCK_BIND_ERRO;
   }
 
   m_rc = set_socket_in_listen_state();
   if (m_rc != 0) {
     WNDX_LOG(LL::ERRO, "[FAIL] in init() : set_socket_in_listen_state()\n");
-    return m_rc;
+    return rc::UNIX_SOCK_LSTN_ERRO;
   }
 
   m_rc = accept_connection();
-  if (m_rc < 1)
-  { // a non negative integer on success (XXX: excluding 0 i guess... right?)
+  if (m_rc < 1) { // a non negative integer on success (excluding 0?)
     WNDX_LOG(LL::ERRO, "[FAIL] in init() : accept_connection()\n");
-    return m_rc;
+    return rc::UNIX_SOCK_CONN_ERRO;
   }
 
-  m_rc = mkdir_sub_storage();
-  if (m_rc != 0) {
+  rc rc = mkdir_sub_storage();
+  if (rc != rc::SUCCESS) {
     WNDX_LOG(LL::ERRO, "[FAIL] in init() : mkdir_sub_storage()\n");
-    return m_rc;
+    return rc;
   }
 
   WNDX_LOG(LL::STAT, "[ OK ] init() - server initialized\n");
-  return 0;
+  return rc::SUCCESS;
 }
 
 [[nodiscard]] int Fserver::fill_sockaddr_in()
@@ -303,31 +307,27 @@ template <typename T>
   // m_addrinfo.ai_family  = AF_INET;
   // m_addrinfo.ai_addrlen = sizeof(m_sockaddr_in);
 
-  // XXX: htons() - uint16_t
-  // FIXME: check - does it work for the all u16 types?
   m_sockaddr_in.sin_family      = AF_INET;
-  m_sockaddr_in.sin_port        = htons(m_port);
+  m_sockaddr_in.sin_port        = htons(m_port); // htons(uint16_t)
   m_sockaddr_in.sin_addr.s_addr = INADDR_ANY;
   m_addrlen                     = sizeof(m_sockaddr_in);
 
   return 0;
 }
 
-[[nodiscard]] int Fserver::mkdir_sub_storage()
+[[nodiscard]] rc Fserver::mkdir_sub_storage()
 {
   fs::path new_sub_storage_dir{ m_storage_dir_sub };
   new_sub_storage_dir += '/';
-  // FIXME(concurrency-mt-unsafe)
-  new_sub_storage_dir += inet_ntoa(m_sockaddr_in.sin_addr); // in addr subdir
+  new_sub_storage_dir += host_addr_ipv4(); // in addr subdir
   // TODO: MAC/UID additionally.
 
-  int rc = file::mkdir(new_sub_storage_dir, fs::perms::owner_all);
-  if (rc != 0) {
-    // m_storage_dir_sub = m_storage_dir; // XXX: or needed?
+  rc rc = file::mkdir(new_sub_storage_dir, fs::perms::owner_all);
+  if (rc != rc::SUCCESS) {
     return rc;
   }
   m_storage_dir_sub = new_sub_storage_dir;
-  return 0;
+  return rc::SUCCESS;
 }
 
 } // namespace wndx::mqlqd

@@ -4,7 +4,9 @@
  */
 
 #include "aliases.hpp"
+
 #include "file.hpp"
+#include "rc.hpp"
 
 #include <vector>
 
@@ -35,7 +37,7 @@ public:
    *
    * @return 0 on success, else return fail code of the underlying functions.
    */
-  [[nodiscard]] int init();
+  [[nodiscard]] rc init();
 
   /**
    * @brief description
@@ -43,8 +45,7 @@ public:
    * @param  TODO
    * @return TODO
    */
-  [[nodiscard]] int
-  send_files_info(std::vector<file::mqlqd_finfo> const& vfinfo);
+  [[nodiscard]] rc send_files_info(std::vector<file::Finfo> const& vfinfo);
 
 
   /**
@@ -53,7 +54,7 @@ public:
    * @param  TODO
    * @return TODO
    */
-  [[nodiscard]] int send_files(std::vector<file::File> const& vfiles);
+  [[nodiscard]] rc send_files(std::vector<file::File> const& vfiles);
 
 protected:
   /**
@@ -76,6 +77,8 @@ protected:
    * following are the helper methods.
    */
 
+  [[nodiscard]] auto host_addr_ipv4() const noexcept;
+
   /**
    * @brief fill the sockaddr_in structure.
    */
@@ -95,7 +98,7 @@ protected:
    * @param  TODO
    * @return TODO
    */
-  [[nodiscard]] int send_file_info(file::mqlqd_finfo const& finfo);
+  [[nodiscard]] int send_file_info(file::Finfo const& finfo);
 
   /**
    * @brief description
@@ -122,8 +125,8 @@ private:
   addr_t const m_addr{};
   port_t const m_port{};
 
-  // for the simple return code. (val chosen arbitrarily)
-  int m_rc{ -42 };
+  // reusable for the POSIX return codes
+  int m_rc{ static_cast<int>(rc::INIT) };
 
   // file descriptor returned by the socket().
   // -1 is the socket() return value on error. ref: socket(2)

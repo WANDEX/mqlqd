@@ -1,22 +1,25 @@
 // client entry point (main)
 
+#include "wndx/mqlqd/rc.hpp"
+
 namespace wndx::mqlqd {
 
 void sig_handler();
 
 // NOLINTNEXTLINE(*-avoid-c-arrays)
-[[nodiscard]] int cmd_opts(int argc, char const* argv[]);
+[[nodiscard]] rc cmd_opts(int argc, char const* argv[]);
 
 } // namespace wndx::mqlqd
 
 
 int main(int argc, char const* argv[])
 {
-  int rc{ -1 }; // return code also known as the error code
-  wndx::mqlqd::sig_handler();
-  rc = wndx::mqlqd::cmd_opts(argc, argv);
-  if (rc != 0) {
-    return rc;
+  using namespace wndx::mqlqd;
+  rc rc{ rc::INIT }; // return code also known as the error code
+  sig_handler();
+  rc = cmd_opts(argc, argv);
+  if (rc != rc::SUCCESS) {
+    return static_cast<int>(rc);
   }
   return 0;
 }

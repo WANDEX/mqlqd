@@ -48,6 +48,14 @@ Fclient::~Fclient() noexcept
   WNDX_LOG(LL::DBUG, "END OF dtor ~Fclient()\n");
 }
 
+[[nodiscard]] auto Fclient::host_addr_ipv4() const noexcept
+{
+  return inet_ntoa(m_sockaddr_in.sin_addr); // FIXME(concurrency-mt-unsafe)
+  // const char *inet_ntop(socklen_t size;
+  //                       int af, const void *restrict src,
+  //                       char dst[restrict size], socklen_t size);
+}
+
 [[nodiscard]] int
 Fclient::send_num_files_total(size_t const num_files_total) const
 {
@@ -68,29 +76,29 @@ Fclient::send_num_files_total(size_t const num_files_total) const
   return 0;
 }
 
-[[nodiscard]] int
-Fclient::send_files_info(std::vector<file::mqlqd_finfo> const& vfinfo)
+[[nodiscard]] rc
+Fclient::send_files_info(std::vector<file::Finfo> const& vfinfo)
 {
   // send num_files_total => so that server knows how many files to expect.
   m_rc = send_num_files_total(vfinfo.size());
   if (m_rc != 0) {
-    return m_rc;
+    return rc::UNIX_SOCK_SEND_ERRO;
   }
   for (auto const& finfo : vfinfo) {
     m_rc = send_file_info(finfo);
     if (m_rc != 0) {
-      return m_rc;
+      return rc::UNIX_SOCK_SEND_ERRO;
     }
   }
   WNDX_LOG(LL::INFO,
            "[ OK ] sent info of the upcoming transfer of the files.\n");
-  return 0;
+  return rc::SUCCESS;
 }
 
-[[nodiscard]] int Fclient::send_file_info(file::mqlqd_finfo const& finfo)
+[[nodiscard]] int Fclient::send_file_info(file::Finfo const& finfo)
 {
   WNDX_LOG(LL::DBUG, "INSIDE send_file_info() : {}\n", finfo);
-  m_rc = send_loop<file::mqlqd_finfo>(m_fd, &finfo, sizeof(finfo));
+  m_rc = send_loop<file::Finfo>(m_fd, &finfo, sizeof(finfo));
   if (m_rc != 0) {
     WNDX_LOG(LL::ERRO, "[FAIL] send_file_info() in send_loop() -> {} : {}\n",
              m_rc, finfo);
@@ -100,17 +108,17 @@ Fclient::send_files_info(std::vector<file::mqlqd_finfo> const& vfinfo)
   return 0;
 }
 
-[[nodiscard]] int Fclient::send_files(std::vector<file::File> const& vfiles)
+[[nodiscard]] rc Fclient::send_files(std::vector<file::File> const& vfiles)
 {
   for (auto const& file : vfiles) {
     m_rc = send_file(file);
     if (m_rc != 0) {
-      return m_rc;
+      return rc::UNIX_SOCK_SEND_ERRO;
     }
   }
   WNDX_LOG(LL::NTFY, "[ OK ] all files are sent: {}/{}\n", vfiles.size(),
            vfiles.size());
-  return 0;
+  return rc::SUCCESS;
 }
 
 [[nodiscard]] int Fclient::send_file(file::File const& file)
@@ -129,7 +137,7 @@ Fclient::send_files_info(std::vector<file::mqlqd_finfo> const& vfinfo)
 template <typename T>
 [[nodiscard]] int Fclient::send_loop(int fd, void const* buf, size_t len)
 {
-  T const* bufptr{ static_cast<T const*>(buf) }; // FIXME: reinterpret_cast?
+  T const* bufptr{ static_cast<T const*>(buf) };
   size_t   toread{ len };
   ssize_t  nbytes{ -1 }; // nbytes sent || -1 - error val. ref: send(2).
   // loop till all bytes are sent or till the error.
@@ -173,35 +181,35 @@ template <typename T>
     WNDX_LOG(LL::CRIT, "UNEXPECTED return code: connect() -> {}\n", m_rc);
   }
   if (m_rc == 0) {
-    WNDX_LOG(LL::NTFY, "connection established with: {}\n",
-             inet_ntoa(m_sockaddr_in.sin_addr)); // FIXME(concurrency-mt-unsafe)
+    WNDX_LOG(LL::NTFY, "connection established with: {}\n", host_addr_ipv4());
   }
   return m_rc;
 }
 
 
-[[nodiscard]] int Fclient::init()
+[[nodiscard]] rc Fclient::init()
 {
+  static constexpr auto fn{ "Fclient::init()" };
   m_rc = create_socket();
   if (m_rc == -1) {
-    WNDX_LOG(LL::ERRO, "[FAIL] in init() : create_socket()\n");
-    return -1;
+    WNDX_LOG(LL::ERRO, "{} : create_socket()\n", fn);
+    return rc::UNIX_SOCK_MAKE_ERRO;
   }
 
   m_rc = fill_sockaddr_in();
   if (m_rc != 1) {
-    WNDX_LOG(LL::ERRO, "[FAIL] in init() : fill_sockaddr_in()\n");
-    return m_rc;
+    WNDX_LOG(LL::ERRO, "{} : fill_sockaddr_in()\n", fn);
+    return rc::UNIX_SOCK_ADDR_ERRO;
   }
 
   m_rc = create_connection();
   if (m_rc == -1) {
-    WNDX_LOG(LL::ERRO, "[FAIL] in init() : create_connection()\n");
-    return m_rc;
+    WNDX_LOG(LL::ERRO, "{} : create_connection()\n", fn);
+    return rc::UNIX_SOCK_CONN_ERRO;
   }
 
-  WNDX_LOG(LL::STAT, "[ OK ] init() - client initialized.\n");
-  return 0;
+  WNDX_LOG(LL::STAT, "{} - client initialized\n", fn);
+  return rc::SUCCESS;
 }
 
 

@@ -2,6 +2,7 @@
 #include "wndx/mqlqd/aliases.hpp" // IWYU pragma: keep
 
 #include "wndx/mqlqd/file.hpp"
+#include "wndx/mqlqd/rc.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -25,22 +26,23 @@ namespace wndx::mqlqd::file {
  * @param  fpath - file path to the file.
  * @return 0 on success or return code based on the failed check.
  */
-[[nodiscard]] int is_r(fs::path const& fpath) noexcept
+[[nodiscard]] rc is_r(fs::path const& fpath) noexcept
 {
-  std::error_code ec{};
-  fs::file_status s{ fs::status(fpath, ec) }; // for the noexcept
+  static constexpr auto fn{ "file::is_r()" };
+  std::error_code       ec{};
+  fs::file_status       s{ fs::status(fpath, ec) }; // for the noexcept
   if (ec) {
-    WNDX_LOG(LL::CRIT, "{}\n^ fs::status error:\n{}\n", fpath.c_str(),
-             ec.message());
-    return ec.value();
+    WNDX_LOG(LL::CRIT, "{} {} fs::status error v:{} m:{}\n", fn, fpath.c_str(),
+             ec.value(), ec.message());
+    return rc::FILE_STATUS_GENERIC_ERRO;
   }
-  // TODO: check file permissions (maybe it is a good idea to have)
   if (!fs::is_regular_file(s)) {
-    WNDX_LOG(LL::ERRO, "IS NOT the regular file: {}\n", fpath.c_str());
-    return 1;
+    WNDX_LOG(LL::ERRO, "{} is NOT a regular file: {}\n", fn, fpath.c_str());
+    return rc::FILE_SPECIAL;
   }
-  WNDX_LOG(LL::INFO, "Is the regular file: {}\n", fpath.c_str());
-  return 0;
+  WNDX_LOG(LL::INFO, "{} is a regular file: {}\n", fn, fpath.c_str());
+  // TODO: check file permissions (maybe it is a good idea to have)
+  return rc::SUCCESS;
 }
 
 
@@ -52,69 +54,74 @@ namespace wndx::mqlqd::file {
  * @param  force/insist on importance of the access rights to the dir.
  * @return 0 on success, else non zero return code.
  */
-[[nodiscard]] int mkdir(fs::path const& dpath, fs::perms const& perms,
-                        bool force) noexcept
+[[nodiscard]] rc mkdir(fs::path const& dpath, fs::perms const& perms,
+                       bool force) noexcept
 {
-  std::error_code ec{};
+  static constexpr auto fn{ "file::mkdir()" };
+  std::error_code       ec{};
   if (fs::is_directory(dpath, ec)) {
-    WNDX_LOG(LL::DBUG, "Directory exist, and will be used as is\n");
+    WNDX_LOG(LL::DBUG, "{} Directory exist, and will be used as is\n", fn);
     if (force) {
       // TODO: validate that directory permissions are set as requested.
     }
   } else {
-    if (!fs::exists(dpath, ec)) {
+    if (!fs::exists(dpath, ec)) { // expected branch
       if (fs::create_directory(dpath, dpath.parent_path(), ec)) {
         fs::permissions(dpath, perms, ec);
         if (ec.value() == 0) {
           WNDX_LOG(
               LL::NTFY,
-              "Created new directory with requested access permissions.\n");
+              "{} Created new directory with requested access permissions.\n",
+              fn);
         } else {
           WNDX_LOG(
               LL::ERRO,
-              "Created new directory, but failed to set requested perms.\n");
+              "{} Created new directory, but failed to set requested perms.\n",
+              fn);
           if (fs::remove(dpath, ec)) {
-            WNDX_LOG(LL::NTFY,
-                     "Removed empty directory created with incorrect perms.\n");
-            return 7;
-          } else {
             WNDX_LOG(
-                LL::CRIT,
-                "{}\n^ failed to remove this dir\n"
-                "that was created with incorrect access rights.\n"
-                "Because of the perms, do it yourself manually!\n"
-                "Additionally take a look at the origin of the error:\n{}\n",
-                dpath.c_str(), ec.message());
-            return ec.value();
+                LL::NTFY,
+                "{} Removed empty directory created with incorrect perms.\n",
+                fn);
+            return rc::FILE_RM_DIR_EMPTY_SUCCESS;
+          } else {
+            WNDX_LOG(LL::CRIT,
+                     "{} {}\n^ failed to remove this dir\n"
+                     "that was created with incorrect access rights.\n"
+                     "Because of the perms, do it yourself manually!\n"
+                     "Additionally take a look at the origin of the error:\n"
+                     "v:{} m:{}\n",
+                     fn, dpath.c_str(), ec.value(), ec.message());
+            return rc::FILE_RM_DIR_PERMS_ERRO;
           }
         }
       } else {
         WNDX_LOG(LL::CRIT,
-                 "If your intent was to make this dir under current cwd:\n"
+                 "{} If your intent was to make this dir under current cwd:\n"
                  "{}\n^ precede your path with './' i.e. ./{}\n"
                  "Additionally take a look at the origin of the error:\n"
-                 "fs::create_directory error: {}\n",
-                 dpath.c_str(), dpath.c_str(), ec.message());
-        return ec.value();
+                 "fs::create_directory error:\nv:{} m:{}\n",
+                 fn, dpath.c_str(), dpath.c_str(), ec.value(), ec.message());
+        return rc::FILE_MKDIR_GENERIC_ERRO;
       }
-    } else {
+    } else { // path already exist
       auto realpath{ fs::canonical(dpath, ec) };
       if (ec) {
-        WNDX_LOG(LL::CRIT, "{}\n^ canonical path error:\n{}\n", dpath.c_str(),
-                 ec.message());
-        return ec.value();
+        WNDX_LOG(LL::CRIT, "{} {}\n^ canonical path error:\nv:{} m:{}\n", fn,
+                 dpath.c_str(), ec.value(), ec.message());
+        return rc::FILE_PATH_CANONICAL_ERRO;
       }
-      WNDX_LOG(LL::CRIT, "{}\n^ path cannot be used as the new directory!\n",
-               realpath.c_str());
-      return 6;
+      WNDX_LOG(LL::CRIT, "{} {}\n^ path cannot be used as the new directory!\n",
+               fn, realpath.c_str());
+      return rc::FILE_PATH_UNEXPECTED_ERRO;
     }
   }
-  return 0;
+  return rc::SUCCESS;
 }
 
 
-File::File(fs::path const& fpath, std::size_t const sz) noexcept
-    : m_fpath{ fpath }
+File::File(fs::path fpath, size_t sz) noexcept
+    : m_fpath{ std::move(fpath) }
     , m_block_size{ sz }
 {
   WNDX_LOG(LL::DBUG,
@@ -123,7 +130,7 @@ File::File(fs::path const& fpath, std::size_t const sz) noexcept
            m_block_size, m_fpath.c_str());
 }
 
-File::File(mqlqd_finfo const& finfo, fs::path dpath) noexcept
+File::File(Finfo const& finfo, fs::path dpath) noexcept
     : m_block_size{ finfo.block_size }
 {
   // concatenate file name from file info to the passed directory path.
@@ -132,18 +139,18 @@ File::File(mqlqd_finfo const& finfo, fs::path dpath) noexcept
   dpath += finfo.fname;
   m_fpath = dpath;
   WNDX_LOG(LL::DBUG,
-           "ctor - File instance from finfo:\n"
+           "ctor - File instance from Finfo:\n"
            "\t[{}] {}\n",
            m_block_size, m_fpath.c_str());
 }
 
-[[nodiscard]] mqlqd_finfo File::to_finfo() const noexcept
+[[nodiscard]] Finfo File::to_finfo() const noexcept
 {
-  mqlqd_finfo finfo{};
+  Finfo finfo{};
   finfo.block_size = m_block_size;
   // fill the array - file name (element by element)
   auto fname{ m_fpath.filename().string() };
-  for (size_t i = 0; i < fname.length(); i++) {
+  for (size_t i = 0; i < fname.length(); ++i) {
     finfo.fname[i] = fname[i];
   }
   // null terminator after the file name (important)
@@ -151,72 +158,63 @@ File::File(mqlqd_finfo const& finfo, fs::path dpath) noexcept
   return finfo;
 }
 
-[[nodiscard]] int File::write()
+[[nodiscard]] rc File::write() const noexcept
 {
+  static constexpr auto fn{ "File::write()" };
   if (!m_block) {
-    WNDX_LOG(LL::CRIT, "empty memory block, nothing to write!\n");
-    return 33;
+    WNDX_LOG(LL::CRIT, "{} {}\n", fn, fn, rc::MEMORY_BLOCK_EMPTY);
+    return rc::MEMORY_BLOCK_EMPTY;
   }
   // open file for writing
   std::basic_fstream<char_type> ofs(m_fpath, openmode_w);
-  // TODO: reinspect checks
   if (!ofs) {
-    WNDX_LOG(LL::ERRO, "can not open output file!\n");
-    return 30;
+    WNDX_LOG(LL::ERRO, "{} {}\n", fn, rc::FS_CTOR_ERRO);
+    return rc::FS_CTOR_ERRO;
   }
   if (ofs.fail()) {
-    WNDX_LOG(LL::ERRO, "ofs.fail()\n");
-    return 31;
+    WNDX_LOG(LL::ERRO, "{} {}\n", fn, rc::FS_OPEN_ERRO);
+    return rc::FS_OPEN_ERRO;
   }
   if (!ofs.good()) {
-    WNDX_LOG(LL::ERRO, "!ofs.good()\n");
-    return 32;
+    WNDX_LOG(LL::ERRO, "{} {}\n", fn, rc::FS_IO_UNAVAILABLE);
+    return rc::FS_IO_UNAVAILABLE;
   }
-
   try {
     // NOTE: for loop is necessary for writing full contents of the binary file!
     for (size_t i = 0; i < m_block_size; i++) {
       ofs << m_block[i]; // NOLINT(*-pointer-arithmetic)
     }
-    WNDX_LOG(LL::STAT,
-             "Contents of the memory block were written to the file:\n\t{}\n",
-             m_fpath.c_str());
+    WNDX_LOG(LL::STAT, "{} SUCCESS:\n\t{}\n", fn, m_fpath.c_str());
   } catch (std::exception const& err) {
-    WNDX_LOG(LL::CRIT,
-             "File::write() UNHANDLED std::exception suppressed:\n{}\n",
-             err.what());
-    return 35;
+    WNDX_LOG(LL::CRIT, "{} {}\n{}\n", fn, rc::CRIT_EX_UNHANDLED, err.what());
+    return rc::CRIT_EX_UNHANDLED;
   }
-  return 0;
+  return rc::SUCCESS;
 }
 
-[[nodiscard]]
-int File::heap_alloc() noexcept
+// It is easy to use std::unique_ptr here for the mem_block
+// but maybe there is the benefit in proper using of the raw pointers?
+// It is easy to rewrite if requested!
+[[nodiscard]] rc File::heap_alloc() noexcept
 {
-  // TODO: it is easy to use std::unique_ptr here for the mem_block
-  // but maybe there is the benefit in proper using of the raw pointers?
-  // It is easy to rewrite if requested!
+  static constexpr auto fn{ "File::heap_alloc()" };
   try {
     m_block = { new char_type[m_block_size]{} };
     if (!m_block) {
-      WNDX_LOG(LL::CRIT,
-               "[FAIL] File::heap_alloc() memory block == nullptr!\n");
-      return 30;
+      WNDX_LOG(LL::CRIT, "{} {}\n", fn, rc::MEMORY_BLOCK_EMPTY);
+      return rc::MEMORY_BLOCK_EMPTY;
     }
-    WNDX_LOG(LL::DBUG, "[ OK ] File::heap_alloc()\n");
+    WNDX_LOG(LL::DBUG, "{}\n", fn);
   } catch (std::bad_alloc const& err) {
-    WNDX_LOG(LL::ERRO, "std::bad_alloc - insufficient memory? :\n{}\n",
-             err.what());
+    WNDX_LOG(LL::ERRO, "{} {}\n{}\n", fn, rc::MEMORY_BAD_ALLOC, err.what());
     File::~File();
-    return 31;
+    return rc::MEMORY_BAD_ALLOC;
   } catch (std::exception const& err) {
-    WNDX_LOG(LL::CRIT,
-             "File::heap_alloc() UNHANDLED std::exception suppressed:\n{}\n",
-             err.what());
+    WNDX_LOG(LL::CRIT, "{} {}\n{}\n", fn, rc::CRIT_EX_UNHANDLED, err.what());
     File::~File();
-    return 32;
+    return rc::CRIT_EX_UNHANDLED;
   }
-  return 0;
+  return rc::SUCCESS;
 }
 
 void File::heap_cleanup() noexcept
@@ -234,72 +232,63 @@ File::~File() noexcept { heap_cleanup(); }
  * @param  fpath - file path to the file.
  * @return 0 on success or return code based on the failed check.
  */
-[[nodiscard]]
-int File::fcontent()
+[[nodiscard]] rc File::fcontent() const noexcept
 {
-  int rc{ is_r(m_fpath) }; // return code
-  if (rc != 0) {
+  static constexpr auto fn{ "File::fcontent()" };
+  rc                    rc{ is_r(m_fpath) }; // return code
+  if (rc != rc::SUCCESS) {
     return rc;
   } // open file for reading
   std::basic_fstream<char_type> ifs(m_fpath, openmode_r);
   // invariants & validation/safety checks
   if (!ifs) {
-    WNDX_LOG(LL::ERRO, "can not open input file!\n");
-    return 20;
+    WNDX_LOG(LL::ERRO, "{} {}\n", fn, rc::FS_CTOR_ERRO);
+    return rc::FS_CTOR_ERRO;
   }
   if (ifs.fail()) {
-    WNDX_LOG(LL::ERRO, "ifs.fail()\n");
-    return 21;
+    WNDX_LOG(LL::ERRO, "{} {}\n", fn, rc::FS_OPEN_ERRO);
+    return rc::FS_OPEN_ERRO;
   }
   if (!ifs.good()) {
-    WNDX_LOG(LL::ERRO, "!ifs.good()\n");
-    return 22;
+    WNDX_LOG(LL::ERRO, "{} {}\n", fn, rc::FS_IO_UNAVAILABLE);
+    return rc::FS_IO_UNAVAILABLE;
   }
-
   try { // we check on the ifs.fail() => will not be negative!
     auto const size{ ifs.tellg() };
-
     ifs.seekg(0, ifs.beg);
     ifs.read(m_block, size);
-
-    WNDX_LOG(LL::INFO, "The entire contents of the file are in memory\n");
-
+    WNDX_LOG(LL::INFO, "{} SUCCESS\n", fn);
   } catch (std::exception const& err) {
-    WNDX_LOG(LL::CRIT,
-             "File::fcontent() UNHANDLED std::exception suppressed:\n{}\n",
-             err.what());
-    return 25;
+    WNDX_LOG(LL::CRIT, "{} {}\n{}\n", fn, rc::CRIT_EX_UNHANDLED, err.what());
+    return rc::CRIT_EX_UNHANDLED;
   }
-  return 0;
+  return rc::SUCCESS;
 }
 
-[[nodiscard]]
-int File::read_to_block()
+[[nodiscard]] rc File::read_to_block()
 {
-  int rc = heap_alloc();
-  if (rc != 0) {
+  static constexpr auto fn{ "File::read_to_block()" };
+  rc                    rc = heap_alloc();
+  if (rc != rc::SUCCESS) {
     return rc;
   }
   try {
     rc = fcontent();
-    if (rc != 0) {
-      WNDX_LOG(LL::ERRO, "[FAIL] File::read_to_block() -> {}\n", rc);
+    if (rc != rc::SUCCESS) {
+      WNDX_LOG(LL::ERRO, "{} -> {}\n", fn, rc);
       return rc;
     }
-    WNDX_LOG(LL::DBUG, "[ OK ] File::read_to_block() : {}\n", m_fpath.c_str());
+    WNDX_LOG(LL::DBUG, "{} SUCCESS : {}\n", fn, m_fpath.c_str());
   } catch (std::exception const& err) {
-    WNDX_LOG(LL::CRIT,
-             "File::read_to_block() UNHANDLED std::exception suppressed:\n"
-             "{}\n",
-             err.what());
-    return 5;
+    WNDX_LOG(LL::CRIT, "{} {}\n{}\n", fn, rc::CRIT_EX_UNHANDLED, err.what());
+    File::~File();
+    return rc::CRIT_EX_UNHANDLED;
   } catch (...) {
-    WNDX_LOG(LL::CRIT, "File::read_to_block() {}\n{}\n",
-             "UNHANDLED anonymous exception occurred but was caught!",
-             "THIS IS EXTREMELY BAD!");
-    return 6;
+    WNDX_LOG(LL::CRIT, "{} occurred but was caught!\n{}\n",
+             rc::CRIT_EX_ANONYMOUS, "THIS IS VERY BAD!");
+    return rc::CRIT_EX_ANONYMOUS;
   }
-  return 0;
+  return rc::SUCCESS;
 }
 
 void File::print_fcontent() const noexcept
@@ -311,7 +300,7 @@ void File::print_fcontent() const noexcept
   std::cerr << ">>> [BEG] " << m_fpath << " - file content >>>" << '\n';
 #endif // MQLQD_FILE_CONTENTS_BOUNDARY
   // NOTE: for loop is necessary for printing full contents of the binary file!
-  for (size_t i = 0; i < m_block_size; i++) {
+  for (size_t i = 0; i < m_block_size; ++i) {
     fmt::print("{:c}", m_block[i]); // NOLINT(*-pointer-arithmetic)
   }
 #if MQLQD_FILE_CONTENTS_BOUNDARY
