@@ -18,6 +18,25 @@
 // clang-format on
 
 
+namespace wndx::sane::path {
+
+/// \brief trim trailing separators.
+/// any path provided by the user may contain a trailing separator - trim it!
+[[nodiscard]] fs::path trim(fs::path const& path) noexcept
+{
+  fs::path npath{ path };
+  // additional trailing directory separators are never introduced
+  npath += fs::path::preferred_separator;
+  return npath.parent_path(); // safely remove trailing separators
+}
+
+[[nodiscard]] fs::path sanitize(fs::path const& path) noexcept
+{
+  return trim(path);
+}
+
+} // namespace wndx::sane::path
+
 namespace wndx::mqlqd::file {
 
 /**
@@ -59,15 +78,17 @@ namespace wndx::mqlqd::file {
 {
   static constexpr auto fn{ "file::mkdir()" };
   std::error_code       ec{};
-  if (fs::is_directory(dpath, ec)) {
+  fs::path const        npath{ wndx::sane::path::trim(dpath) };
+  fs::path const        parent_dir{ npath.parent_path() };
+  if (fs::is_directory(npath, ec)) {
     WNDX_LOG(LL::DBUG, "{} Directory exist, and will be used as is\n", fn);
     if (force) {
       // TODO: validate that directory permissions are set as requested.
     }
   } else {
-    if (!fs::exists(dpath, ec)) { // expected branch
-      if (fs::create_directory(dpath, dpath.parent_path(), ec)) {
-        fs::permissions(dpath, perms, ec);
+    if (!fs::exists(npath, ec)) { // expected branch
+      if (fs::create_directory(npath, parent_dir, ec)) {
+        fs::permissions(npath, perms, ec);
         if (ec.value() == 0) {
           WNDX_LOG(
               LL::NTFY,
@@ -78,7 +99,7 @@ namespace wndx::mqlqd::file {
               LL::ERRO,
               "{} Created new directory, but failed to set requested perms.\n",
               fn);
-          if (fs::remove(dpath, ec)) {
+          if (fs::remove(npath, ec)) {
             WNDX_LOG(
                 LL::NTFY,
                 "{} Removed empty directory created with incorrect perms.\n",
@@ -91,7 +112,7 @@ namespace wndx::mqlqd::file {
                      "Because of the perms, do it yourself manually!\n"
                      "Additionally take a look at the origin of the error:\n"
                      "v:{} m:{}\n",
-                     fn, dpath.c_str(), ec.value(), ec.message());
+                     fn, npath.c_str(), ec.value(), ec.message());
             return rc::FILE_RM_DIR_PERMS_ERRO;
           }
         }
@@ -101,14 +122,14 @@ namespace wndx::mqlqd::file {
                  "{}\n^ precede your path with './' i.e. ./{}\n"
                  "Additionally take a look at the origin of the error:\n"
                  "fs::create_directory error:\nv:{} m:{}\n",
-                 fn, dpath.c_str(), dpath.c_str(), ec.value(), ec.message());
+                 fn, npath.c_str(), npath.c_str(), ec.value(), ec.message());
         return rc::FILE_MKDIR_GENERIC_ERRO;
       }
     } else { // path already exist
-      auto realpath{ fs::canonical(dpath, ec) };
+      auto realpath{ fs::canonical(npath, ec) };
       if (ec) {
         WNDX_LOG(LL::CRIT, "{} {}\n^ canonical path error:\nv:{} m:{}\n", fn,
-                 dpath.c_str(), ec.value(), ec.message());
+                 npath.c_str(), ec.value(), ec.message());
         return rc::FILE_PATH_CANONICAL_ERRO;
       }
       WNDX_LOG(LL::CRIT, "{} {}\n^ path cannot be used as the new directory!\n",
@@ -121,8 +142,8 @@ namespace wndx::mqlqd::file {
 
 
 File::File(fs::path fpath, size_t sz) noexcept
-    : m_fpath{ std::move(fpath) }
-    , m_block_size{ sz }
+    : m_block_size{ sz }
+    , m_fpath{ std::move(fpath) }
 {
   WNDX_LOG(LL::DBUG,
            "ctor - File instance from file & size:\n"
@@ -130,17 +151,11 @@ File::File(fs::path fpath, size_t sz) noexcept
            m_block_size, m_fpath.c_str());
 }
 
-File::File(Finfo const& finfo, fs::path dpath) noexcept
+File::File(Finfo const& finfo, fs::path const& dpath) noexcept
     : m_block_size{ finfo.block_size }
+    , m_fpath{ dpath / finfo.fname } // concatenate path
 {
-  // concatenate file name from file info to the passed directory path.
-  // NOTE: like this -> additional directory separators are never introduced.
-  dpath += '/';
-  dpath += finfo.fname;
-  m_fpath = dpath;
-  WNDX_LOG(LL::DBUG,
-           "ctor - File instance from Finfo:\n"
-           "\t[{}] {}\n",
+  WNDX_LOG(LL::DBUG, "ctor - File instance from Finfo:\n\t[{}] {}\n",
            m_block_size, m_fpath.c_str());
 }
 
@@ -151,10 +166,10 @@ File::File(Finfo const& finfo, fs::path dpath) noexcept
   // fill the array - file name (element by element)
   auto fname{ m_fpath.filename().string() };
   for (size_t i = 0; i < fname.length(); ++i) {
-    finfo.fname[i] = fname[i];
+    finfo.fname[i] = fname[i]; // NOLINT(*-constant-array-index)
   }
   // null terminator after the file name (important)
-  finfo.fname[fname.length()] = '\0';
+  finfo.fname[fname.length()] = '\0'; // NOLINT(*-constant-array-index)
   return finfo;
 }
 

@@ -9,6 +9,14 @@
 #include <filesystem>
 
 
+namespace wndx::sane::path {
+
+[[nodiscard]] fs::path trim(fs::path const& path) noexcept;
+
+[[nodiscard]] fs::path sanitize(fs::path const& path) noexcept;
+
+} // namespace wndx::sane::path
+
 namespace wndx::mqlqd::file {
 
 // value chosen arbitrarily ->
@@ -63,7 +71,7 @@ public:
   explicit File(fs::path fpath, size_t sz) noexcept;
 
   // @brief construct class instance from the file info structure.
-  explicit File(Finfo const& finfo, fs::path dpath) noexcept;
+  explicit File(Finfo const& finfo, fs::path const& dpath) noexcept;
 
   // @bief convert essentials of the instance into file info structure.
   [[nodiscard]] Finfo to_finfo() const noexcept;
@@ -96,8 +104,8 @@ public:
               << '\n';
   }
 
-  fs::path    m_fpath{};
   std::size_t m_block_size{ 0 };
+  fs::path    m_fpath{};
   char_type*  m_block{ nullptr }; // memory block -> contiguous chunk of memory.
 };
 

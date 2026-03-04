@@ -317,10 +317,8 @@ template <typename T>
 
 [[nodiscard]] rc Fserver::mkdir_sub_storage()
 {
-  fs::path new_sub_storage_dir{ m_storage_dir_sub };
-  new_sub_storage_dir += '/';
-  new_sub_storage_dir += host_addr_ipv4(); // in addr subdir
   // TODO: MAC/UID additionally.
+  fs::path const new_sub_storage_dir{ m_storage_dir_sub / host_addr_ipv4() };
 
   rc rc = file::mkdir(new_sub_storage_dir, fs::perms::owner_all);
   if (rc != rc::SUCCESS) {

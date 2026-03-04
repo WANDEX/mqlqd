@@ -76,7 +76,8 @@ namespace wndx::mqlqd {
     rc rc{ rc::INIT }; // reusable variable for the return codes
 
     // path to the storage dir. (storage for incoming files)
-    fs::path const storage_dir{ cmd_opts["dir"].as<cmd_opt_t>() };
+    fs::path const storage_dir{ wndx::sane::path::sanitize(
+        cmd_opts["dir"].as<cmd_opt_t>()) };
 
     std::error_code ec{};
     if (fs::is_directory(storage_dir, ec)) {
