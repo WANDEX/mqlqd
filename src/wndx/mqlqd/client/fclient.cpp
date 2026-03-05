@@ -48,12 +48,16 @@ Fclient::~Fclient() noexcept
   WNDX_LOG(LL::DBUG, "END OF dtor ~Fclient()\n");
 }
 
-[[nodiscard]] auto Fclient::host_addr_ipv4() const noexcept
+/// \return host address or empty string on error.
+[[nodiscard]] std::string Fclient::host_addr_ipv4() const noexcept
 {
-  return inet_ntoa(m_sockaddr_in.sin_addr); // FIXME(concurrency-mt-unsafe)
-  // const char *inet_ntop(socklen_t size;
-  //                       int af, const void *restrict src,
-  //                       char dst[restrict size], socklen_t size);
+  std::string str(m_addrlen, '\0'); // null-terminated string required
+  if (!inet_ntop(AF_INET, &(m_sockaddr_in.sin_addr), str.data(), m_addrlen)) {
+    log_g.errnum(errno, "[FAIL] convert host_addr_ipv4()");
+    return {};
+  }
+  str.pop_back(); // remove null-terminator
+  return str;
 }
 
 [[nodiscard]] int

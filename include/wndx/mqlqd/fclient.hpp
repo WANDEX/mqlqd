@@ -77,7 +77,7 @@ protected:
    * following are the helper methods.
    */
 
-  [[nodiscard]] auto host_addr_ipv4() const noexcept;
+  [[nodiscard]] std::string host_addr_ipv4() const noexcept;
 
   /**
    * @brief fill the sockaddr_in structure.

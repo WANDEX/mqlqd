@@ -26,7 +26,7 @@ static constexpr size_t fname_max_len{ 79 };
 // @brief struct file info.
 struct Finfo
 {
-  size_t block_size{ 0 };
+  size_t block_size{ 0 }; // NOLINTNEXTLINE(*-avoid-c-arrays)
   char   fname[fname_max_len]{ "mqlqd_default_file_name" };
 };
 
@@ -112,11 +112,12 @@ public:
 } // namespace wndx::mqlqd::file
 
 
-// overload for the std::ostream (to print file info structure in the readable
-// text form)
+// overload for the std::ostream
+// (to print file info structure in the readable text form)
 inline std::ostream& operator<<(std::ostream&                   os,
                                 wndx::mqlqd::file::Finfo const& finfo)
 {
+  // NOLINTNEXTLINE(*-array-to-pointer-decay, *-array-decay, *-avoid-c-arrays)
   return os << "     finfo.fname: " << finfo.fname << '\n'
             << "finfo.block_size: " << '[' << finfo.block_size << ']' << '\n';
 }

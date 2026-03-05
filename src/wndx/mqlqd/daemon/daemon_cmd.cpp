@@ -84,6 +84,7 @@ namespace wndx::mqlqd {
       WNDX_LOG(LL::NTFY,
                "Directory exist, and will be used as the storage dir\n");
     } else {
+      WNDX_LOG(LL::DBUG, "storage_dir: {}\n", storage_dir.c_str());
       // make dir for the storage with permissions for owner only.
       rc = file::mkdir(storage_dir, fs::perms::owner_all);
       if (rc != rc::SUCCESS) {
