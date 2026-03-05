@@ -4,7 +4,6 @@
 #include "wndx/mqlqd/fserver.hpp"
 
 #include "wndx/mqlqd/file.hpp"
-#include "wndx/mqlqd/rc.hpp"
 
 #include <fmt/format.h>
 

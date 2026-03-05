@@ -6,7 +6,6 @@
 #include "aliases.hpp"
 
 #include "file.hpp"
-#include "rc.hpp"
 
 #include <vector>
 

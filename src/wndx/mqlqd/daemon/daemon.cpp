@@ -1,19 +1,20 @@
 // daemon entry point (main)
 
-#include "wndx/mqlqd/rc.hpp"
+#include "wndx/sane/rc.hpp"
 
 namespace wndx::mqlqd {
 
 void sig_handler();
 
 // NOLINTNEXTLINE(*-avoid-c-arrays)
-[[nodiscard]] rc cmd_opts(int argc, char const* argv[]);
+[[nodiscard]] sane::rc cmd_opts(int argc, char const* argv[]);
 
 } // namespace wndx::mqlqd
 
 
 int main(int argc, char const* argv[])
 {
+  using namespace wndx::sane;
   using namespace wndx::mqlqd;
   rc rc{ rc::INIT }; // return code also known as the error code
   sig_handler();

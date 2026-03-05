@@ -6,7 +6,6 @@
 
 #include "wndx/mqlqd/config.hpp"
 #include "wndx/mqlqd/file.hpp"
-#include "wndx/mqlqd/rc.hpp"
 
 #include <cxxopts.hpp>
 

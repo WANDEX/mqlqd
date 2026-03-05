@@ -10,13 +10,9 @@ using namespace wndx::sane;
 using addr_t = sv_t;
 using port_t = u16;
 
-// cxxopts default_value() accepts std::string.
-// Any other type make working with the cxxopts unnecessarily harder.
-// => Common type for the command line options.
+/// cxxopts default_value() accepts std::string.
+/// Any other type make working with the cxxopts unnecessarily harder.
+/// => Common type for the command line options.
 using cmd_opt_t = std::string;
 
 } // namespace wndx::mqlqd
-
-// In the end of the file after defining project-wide aliases & convenience.
-// To not include logger declarations separately in each translation unit.
-#include "wndx/sane/log.hpp" // IWYU pragma: keep
