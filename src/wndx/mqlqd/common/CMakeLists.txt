@@ -3,9 +3,6 @@
 target_sources(mqlqd_src
   PRIVATE
     file.cpp
+    unix_sig.cpp
 )
-
-## XXX: only to make target archive not empty =>
-## Xcode AppleClang will not compile static library without objects in archive.
-# target_sources(mqlqd_deps PRIVATE file.cpp)
 
