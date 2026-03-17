@@ -125,8 +125,9 @@ Fserver::~Fserver() noexcept
     return m_rc;
   }
   WNDX_LOG(LL::INFO, "[ OK ] recv_file_info() : {}\n", finfo);
-  // construct file object from the file info structure.
-  m_vfiles.emplace_back(finfo, m_storage_dir_sub);
+  file::File File(finfo, m_storage_dir_sub);
+  m_vfiles.emplace_back(File);
+  // m_vfiles.emplace_back(finfo, m_storage_dir_sub);
 #if 0 // even for debug - too verbose
   WNDX_LOG(LL::DBUG, "\ti - {} : {}\n", i, m_vfiles.at(i));
 #endif

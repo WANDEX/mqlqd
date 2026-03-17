@@ -5,7 +5,7 @@
 #include "wndx/mqlqd/fserver.hpp"
 
 #include "wndx/mqlqd/config.hpp"
-#include "wndx/mqlqd/file.hpp"
+#include "wndx/mqlqd/file.hpp" // IWYU pragma: keep
 
 #include <cxxopts.hpp>
 
@@ -83,7 +83,7 @@ namespace wndx::mqlqd {
       WNDX_LOG(LL::NTFY,
                "Directory exist, and will be used as the storage dir\n");
     } else {
-      WNDX_LOG(LL::DBUG, "storage_dir: {}\n", storage_dir.c_str());
+      WNDX_LOG(LL::DBUG, "storage_dir: {}\n", storage_dir);
       // make dir for the storage with permissions for owner only.
       rc = file::mkdir(storage_dir, fs::perms::owner_all);
       if (rc != rc::SUCCESS) {

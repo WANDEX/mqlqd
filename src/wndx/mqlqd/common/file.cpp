@@ -3,9 +3,7 @@
 
 #include "wndx/mqlqd/file.hpp"
 
-#include <filesystem>
 #include <fstream>
-#include <iostream>
 
 
 // show boundaries of the files in the cat mode
@@ -18,35 +16,33 @@
 
 namespace wndx::mqlqd::file {
 
+static constexpr std::string_view ctor{ "ctor - File instance" };
+
 File::File(fs::path fpath, size_t sz) noexcept
     : m_block_size{ sz }
     , m_fpath{ std::move(fpath) }
 {
-  WNDX_LOG(LL::DBUG,
-           "ctor - File instance from file & size:\n"
-           "\t[{}] {}\n",
-           m_block_size, m_fpath.c_str());
+  WNDX_LOG(LL::DBUG, "{} from file & size:\n\t{}\n", ctor, *this);
 }
 
 File::File(Finfo const& finfo, fs::path const& dpath) noexcept
-    : m_block_size{ finfo.block_size }
-    , m_fpath{ dpath / finfo.fname } // concatenate path
+    : m_block_size{ finfo.m_block_size }
+    , m_fpath{ dpath / finfo.m_fname } // concatenate path
 {
-  WNDX_LOG(LL::DBUG, "ctor - File instance from Finfo:\n\t[{}] {}\n",
-           m_block_size, m_fpath.c_str());
+  WNDX_LOG(LL::DBUG, "{} from Finfo & dir path:\n\t{}\n", ctor, *this);
 }
 
 [[nodiscard]] Finfo File::to_finfo() const noexcept
 {
   Finfo finfo{};
-  finfo.block_size = m_block_size;
+  finfo.m_block_size = m_block_size;
   // fill the array - file name (element by element)
   auto fname{ m_fpath.filename().string() };
   for (size_t i = 0; i < fname.length(); ++i) {
-    finfo.fname[i] = fname[i]; // NOLINT(*-constant-array-index)
+    finfo.m_fname[i] = fname[i]; // NOLINT(*-constant-array-index)
   }
   // null terminator after the file name (important)
-  finfo.fname[fname.length()] = '\0'; // NOLINT(*-constant-array-index)
+  finfo.m_fname[fname.length()] = '\0'; // NOLINT(*-constant-array-index)
   return finfo;
 }
 
@@ -76,7 +72,7 @@ File::File(Finfo const& finfo, fs::path const& dpath) noexcept
     for (size_t i = 0; i < m_block_size; i++) {
       ofs << m_block[i]; // NOLINT(*-pointer-arithmetic)
     }
-    WNDX_LOG(LL::STAT, "{} SUCCESS:\n\t{}\n", fn, m_fpath.c_str());
+    WNDX_LOG(LL::STAT, "{} SUCCESS:\n\t{}\n", fn, m_fpath);
   } catch (std::exception const& err) {
     WNDX_LOG(LL::CRIT, "{} {}\n{}\n", fn, rc::CRIT_EX_UNHANDLED, err.what());
     return rc::CRIT_EX_UNHANDLED;
@@ -170,7 +166,7 @@ File::~File() noexcept { heap_cleanup(); }
       WNDX_LOG(LL::ERRO, "{} -> {}\n", fn, rc);
       return rc;
     }
-    WNDX_LOG(LL::DBUG, "{} SUCCESS : {}\n", fn, m_fpath.c_str());
+    WNDX_LOG(LL::DBUG, "{} SUCCESS : {}\n", fn, m_fpath);
   } catch (std::exception const& err) {
     WNDX_LOG(LL::CRIT, "{} {}\n{}\n", fn, rc::CRIT_EX_UNHANDLED, err.what());
     File::~File();
@@ -201,3 +197,32 @@ void File::print_fcontent() const noexcept
 }
 
 } // namespace wndx::mqlqd::file
+
+
+// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+auto fmt::formatter<wndx::mqlqd::file::Finfo>::format(
+    wndx::mqlqd::file::Finfo const& f, format_context& ctx) const
+    -> format_context::iterator
+{
+  return format_to(ctx.out(), "[{}] {}", f.m_block_size, f.m_fname);
+}
+
+// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+auto fmt::formatter<wndx::mqlqd::file::File>::format(
+    wndx::mqlqd::file::File const& f, format_context& ctx) const
+    -> format_context::iterator
+{
+  return format_to(ctx.out(), "[{}] {}", f.m_block_size, f.m_fpath);
+}
+
+#if WNDX_LOG_OSTREAM_SUPPORT
+std::ostream& operator<<(std::ostream& os, wndx::mqlqd::file::Finfo const& f)
+{
+  return os << fmt::to_string(f);
+}
+
+std::ostream& operator<<(std::ostream& os, wndx::mqlqd::file::File const& f)
+{
+  return os << fmt::to_string(f);
+}
+#endif // WNDX_LOG_OSTREAM_SUPPORT
