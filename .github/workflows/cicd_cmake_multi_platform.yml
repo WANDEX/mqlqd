@@ -266,6 +266,7 @@ jobs:
       with :
         body : ${{ steps.git.outputs.annotation }}
         generate_release_notes: true
+        append_body: true
         draft: false
         token: ${{ secrets.GITHUB_TOKEN }}
         files: |
