@@ -1,5 +1,5 @@
 #pragma once
-// project-wide type aliases
+/// project-wide type aliases
 
 #include "wndx/sane/aliases.hpp"
 

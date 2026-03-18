@@ -1,4 +1,4 @@
-// daemon command line (cmd)
+/// daemon command line (cmd)
 
 #include "wndx/mqlqd/aliases.hpp"
 
@@ -14,9 +14,9 @@
 #include <string>
 
 
-// catch all possible exceptions (like Pokemon's)
-// to not suppress core dumps etc -> should be disabled => 0
 // clang-format off
+/// catch all possible exceptions (like Pokemon's)
+/// to not suppress core dumps etc -> should be disabled => 0
 #ifndef MQLQD_CATCH_THEM_ALL
 #define MQLQD_CATCH_THEM_ALL 1 // NOLINT(*-macro-usage)
 #endif//MQLQD_CATCH_THEM_ALL
@@ -25,17 +25,15 @@
 
 namespace wndx::mqlqd {
 
-/**
- * @brief parse command line options.
- *
- * catches every possible exception & signifies about that:
- * with an error message printed to std::cerr.
- * and with the return code / exit code.
- *
- * @param  argc - as in the usual main() entry point.
- * @param  argv - as in the usual main() entry point.
- * @return error code.
- */
+/// \brief parse command line options.
+///
+/// catches every possible exception & signifies about that:
+/// with an error message printed to std::cerr.
+/// and with the return code / exit code.
+///
+/// \param  argc - as in the usual main() entry point.
+/// \param  argv - as in the usual main() entry point.
+/// \return error code.
 // NOLINTNEXTLINE(*-avoid-c-arrays)
 [[nodiscard]] rc cmd_opts(int argc, char const* argv[])
 {
@@ -56,10 +54,10 @@ namespace wndx::mqlqd {
       ("u,urge", "Log urgency level. (All messages </> Only critical)",
        cxxopts::value<int>(), "1-7");
     // clang-format on
-    // initialize cmd options variable
+    /// initialize cmd options variable
     cxxopts::ParseResult cmd_opts{ options.parse(argc, argv) };
 
-    // initialize logger with the specific log file.
+    /// initialize logger with the specific log file.
     log_g = Logger{ "/tmp/mqlqd/logs/daemon.log"sv };
 
     if (cmd_opts.count("help")) {
@@ -74,7 +72,7 @@ namespace wndx::mqlqd {
 
     rc rc{ rc::INIT }; // reusable variable for the return codes
 
-    // path to the storage dir. (storage for incoming files)
+    /// path to the storage dir. (storage for incoming files)
     fs::path const storage_dir{ wndx::sane::path::sanitize(
         cmd_opts["dir"].as<cmd_opt_t>()) };
 
@@ -84,24 +82,22 @@ namespace wndx::mqlqd {
                "Directory exist, and will be used as the storage dir\n");
     } else {
       WNDX_LOG(LL::DBUG, "storage_dir: {}\n", storage_dir);
-      // make dir for the storage with permissions for owner only.
+      /// make dir for the storage with permissions for owner only.
       rc = file::mkdir(storage_dir, fs::perms::owner_all);
       if (rc != rc::SUCCESS) {
         return rc;
       }
     }
 
-    // use port number as identity on the server. (cmd option overrides value
-    // from config)
+    /// use port number as identity on the server. (cmd option overrides value
+    /// from config)
     port_t const port{ cmd_opts.count("port") ? cmd_opts["port"].as<port_t>()
                                               : mqlqd::cfg::port };
 
-    /**
-     * Work infinitely as the daemon till one of the stop signals received.
-     * Also - till the error: return code, errno msg, everything is logged,
-     * nothing suppressed.)
-     * TODO: make this daemon (file server) loop more optimal.
-     */
+    /// Work infinitely as the daemon till one of the stop signals received.
+    /// Also - till the error: return code, errno msg, everything is logged,
+    /// nothing suppressed.)
+    /// TODO: make this daemon (file server) loop more optimal.
     for (;;) {
       Fserver fserver{ port, storage_dir };
       // initialize file server.
@@ -110,13 +106,13 @@ namespace wndx::mqlqd {
         return rc;
       }
 
-      // attempt to receive info of the upcoming transmission of the files.
+      /// attempt to receive info of the upcoming transmission of the files.
       rc = fserver.recv_files_info();
       if (rc != rc::SUCCESS) {
         return rc;
       }
 
-      // server is ready to accept provided files => start accepting files.
+      /// server is ready to accept provided files => start accepting files.
       rc = fserver.recv_files();
       if (rc != rc::SUCCESS) {
         return rc;

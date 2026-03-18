@@ -6,8 +6,8 @@
 #include <fstream>
 
 
-// show boundaries of the files in the cat mode
 // clang-format off
+/// show boundaries of the files in the cat mode
 #ifndef MQLQD_FILE_CONTENTS_BOUNDARY
 #define MQLQD_FILE_CONTENTS_BOUNDARY 0 // NOLINT(*-macro-usage)
 #endif//MQLQD_FILE_CONTENTS_BOUNDARY
@@ -50,7 +50,7 @@ File::File(Finfo const& finfo, fs::path const& dpath) noexcept
 {
   static constexpr auto fn{ "File::write()" };
   if (!m_block) {
-    WNDX_LOG(LL::CRIT, "{} {}\n", fn, fn, rc::MEMORY_BLOCK_EMPTY);
+    WNDX_LOG(LL::CRIT, "{} {}\n", fn, rc::MEMORY_BLOCK_EMPTY);
     return rc::MEMORY_BLOCK_EMPTY;
   }
   // open file for writing
@@ -80,9 +80,9 @@ File::File(Finfo const& finfo, fs::path const& dpath) noexcept
   return rc::SUCCESS;
 }
 
-// It is easy to use std::unique_ptr here for the mem_block
-// but maybe there is the benefit in proper using of the raw pointers?
-// It is easy to rewrite if requested!
+/// It is easy to use std::unique_ptr here for the mem_block
+/// but maybe there is the benefit in proper using of the raw pointers?
+/// It is easy to rewrite if requested!
 [[nodiscard]] rc File::heap_alloc() noexcept
 {
   static constexpr auto fn{ "File::heap_alloc()" };
@@ -113,13 +113,11 @@ void File::heap_cleanup() noexcept
 
 File::~File() noexcept { heap_cleanup(); }
 
-/**
- * @brief read file contents into the memory block.
- *
- * @param  mem_block - memory block.
- * @param  fpath - file path to the file.
- * @return 0 on success or return code based on the failed check.
- */
+/// \brief read file contents into the memory block.
+///
+/// \param  mem_block - memory block.
+/// \param  fpath - file path to the file.
+/// \return 0 on success or return code based on the failed check.
 [[nodiscard]] rc File::fcontent() const noexcept
 {
   static constexpr auto fn{ "File::fcontent()" };

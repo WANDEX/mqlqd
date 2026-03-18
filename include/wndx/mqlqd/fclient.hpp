@@ -1,7 +1,5 @@
 #pragma once
-/**
- * file client (sending side / sending party).
- */
+/// file client (sending side / sending party).
 
 #include "aliases.hpp"
 
@@ -30,113 +28,88 @@ public:
 
   explicit Fclient(addr_t const& addr, port_t const& port) noexcept;
 
-  /**
-   * @brief initialize everything & start on success of all underlying
-   * functions.
-   *
-   * @return 0 on success, else return fail code of the underlying functions.
-   */
+  /// \brief initialize & start on success of all underlying functions.
+  ///
+  /// \return 0 on success, else return fail code of the underlying functions.
   [[nodiscard]] rc init();
 
-  /**
-   * @brief description
-   *
-   * @param  TODO
-   * @return TODO
-   */
+  /// \brief send info files structures, with the files information.
+  ///
+  /// \param  vfinfo - vector of Finfo objects.
+  /// \return 0 on success, else return fail code of the underlying functions.
   [[nodiscard]] rc send_files_info(std::vector<file::Finfo> const& vfinfo);
 
-
-  /**
-   * @brief description
-   *
-   * @param  TODO
-   * @return TODO
-   */
+  /// \brief send files.
+  ///
+  /// \param  vfiles - vector of File objects.
+  /// \return 0 on success, else return fail code of the underlying functions.
   [[nodiscard]] rc send_files(std::vector<file::File> const& vfiles);
 
 protected:
-  /**
-   * @brief man socket(2).
-   *
-   * @return file descriptor for the new socket (on success).
-   * @return -1 on error.
-   */
+  /// \brief man socket(2).
+  ///
+  /// \return file descriptor for the new socket (on success).
+  /// \return -1 on error.
   [[nodiscard]] int create_socket();
 
-  /**
-   * @brief man connect(2).
-   *
-   * @return  0 on success.
-   * @return -1 on error.
-   */
+  /// \brief man connect(2).
+  ///
+  /// \return  0 on success.
+  /// \return -1 on error.
   [[nodiscard]] int create_connection();
 
-  /****************************************************************************
-   * following are the helper methods.
-   */
+  ////////////////////////////////////////////////////////////////
+  /// following are the helper methods.
 
   [[nodiscard]] std::string host_addr_ipv4() const noexcept;
 
-  /**
-   * @brief fill the sockaddr_in structure.
-   */
+  /// \brief fill the sockaddr_in structure.
   [[nodiscard]] int fill_sockaddr_in();
 
-  /**
-   * @brief send num_files_total, so that the server knows how many to expect.
-   *
-   * @param  TODO
-   * @return TODO
-   */
+  /// \brief send num_files_total, so that the server knows how many to expect.
+  ///
+  /// \param num_files_total - total number of the files to send.
+  /// \return 0 on success.
   [[nodiscard]] int send_num_files_total(size_t const num_files_total) const;
 
-  /**
-   * @brief description
-   *
-   * @param  TODO
-   * @return TODO
-   */
+  /// \brief description
+  ///
+  /// \param finfo - Finfo structure, with the file information.
+  /// \return 0 on success.
   [[nodiscard]] int send_file_info(file::Finfo const& finfo);
 
-  /**
-   * @brief description
-   *
-   * @param  TODO
-   * @return TODO
-   *
-   */
+  /// \brief send File.
+  ///
+  /// \param file - File object, with the file information.
+  /// \return 0 on success.
   [[nodiscard]] int send_file(file::File const& file);
 
-  /**
-   * @brief man send(2).
-   *
-   * @return  0 on success - when all bytes are sent (finish).
-   * @return -1 on error   - and errno msg is logged to indicate the error.
-   * @return -2 on send() -> 0 - nothing to send etc.
-   */
+  /// \brief man send(2).
+  ///
+  /// \return  0 on success - when all bytes are sent (finish).
+  /// \return -1 on error   - and errno msg is logged to indicate the error.
+  /// \return -2 on send() -> 0 - nothing to send etc.
   template <typename T = file::File::char_type>
   [[nodiscard]] int send_loop(int fd, void const* buf, size_t len);
 
-
 private:
-  // initialized via explicit ctor
+  /// initialized via explicit ctor
   addr_t const m_addr{};
   port_t const m_port{};
 
-  // reusable for the POSIX return codes
+  /// reusable for the POSIX return codes
   int m_rc{ static_cast<int>(rc::INIT) };
 
-  // file descriptor returned by the socket().
-  // -1 is the socket() return value on error. ref: socket(2)
+  /// file descriptor returned by the socket().
+  /// -1 is the socket() return value on error. ref: socket(2)
   int m_fd{ -1 };
 
   socklen_t m_addrlen{}; // part of addrinfo
 
   struct sockaddr_in m_sockaddr_in{};
 
-  // TODO: probably better to rewrite later using addrinfo structure.
-  //       If it make sense!
+  /// TODO: probably better to rewrite later using addrinfo structure.
+  ///       If it make sense!
   // addrinfo    m_addrinfo    {};
 };
 
