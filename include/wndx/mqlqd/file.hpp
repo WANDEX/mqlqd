@@ -62,7 +62,6 @@ public:
   /// mostly for files constructed from the Finfo.
   [[nodiscard]] rc write() const noexcept;
 
-
   void heap_cleanup() noexcept;
 
   [[nodiscard]] rc heap_alloc() noexcept;
@@ -73,9 +72,28 @@ public:
 
   void print_fcontent() const noexcept;
 
+  /// \brief path to the file.
+  [[nodiscard]] fs::path path() const noexcept
+  {
+    return m_fpath;
+  }
+
+  /// \brief size of contiguous memory block required for the file.
+  [[nodiscard]] std::size_t size() const noexcept
+  {
+    return m_block_size;
+  }
+
+  /// \brief memory block.
+  [[nodiscard]] auto memory() const noexcept
+  {
+    return m_block;
+  }
+
   // TODO: DOUBTS: clone file permissions
   // void clone_perms();
 
+private:
   std::size_t m_block_size{ 0 };
   fs::path    m_fpath{};
   char_type*  m_block{ nullptr }; // memory block -> contiguous chunk of memory.

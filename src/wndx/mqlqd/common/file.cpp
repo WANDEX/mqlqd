@@ -27,7 +27,7 @@ File::File(fs::path fpath, size_t sz) noexcept
 
 File::File(Finfo const& finfo, fs::path const& dpath) noexcept
     : m_block_size{ finfo.m_block_size }
-    , m_fpath{ dpath / finfo.m_fname } // concatenate path
+    , m_fpath{ dpath / std::string(finfo.m_fname) } // concatenate path
 {
   WNDX_LOG(LL::DBUG, "{} from Finfo & dir path:\n\t{}\n", ctor, *this);
 }
@@ -210,7 +210,7 @@ auto fmt::formatter<wndx::mqlqd::file::File>::format(
     wndx::mqlqd::file::File const& f, format_context& ctx) const
     -> format_context::iterator
 {
-  return format_to(ctx.out(), "[{}] {}", f.m_block_size, f.m_fpath);
+  return format_to(ctx.out(), "[{}] {}", f.size(), f.path());
 }
 
 #if WNDX_LOG_OSTREAM_SUPPORT

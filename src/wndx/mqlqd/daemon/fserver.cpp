@@ -161,7 +161,7 @@ Fserver::~Fserver() noexcept
   if (m_rc != 0) {
     return m_rc;
   }
-  m_rc = recv_loop(m_fd_con, file.m_block, file.m_block_size);
+  m_rc = recv_loop(m_fd_con, file.memory(), file.size());
   if (m_rc != 0) {
     WNDX_LOG(LL::ERRO, "[FAIL] recv_file() in recv_loop() -> {} : {}\n", m_rc,
              file);

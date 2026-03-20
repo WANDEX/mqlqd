@@ -128,7 +128,7 @@ Fclient::send_files_info(std::vector<file::Finfo> const& vfinfo)
 [[nodiscard]] int Fclient::send_file(file::File const& file)
 {
   WNDX_LOG(LL::INFO, "INSIDE send_file() : {}\n", file);
-  m_rc = send_loop(m_fd, file.m_block, file.m_block_size);
+  m_rc = send_loop(m_fd, file.memory(), file.size());
   if (m_rc != 0) {
     WNDX_LOG(LL::ERRO, "[FAIL] send_file() in send_loop() -> {} : {}\n", m_rc,
              file);
