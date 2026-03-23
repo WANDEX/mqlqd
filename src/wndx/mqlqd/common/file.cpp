@@ -55,18 +55,20 @@ File::File(Finfo const& finfo, fs::path const& dpath) noexcept
   }
   // open file for writing
   std::basic_fstream<char_type> ofs(m_fpath, openmode_w);
-  if (!ofs) {
-    WNDX_LOG(LL::ERRO, "{} {}\n", fn, rc::FS_CTOR_ERRO);
-    return rc::FS_CTOR_ERRO;
-  }
-  if (ofs.fail()) {
-    WNDX_LOG(LL::ERRO, "{} {}\n", fn, rc::FS_OPEN_ERRO);
-    return rc::FS_OPEN_ERRO;
-  }
-  if (!ofs.good()) {
-    WNDX_LOG(LL::ERRO, "{} {}\n", fn, rc::FS_IO_UNAVAILABLE);
-    return rc::FS_IO_UNAVAILABLE;
-  }
+  // FIXME: these checks not valid for the not existing file!
+  //        (file not yet written to the disk)
+  // if (!ofs) {
+  //   WNDX_LOG(LL::ERRO, "{} {}\n", fn, rc::FS_CTOR_ERRO);
+  //   return rc::FS_CTOR_ERRO;
+  // }
+  // if (ofs.fail()) {
+  //   WNDX_LOG(LL::ERRO, "{} {}\n", fn, rc::FS_OPEN_ERRO);
+  //   return rc::FS_OPEN_ERRO;
+  // }
+  // if (!ofs.good()) {
+  //   WNDX_LOG(LL::ERRO, "{} {}\n", fn, rc::FS_IO_UNAVAILABLE);
+  //   return rc::FS_IO_UNAVAILABLE;
+  // }
   try {
     // NOTE: for loop is necessary for writing full contents of the binary file!
     for (size_t i = 0; i < m_block_size; i++) {
@@ -113,11 +115,6 @@ void File::heap_cleanup() noexcept
 
 File::~File() noexcept { heap_cleanup(); }
 
-/// \brief read file contents into the memory block.
-///
-/// \param  mem_block - memory block.
-/// \param  fpath - file path to the file.
-/// \return 0 on success or return code based on the failed check.
 [[nodiscard]] rc File::fcontent() const noexcept
 {
   static constexpr auto fn{ "File::fcontent()" };
