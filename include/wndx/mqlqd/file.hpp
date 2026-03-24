@@ -4,6 +4,8 @@
 
 #include "wndx/sane/file.hpp" // IWYU pragma: keep
 
+#include <cstring>            // std::memcmp()
+
 
 namespace wndx::mqlqd::file {
 
@@ -16,7 +18,7 @@ static constexpr size_t fname_max_len{ 79 };
 struct Finfo
 {
   size_t m_block_size{ 0 }; // NOLINTNEXTLINE(*-avoid-c-arrays)
-  char   m_fname[fname_max_len]{ "mqlqd_default_file_name" };
+  char   m_fname[fname_max_len]{ "mqlqd_default_file_name\0" };
 };
 
 class File final
@@ -57,41 +59,88 @@ public:
   /// \brief convert essentials of the instance into file info structure.
   [[nodiscard]] Finfo to_finfo() const noexcept;
 
-  /// \brief for writing file to the disk.
-  ///
-  /// mostly for files constructed from the Finfo.
+  /// \brief write file to the disk.
   [[nodiscard]] rc write() const noexcept;
 
   void heap_cleanup() noexcept;
 
   [[nodiscard]] rc heap_alloc() noexcept;
 
+  /// \brief read file contents into the memory block.
   [[nodiscard]] rc fcontent() const noexcept;
 
+  /// \brief alloc space & read file contents into the memory block.
   [[nodiscard]] rc read_to_block();
 
   void print_fcontent() const noexcept;
 
   /// \brief path to the file.
-  [[nodiscard]] fs::path path() const noexcept
-  {
-    return m_fpath;
-  }
+  [[nodiscard]] fs::path path() const noexcept { return m_fpath; }
 
   /// \brief size of contiguous memory block required for the file.
-  [[nodiscard]] std::size_t size() const noexcept
+  [[nodiscard]] constexpr std::size_t size() const noexcept
   {
     return m_block_size;
   }
 
   /// \brief memory block.
-  [[nodiscard]] auto memory() const noexcept
+  [[nodiscard]] constexpr char_type* memory() const noexcept { return m_block; }
+
+  /// \brief uses compiler intrinsics for the efficient memory comparison.
+  ///
+  /// \see https://en.cppreference.com/w/cpp/string/byte/memcmp
+  [[nodiscard]]
+  static int memcmp(char_type const* const lhs, char_type const* const rhs,
+                    std::size_t count)
   {
-    return m_block;
+    return std::memcmp(lhs, rhs, count); // not constexpr!
   }
 
-  // TODO: DOUBTS: clone file permissions
-  // void clone_perms();
+  [[nodiscard]]
+  int memcmp(char_type const* const rhs) const noexcept
+  {
+    return memcmp(memory(), rhs, size());
+  }
+
+  /// \brief allow conversion of the memory block pointer to bool.
+  constexpr explicit operator bool() const noexcept
+  {
+    return m_block != nullptr;
+  }
+
+  constexpr bool operator!=(File const& rhs) const noexcept
+  {
+    return !m_block || !rhs.m_block || size() != rhs.size();
+  }
+
+  constexpr bool operator<(File const& rhs) const noexcept
+  {
+    return operator!=(rhs) && size() < rhs.size();
+  }
+
+  constexpr bool operator>(File const& rhs) const noexcept
+  {
+    return operator!=(rhs) && size() > rhs.size();
+  }
+
+  /// \brief equality of the files contents (compare memory blocks).
+  ///
+  /// memory comparison is the most expensive operation,
+  /// so we compare memory at the very end, after all other conditions.
+  constexpr bool operator==(File const& rhs) const noexcept
+  {
+    return !operator!=(rhs) && memcmp(rhs.memory()) == 0;
+  }
+
+  constexpr bool operator<=(File const& rhs) const noexcept
+  {
+    return operator<(rhs) || operator==(rhs);
+  }
+
+  constexpr bool operator>=(File const& rhs) const noexcept
+  {
+    return operator>(rhs) || operator==(rhs);
+  }
 
 private:
   std::size_t m_block_size{ 0 };
