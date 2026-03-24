@@ -157,7 +157,7 @@ Fserver::~Fserver() noexcept
 
   // TODO: it will be cool to make - "the small buffer optimization"
   //       => fixed size buffer on the stack for the small files.
-  m_rc = static_cast<int>(file.heap_alloc());
+  m_rc = static_cast<int>(file.alloc());
   if (m_rc != 0) {
     return m_rc;
   }

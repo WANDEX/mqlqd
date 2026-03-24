@@ -12,13 +12,13 @@ namespace wndx::mqlqd::file {
 using namespace wndx::sane::file;
 
 /// \brief length chosen arbitrarily to fit most of of the file names into.
-static constexpr size_t fname_max_len{ 79 };
+static constexpr std::size_t fname_max_len{ 79 };
 
 /// \brief struct file info.
 struct Finfo
 {
-  size_t m_block_size{ 0 }; // NOLINTNEXTLINE(*-avoid-c-arrays)
-  char   m_fname[fname_max_len]{ "mqlqd_default_file_name\0" };
+  std::size_t m_block_size{ 0 }; // NOLINTNEXTLINE(*-avoid-c-arrays)
+  char        m_fname[fname_max_len]{ "mqlqd_default_file_name\0" };
 };
 
 class File final
@@ -51,28 +51,31 @@ public:
   ~File() noexcept;
 
   /// \brief construct class instance from the file path & its size.
-  explicit File(fs::path fpath, size_t sz) noexcept;
+  explicit File(fs::path fpath, std::size_t sz) noexcept;
 
   /// \brief construct class instance from the file info structure.
   explicit File(Finfo const& finfo, fs::path const& dpath) noexcept;
 
+  /// \brief cleanup facilities for the heap.
+  void clean_heap() noexcept;
+
   /// \brief convert essentials of the instance into file info structure.
   [[nodiscard]] Finfo to_finfo() const noexcept;
+
+  /// \brief allocate required space in the heap for the file contents.
+  [[nodiscard]] rc alloc() noexcept;
 
   /// \brief write file to the disk.
   [[nodiscard]] rc write() const noexcept;
 
-  void heap_cleanup() noexcept;
-
-  [[nodiscard]] rc heap_alloc() noexcept;
-
   /// \brief read file contents into the memory block.
-  [[nodiscard]] rc fcontent() const noexcept;
+  [[nodiscard]] rc read() const noexcept;
 
   /// \brief alloc space & read file contents into the memory block.
-  [[nodiscard]] rc read_to_block();
+  [[nodiscard]] rc alloc_and_read() noexcept;
 
-  void print_fcontent() const noexcept;
+  /// \brief print file contents (like a UNIX cat utility).
+  void print() const noexcept;
 
   /// \brief path to the file.
   [[nodiscard]] fs::path path() const noexcept { return m_fpath; }

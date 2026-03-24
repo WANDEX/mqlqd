@@ -123,12 +123,12 @@ namespace wndx::mqlqd {
       /// We are doing this here to not have potential bottleneck later -> on the
       /// transmission step. (especially in terms of reading speed from the users
       /// block devices e.g. Slow HDD etc.).
-      rc = file.read_to_block();
+      rc = file.alloc_and_read();
       if (rc != rc::SUCCESS) {
         return rc;
       }
       if (cmd_opts.count("cat")) {
-        file.print_fcontent();
+        file.print();
       } else {
         vfinfo.emplace_back(file.to_finfo());
       }

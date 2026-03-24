@@ -42,7 +42,7 @@ public:
   {
     if (m_do_alloc) {
       /// read file and check that memory is allocated.
-      ASSERT_TRUE(file.read_to_block() == rc::SUCCESS);
+      ASSERT_TRUE(file.alloc_and_read() == rc::SUCCESS);
       ASSERT_TRUE(file.memory() != nullptr);
       ASSERT_TRUE(file);
       ASSERT_FALSE(!file);

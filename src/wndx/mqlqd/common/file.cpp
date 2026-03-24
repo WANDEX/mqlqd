@@ -6,14 +6,6 @@
 #include <fstream>
 
 
-// clang-format off
-/// show boundaries of the files in the cat mode
-#ifndef MQLQD_FILE_CONTENTS_BOUNDARY
-#define MQLQD_FILE_CONTENTS_BOUNDARY 0 // NOLINT(*-macro-usage)
-#endif//MQLQD_FILE_CONTENTS_BOUNDARY
-// clang-format on
-
-
 namespace wndx::mqlqd::file {
 
 static constexpr std::string_view ctor{ "ctor - File instance" };
@@ -32,6 +24,14 @@ File::File(Finfo const& finfo, fs::path const& dpath) noexcept
   WNDX_LOG(LL::DBUG, "{} from Finfo & dir path:\n\t{}\n", ctor, *this);
 }
 
+void File::clean_heap() noexcept
+{
+  delete[] m_block;
+  m_block = nullptr;
+}
+
+File::~File() noexcept { clean_heap(); }
+
 [[nodiscard]] Finfo File::to_finfo() const noexcept
 {
   Finfo finfo{};
@@ -44,6 +44,31 @@ File::File(Finfo const& finfo, fs::path const& dpath) noexcept
   // null terminator after the file name (important)
   finfo.m_fname[fname.length()] = '\0'; // NOLINT(*-constant-array-index)
   return finfo;
+}
+
+/// It is easy to use std::unique_ptr here for the mem_block
+/// but maybe there is the benefit in proper using of the raw pointers?
+/// It is easy to rewrite if requested!
+[[nodiscard]] rc File::alloc() noexcept
+{
+  static constexpr auto fn{ "File::heap_alloc()" };
+  try {
+    m_block = { new char_type[m_block_size]{} };
+    if (!m_block) {
+      WNDX_LOG(LL::CRIT, "{} {}\n", fn, rc::MEMORY_BLOCK_EMPTY);
+      return rc::MEMORY_BLOCK_EMPTY;
+    }
+    WNDX_LOG(LL::DBUG, "{}\n", fn);
+  } catch (std::bad_alloc const& err) {
+    WNDX_LOG(LL::ERRO, "{} {}\n{}\n", fn, rc::MEMORY_BAD_ALLOC, err.what());
+    File::~File();
+    return rc::MEMORY_BAD_ALLOC;
+  } catch (std::exception const& err) {
+    WNDX_LOG(LL::CRIT, "{} {}\n{}\n", fn, rc::CRIT_EX_UNHANDLED, err.what());
+    File::~File();
+    return rc::CRIT_EX_UNHANDLED;
+  }
+  return rc::SUCCESS;
 }
 
 [[nodiscard]] rc File::write() const noexcept
@@ -82,40 +107,7 @@ File::File(Finfo const& finfo, fs::path const& dpath) noexcept
   return rc::SUCCESS;
 }
 
-/// It is easy to use std::unique_ptr here for the mem_block
-/// but maybe there is the benefit in proper using of the raw pointers?
-/// It is easy to rewrite if requested!
-[[nodiscard]] rc File::heap_alloc() noexcept
-{
-  static constexpr auto fn{ "File::heap_alloc()" };
-  try {
-    m_block = { new char_type[m_block_size]{} };
-    if (!m_block) {
-      WNDX_LOG(LL::CRIT, "{} {}\n", fn, rc::MEMORY_BLOCK_EMPTY);
-      return rc::MEMORY_BLOCK_EMPTY;
-    }
-    WNDX_LOG(LL::DBUG, "{}\n", fn);
-  } catch (std::bad_alloc const& err) {
-    WNDX_LOG(LL::ERRO, "{} {}\n{}\n", fn, rc::MEMORY_BAD_ALLOC, err.what());
-    File::~File();
-    return rc::MEMORY_BAD_ALLOC;
-  } catch (std::exception const& err) {
-    WNDX_LOG(LL::CRIT, "{} {}\n{}\n", fn, rc::CRIT_EX_UNHANDLED, err.what());
-    File::~File();
-    return rc::CRIT_EX_UNHANDLED;
-  }
-  return rc::SUCCESS;
-}
-
-void File::heap_cleanup() noexcept
-{
-  delete[] m_block;
-  m_block = nullptr;
-}
-
-File::~File() noexcept { heap_cleanup(); }
-
-[[nodiscard]] rc File::fcontent() const noexcept
+[[nodiscard]] rc File::read() const noexcept
 {
   static constexpr auto fn{ "File::fcontent()" };
   rc                    rc{ is_r(m_fpath) }; // return code
@@ -148,15 +140,15 @@ File::~File() noexcept { heap_cleanup(); }
   return rc::SUCCESS;
 }
 
-[[nodiscard]] rc File::read_to_block()
+[[nodiscard]] rc File::alloc_and_read() noexcept
 {
   static constexpr auto fn{ "File::read_to_block()" };
-  rc                    rc = heap_alloc();
+  rc                    rc = alloc();
   if (rc != rc::SUCCESS) {
     return rc;
   }
   try {
-    rc = fcontent();
+    rc = read();
     if (rc != rc::SUCCESS) {
       WNDX_LOG(LL::ERRO, "{} -> {}\n", fn, rc);
       return rc;
@@ -174,21 +166,15 @@ File::~File() noexcept { heap_cleanup(); }
   return rc::SUCCESS;
 }
 
-void File::print_fcontent() const noexcept
+void File::print() const noexcept
 {
   if (m_block == nullptr) {
     return;
   }
-#if MQLQD_FILE_CONTENTS_BOUNDARY
-  std::cerr << ">>> [BEG] " << m_fpath << " - file content >>>" << '\n';
-#endif // MQLQD_FILE_CONTENTS_BOUNDARY
   // NOTE: for loop is necessary for printing full contents of the binary file!
   for (size_t i = 0; i < m_block_size; ++i) {
     fmt::print("{:c}", m_block[i]); // NOLINT(*-pointer-arithmetic)
   }
-#if MQLQD_FILE_CONTENTS_BOUNDARY
-  std::cerr << "<<< [END] " << m_fpath << " - file content <<<" << '\n';
-#endif // MQLQD_FILE_CONTENTS_BOUNDARY
 }
 
 } // namespace wndx::mqlqd::file
