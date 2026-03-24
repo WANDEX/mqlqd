@@ -34,6 +34,25 @@ static std::string_view const g_tmp_dir{ make_tmp_dir() };
 class File_test : public ::testing::Test
 {
 public:
+  bool m_do_alloc{ true };
+
+  /// \brief allocate space, read file contents, check that memory is allocated.
+  // NOLINTNEXTLINE(readability-function-cognitive-complexity)
+  void alloc_read_check(file::File& file) const noexcept
+  {
+    if (m_do_alloc) {
+      /// read file and check that memory is allocated.
+      ASSERT_TRUE(file.read_to_block() == rc::SUCCESS);
+      ASSERT_TRUE(file.memory() != nullptr);
+      ASSERT_TRUE(file);
+      ASSERT_FALSE(!file);
+    } else {
+      ASSERT_TRUE(file.memory() == nullptr);
+      ASSERT_FALSE(file);
+      ASSERT_TRUE(!file);
+    }
+  }
+
   /// \brief helper function to create File from the tests data files.
   [[nodiscard]]
   file::File alloc_file(std::string const& file_name = "ascii_1.txt",
@@ -46,6 +65,7 @@ public:
       fp = dp / file_name;
     });
     file::File File(fp, fs::file_size(fp));
+    alloc_read_check(File);
     return File;
   }
 
@@ -61,15 +81,6 @@ public:
     auto tmp_dir{ get_tmp_dir() };
     auto File{ alloc_file(file_name, tmp_dir) };
     return File;
-  }
-
-  /// \brief read file and check that memory is allocated.
-  static void check_null(file::File& file) noexcept
-  {
-    ASSERT_TRUE(file.read_to_block() == rc::SUCCESS);
-    ASSERT_TRUE(file.memory() != nullptr);
-    ASSERT_TRUE(file);
-    ASSERT_FALSE(!file);
   }
 };
 
@@ -105,14 +116,9 @@ TEST_F(File_test, ctor_finfo_path)
 
 TEST_F(File_test, compare_nullptr)
 {
+  m_do_alloc = false;
   auto file1{ alloc_file() };
   auto file2{ alloc_file() };
-  ASSERT_TRUE(file1.memory() == nullptr);
-  ASSERT_TRUE(file2.memory() == nullptr);
-  ASSERT_FALSE(file1);
-  ASSERT_FALSE(file2);
-  ASSERT_TRUE(!file1);
-  ASSERT_TRUE(!file2);
   ASSERT_FALSE(file1 < file2);
   ASSERT_FALSE(file1 > file2);
   ASSERT_TRUE(file1 != file2);  // assume not eq when nullptr!
@@ -125,8 +131,6 @@ TEST_F(File_test, compare_eq)
 {
   auto file1{ alloc_file() };
   auto file2{ alloc_file() };
-  check_null(file1);
-  check_null(file2);
   ASSERT_FALSE(file1 < file2);
   ASSERT_FALSE(file1 > file2);
   ASSERT_FALSE(file1 != file2);
@@ -139,8 +143,6 @@ TEST_F(File_test, compare_lt)
 {
   auto file1{ alloc_file("ascii_1.txt") };
   auto file2{ alloc_file("ascii_2.txt") };
-  check_null(file1);
-  check_null(file2);
   ASSERT_TRUE(file1 < file2);
   ASSERT_FALSE(file1 > file2);
   ASSERT_TRUE(file1 != file2);
@@ -153,8 +155,6 @@ TEST_F(File_test, compare_gt)
 {
   auto file1{ alloc_file("ascii_3.txt") };
   auto file2{ alloc_file("ascii_2.txt") };
-  check_null(file1);
-  check_null(file2);
   ASSERT_FALSE(file1 < file2);
   ASSERT_TRUE(file1 > file2);
   ASSERT_TRUE(file1 != file2);
