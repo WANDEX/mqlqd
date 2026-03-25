@@ -166,6 +166,44 @@ File::~File() noexcept { clean_heap(); }
   return rc::SUCCESS;
 }
 
+[[nodiscard]] rc File::copy_to(fs::path const& dst) noexcept
+{
+  static constexpr auto fn{ "File::copy_to()" };
+  if (m_block == nullptr) {
+    WNDX_LOG(LL::ERRO, "{} {}\n", fn, rc::MEMORY_BLOCK_EMPTY);
+    return rc::MEMORY_BLOCK_EMPTY;
+  }
+  m_fpath = dst; // set new file path prior to the write to the disk.
+  rc rc   = write();
+  if (rc != rc::SUCCESS) {
+    WNDX_LOG(LL::ERRO, "{} -> {}\n", fn, rc);
+    return rc;
+  }
+  WNDX_LOG(LL::DBUG, "{} SUCCESS : {}\n", fn, m_fpath);
+  return rc::SUCCESS;
+}
+
+[[nodiscard]] rc File::move_to(fs::path const& dst) noexcept
+{
+  static constexpr auto fn{ "File::move_to()" };
+  fs::path const        old_fpath{ m_fpath };
+  rc                    rc = copy_to(dst);
+  if (rc != rc::SUCCESS) {
+    WNDX_LOG(LL::ERRO, "{} -> {}\n", fn, rc);
+    return rc;
+  }
+  std::error_code ec{};
+  fs::remove(old_fpath, ec);
+  if (ec) {
+    WNDX_LOG(LL::ERRO, "[FAIL] fs::remove(old_fpath, ec) -> v:{} m:{}\n",
+             ec.value(), ec.message());
+  } else {
+    WNDX_LOG(LL::DBUG, "[ OK ] fs::remove(\"{}\")\n", old_fpath);
+  }
+  WNDX_LOG(LL::DBUG, "{} SUCCESS : {}\n", fn, m_fpath);
+  return rc::SUCCESS;
+}
+
 void File::print() const noexcept
 {
   if (m_block == nullptr) {

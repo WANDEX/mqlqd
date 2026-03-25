@@ -74,6 +74,12 @@ public:
   /// \brief alloc space & read file contents into the memory block.
   [[nodiscard]] rc alloc_and_read() noexcept;
 
+  /// \brief copy file to the destination.
+  [[nodiscard]] rc copy_to(fs::path const& dst) noexcept;
+
+  /// \brief move file to the destination.
+  [[nodiscard]] rc move_to(fs::path const& dst) noexcept;
+
   /// \brief print file contents (like a UNIX cat utility).
   void print() const noexcept;
 
@@ -92,15 +98,14 @@ public:
   /// \brief uses compiler intrinsics for the efficient memory comparison.
   ///
   /// \see https://en.cppreference.com/w/cpp/string/byte/memcmp
-  [[nodiscard]]
-  static int memcmp(char_type const* const lhs, char_type const* const rhs,
-                    std::size_t count)
+  [[nodiscard]] static int memcmp(char_type const* const lhs,
+                                  char_type const* const rhs, std::size_t count)
   {
     return std::memcmp(lhs, rhs, count); // not constexpr!
   }
 
-  [[nodiscard]]
-  int memcmp(char_type const* const rhs) const noexcept
+  /// \brief uses compiler intrinsics for comparing files memory blocks.
+  [[nodiscard]] int memcmp(char_type const* const rhs) const noexcept
   {
     return memcmp(memory(), rhs, size());
   }

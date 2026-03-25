@@ -29,7 +29,7 @@ auto make_tmp_dir() noexcept
   return tmp_dir.string();
 }
 
-static std::string_view const g_tmp_dir{ make_tmp_dir() };
+static auto const g_tmp_dir{ make_tmp_dir() };
 
 class File_test : public ::testing::Test
 {
@@ -70,7 +70,7 @@ public:
   }
 
   [[nodiscard]]
-  static fs::path get_tmp_dir()
+  fs::path get_tmp_dir() const noexcept
   {
     return g_tmp_dir;
   }
@@ -161,6 +161,26 @@ TEST_F(File_test, compare_gt)
   ASSERT_FALSE(file1 == file2);
   ASSERT_FALSE(file1 <= file2);
   ASSERT_TRUE(file1 >= file2);
+}
+
+TEST_F(File_test, copy_and_move)
+{
+  char const* fname1{ "ascii_1.txt" };
+  char const* fname2{ "moved_ascii_1.txt" };
+  auto const  file1{ alloc_file(fname1) };
+  auto        file2{ alloc_file(fname1) };
+  fs::path    fpath1{ get_tmp_dir() / fname1 };
+  fs::path    fpath2{ get_tmp_dir() / fname2 };
+  WNDX_LOG(LL::DBUG, "fpath1: {}\n", fpath1.string());
+  WNDX_LOG(LL::DBUG, "fpath2: {}\n", fpath2.string());
+  ASSERT_NE(fpath1, fpath2);
+  ASSERT_TRUE(file2.copy_to(fpath1) == rc::SUCCESS);
+  ASSERT_TRUE(file1 == file2);
+  ASSERT_EQ(file2.path(), fpath1);
+  ASSERT_TRUE(file2.move_to(fpath2) == rc::SUCCESS);
+  ASSERT_TRUE(file1 == file2);
+  ASSERT_NE(file1.path(), file2.path());
+  ASSERT_EQ(file2.path(), fpath2);
 }
 
 } // namespace wndx::mqlqd
