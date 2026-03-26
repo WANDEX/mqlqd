@@ -55,13 +55,13 @@ public:
 
   /// \brief helper function to create File from the tests data files.
   [[nodiscard]]
-  file::File alloc_file(std::string const& file_name = "ascii_1.txt",
-                        std::string const& data_dir  = "./data") const noexcept
+  file::File
+  alloc_file(std::string const& file_name = "ascii_1.txt") const noexcept
   {
     fs::path dp;
     fs::path fp;
     EXPECT_NO_THROW({
-      dp = data_dir;
+      dp = "./data";
       fp = dp / file_name;
     });
     file::File File(fp, fs::file_size(fp));
@@ -70,17 +70,19 @@ public:
   }
 
   [[nodiscard]]
-  fs::path get_tmp_dir() const noexcept
+  static fs::path get_tmp_dir() noexcept
   {
     return g_tmp_dir;
   }
 
   [[nodiscard]]
-  file::File tmp_file(std::string const& file_name) const noexcept
+  file::File tmp_file(std::string const& fname) const noexcept
   {
-    auto tmp_dir{ get_tmp_dir() };
-    auto File{ alloc_file(file_name, tmp_dir) };
-    return File;
+    auto     file{ alloc_file(fname) };
+    fs::path tmp_fpath{ get_tmp_dir() / fname };
+    WNDX_LOG(LL::DBUG, "tmp_fpath: {}\n", tmp_fpath.string());
+    EXPECT_TRUE(file.copy_to(tmp_fpath) == rc::SUCCESS);
+    return file;
   }
 };
 
@@ -161,6 +163,28 @@ TEST_F(File_test, compare_gt)
   ASSERT_FALSE(file1 == file2);
   ASSERT_FALSE(file1 <= file2);
   ASSERT_TRUE(file1 >= file2);
+}
+
+TEST_F(File_test, copy_tmp_file)
+{
+  char const* fname{ "ascii_1.txt" };
+  auto const  file1{ alloc_file(fname) };
+  auto const  file2{ tmp_file(fname) };
+  ASSERT_TRUE(file1 == file2);
+  ASSERT_NE(file1.path(), file2.path());
+}
+
+TEST_F(File_test, move_tmp_file)
+{
+  char const* fname1{ "ascii_1.txt" };
+  char const* fname2{ "moved_ascii_1.txt" };
+  auto const  file1{ alloc_file(fname1) };
+  auto        file2{ tmp_file(fname1) };
+  ASSERT_TRUE(file1 == file2);
+  ASSERT_NE(file1.path(), file2.path());
+  ASSERT_TRUE(file2.move_to({ get_tmp_dir() / fname2 }) == rc::SUCCESS);
+  ASSERT_TRUE(file1 == file2);
+  ASSERT_NE(file1.path(), file2.path());
 }
 
 TEST_F(File_test, copy_and_move)
