@@ -97,6 +97,7 @@ TEST_F(File_test, File_to_finfo)
   auto const file_name{ "ascii_2.txt" }; // NOLINT(readability-qualified-auto)
   auto const file{ alloc_file(file_name) };
   auto const finfo{ file.to_finfo() };
+  // NOLINTNEXTLINE(*-array-to-pointer-decay, hicpp-no-array-decay)
   ASSERT_EQ(file_name, std::string(finfo.m_fname));
 }
 
@@ -106,13 +107,15 @@ TEST_F(File_test, ctor_finfo_path)
   auto const len{ std::string(file_name).length() };
   auto const file{ alloc_file(file_name) };
   auto const finfo{ file.to_finfo() };
+  // NOLINTNEXTLINE(*-array-to-pointer-decay, hicpp-no-array-decay)
   ASSERT_EQ(file_name, std::string(finfo.m_fname));
   ASSERT_EQ(file.size(), fs::file_size(file.path()));
 
   file::Finfo finfo2;
   finfo2.m_block_size = file.size();
-  finfo2.m_fname[len] = '\0';
+  finfo2.m_fname[len] = '\0'; // NOLINT(*-constant-array-index)
   std::memcpy(&finfo2.m_fname, file_name, len);
+  // NOLINTNEXTLINE(*-array-to-pointer-decay, hicpp-no-array-decay)
   ASSERT_EQ(std::string(finfo.m_fname), std::string(finfo2.m_fname));
 }
 
