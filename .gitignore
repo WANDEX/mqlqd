@@ -4,3 +4,5 @@ TODO
 build/
 mqlqd_storage/
 compile_commands*.json*
+.coverage/
+scripts/lcov.sh
