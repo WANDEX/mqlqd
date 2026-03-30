@@ -61,8 +61,8 @@ public:
     fs::path dp;
     fs::path fp;
     EXPECT_NO_THROW({
-      dp = "./data";
-      fp = dp / file_name;
+      dp = fs::absolute("data");
+      fp = fs::canonical(dp / file_name);
     });
     file::File File(fp, fs::file_size(fp));
     alloc_read_check(File);
